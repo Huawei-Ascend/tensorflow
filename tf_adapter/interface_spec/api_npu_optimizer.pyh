@@ -1,0 +1,8 @@
+# source file:python/npu_bridge/estimator/npu/npu_optimizer.py
+
+class NPUOptimizer(optimizer.Optimizer):
+    def __init__(self, opt, loss_scale_manager=None, is_distributed=False,
+                is_loss_scale=False, is_tailing_optimization=False, name=None):
+
+class NPUDistributedOptimizer(tf.train.Optimizer):
+    def __init__(self, optimizer, name=None):

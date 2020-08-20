@@ -1,0 +1,8 @@
+# source file:python/npu_bridge/estimator/npu/npu_hook.py
+
+class NPUOutputTensorHook(basic_session_run_hooks.LoggingTensorHook):
+    def __init__(self, tensors, dependencies=None, output_fn=None, output_every_n_steps=0):
+
+class NPUCheckpointSaverHook(basic_session_run_hooks.CheckpointSaverHook):
+    def __init__(self, checkpoint_dir, save_secs=None, save_steps=None,
+                saver=None, checkpoint_basename="model.ckpt", scaffold=None, listeners=None):
