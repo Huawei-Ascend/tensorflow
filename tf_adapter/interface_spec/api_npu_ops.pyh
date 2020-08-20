@@ -1,0 +1,10 @@
+# source file:python/npu_bridge/estimator/npu_ops.py
+
+def initialize_system(name = None):
+
+def shutdown_system(name = None):
+
+def dropout(x, keep_prob, noise_shape=None, seed=None, name=None):
+
+def LARSV2(input_weight, input_grad, weight_decay, learning_rate,
+           hyperpara=0.001, epsilon=0.00001, use_clip=False, name=None):
