@@ -16,6 +16,7 @@ extern const char* const OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES;
 extern const char* const OPTION_EXEC_PROFILING_MODE;
 extern const char* const OPTION_EXEC_PROFILING_OPTIONS;
 extern const char* const OPTION_GRAPH_RUN_MODE;
+extern const char* const OPTION_EXEC_HCCL_FLAG;
 
 extern void PluginInit(std::map<std::string, std::string>& init_options);
 

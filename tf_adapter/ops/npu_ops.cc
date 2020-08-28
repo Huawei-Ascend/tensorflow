@@ -1,6 +1,17 @@
 /* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-Copyright (C) 2019-2020. Huawei Technologies Co., Ltd. All rights reserved. foss@huawei.com
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Copyright (C) 2019-2020. Huawei Technologies Co., Ltd. All rights reserved.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -16,8 +27,6 @@ limitations under the License.
 
 #include "tensorflow/core/framework/common_shape_fns.h"
 #include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/shape_inference.h"
-#include "tensorflow/core/framework/tensor.pb.h"
 
 namespace tensorflow {
 using shape_inference::DimensionHandle;
@@ -48,10 +57,7 @@ REGISTER_OP("DPOP")
 
 REGISTER_OP("NPUInit").SetShapeFn(shape_inference::NoOutputs);
 
-REGISTER_OP("LogTimeStamp")
-    .Attr("logid: string")
-    .Attr("notify: bool")
-    .SetShapeFn(shape_inference::NoOutputs);
+REGISTER_OP("LogTimeStamp").Attr("logid: string").Attr("notify: bool").SetShapeFn(shape_inference::NoOutputs);
 
 REGISTER_OP("NPUShutdown").SetShapeFn(shape_inference::NoOutputs);
 
@@ -63,11 +69,9 @@ REGISTER_OP("LARS")
     .Attr("T: list(type) >= 1")
     .Attr("hyperpara: float = 0.001")
     .Attr("epsilon: float = 0.00001")
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        for (int i=0 ; i< ((c->num_inputs() - 1) / 2) ; i++) {
-            c->set_output(i, c->input(i));
-        }
-        return Status::OK();
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      for (int i = 0; i < ((c->num_inputs() - 1) / 2); i++) { c->set_output(i, c->input(i)); }
+      return Status::OK();
     })
     .Doc(R"doc(
     Perform Lars on multi tensors. inputs_g have the same shape as `inputs_w`.
@@ -90,9 +94,9 @@ REGISTER_OP("LarsV2")
     .Attr("hyperpara: float = 0.001")
     .Attr("epsilon: float = 0.00001")
     .Attr("use_clip: bool = false")
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        c->set_output(0, c->input(0));
-        return Status::OK();
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      c->set_output(0, c->input(0));
+      return Status::OK();
     })
     .Doc(R"doc(
     Perform LarsV2 on single output. input_weight have the same shape
@@ -109,20 +113,16 @@ REGISTER_OP("LarsV2")
         output:    Tensor with the same shape as `input_weight`.
     )doc");
 
-
-Status OutfeedDequeueShapeFn(shape_inference::InferenceContext* c) {
-  shape_inference::ShapeHandle unused;
+Status OutfeedDequeueShapeFn(shape_inference::InferenceContext *c) {
   std::vector<PartialTensorShape> output_shapes;
   TF_RETURN_IF_ERROR(c->GetAttr("output_shapes", &output_shapes));
   if (static_cast<int>(output_shapes.size()) != c->num_outputs()) {
-    return errors::InvalidArgument(
-        "`output_shapes` must be the same length as `output_types` (",
-        output_shapes.size(), " vs. ", c->num_outputs());
+    return errors::InvalidArgument("`output_shapes` must be the same length as `output_types` (", output_shapes.size(),
+                                   " vs. ", c->num_outputs());
   }
   for (size_t i = 0; i < output_shapes.size(); ++i) {
     shape_inference::ShapeHandle output_shape_handle;
-    TF_RETURN_IF_ERROR(c->MakeShapeFromPartialTensorShape(
-        output_shapes[i], &output_shape_handle));
+    TF_RETURN_IF_ERROR(c->MakeShapeFromPartialTensorShape(output_shapes[i], &output_shape_handle));
     c->set_output(static_cast<int>(i), output_shape_handle);
   }
   return Status::OK();
@@ -143,10 +143,7 @@ REGISTER_OP("OutfeedDequeueOp")
     .SetIsStateful()
     .SetShapeFn(OutfeedDequeueShapeFn);
 
-REGISTER_OP("StopOutfeedDequeueOp")
-    .Attr("channel_name: string")
-    .SetIsStateful()
-    .SetShapeFn(shape_inference::NoOutputs);
+REGISTER_OP("StopOutfeedDequeueOp").Attr("channel_name: string").SetIsStateful().SetShapeFn(shape_inference::NoOutputs);
 
 REGISTER_OP("DropOutDoMask")
     .Input("x: T")
@@ -155,7 +152,7 @@ REGISTER_OP("DropOutDoMask")
     .Output("y: T")
     .Attr("T: {float16, float32}")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       c->set_output(0, c->input(0));
       return Status::OK();
     });
@@ -169,55 +166,52 @@ REGISTER_OP("DropOutGenMask")
     .Attr("seed: int = 0")
     .Attr("seed2: int = 0")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       ShapeHandle unused;
-        TF_RETURN_IF_ERROR(c->WithRankAtMost(c->input(1), 0, &unused)); // prob must be 0-d
+      TF_RETURN_IF_ERROR(c->WithRankAtMost(c->input(1), 0, &unused));  // prob must be 0-d
 
-        ShapeHandle inputShapeHandle;
-        TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &inputShapeHandle));
+      ShapeHandle inputShapeHandle;
+      TF_RETURN_IF_ERROR(c->MakeShapeFromShapeTensor(0, &inputShapeHandle));
 
-        int32 rank = c->Rank(inputShapeHandle);
-        if (InferenceContext::kUnknownRank == rank) {
-            ShapeHandle out = c->UnknownShapeOfRank(1);
-            c->set_output(0, out);
-            return Status::OK();
-        }
-
-        bool unknownDimExist = false;
-        for (int32 i = 0; i < rank; ++i) {
-            DimensionHandle dimHandle = c->Dim(inputShapeHandle, i);
-            int64 value = c->Value(dimHandle);
-            if (InferenceContext::kUnknownDim == value) {
-                unknownDimExist = true;
-                break;
-            }
-        }
-
-        if (unknownDimExist) {
-            ShapeHandle out = c->UnknownShapeOfRank(1);
-            c->set_output(0, out);
-            return Status::OK();
-        }
-
-        int64 bitCount = 0;
-        if (rank != 0) {
-            DimensionHandle inputDimHandle = c->NumElements(inputShapeHandle);
-            bitCount = c->Value(inputDimHandle);
-        }
-
-        // align to 128 and around up
-        int64 n128Bits = bitCount / 128;
-        if ((bitCount % 128) != 0) {
-            n128Bits++;
-        }
-
-        // transfer 128 bit count to byte count if shape is full know
-        int64 nBytes = n128Bits * 16;
-
-        ShapeHandle out = c->Vector(nBytes);
+      int32 rank = c->Rank(inputShapeHandle);
+      if (InferenceContext::kUnknownRank == rank) {
+        ShapeHandle out = c->UnknownShapeOfRank(1);
         c->set_output(0, out);
         return Status::OK();
+      }
 
+      bool unknownDimExist = false;
+      for (int32 i = 0; i < rank; ++i) {
+        DimensionHandle dimHandle = c->Dim(inputShapeHandle, i);
+        int64 value = c->Value(dimHandle);
+        if (InferenceContext::kUnknownDim == value) {
+          unknownDimExist = true;
+          break;
+        }
+      }
+
+      if (unknownDimExist) {
+        ShapeHandle out = c->UnknownShapeOfRank(1);
+        c->set_output(0, out);
+        return Status::OK();
+      }
+
+      int64 bitCount = 0;
+      if (rank != 0) {
+        DimensionHandle inputDimHandle = c->NumElements(inputShapeHandle);
+        bitCount = c->Value(inputDimHandle);
+      }
+
+      // align to 128 and around up
+      int64 n128Bits = bitCount / 128;
+      if ((bitCount % 128) != 0) { n128Bits++; }
+
+      // transfer 128 bit count to byte count if shape is full know
+      int64 nBytes = n128Bits * 16;
+
+      ShapeHandle out = c->Vector(nBytes);
+      c->set_output(0, out);
+      return Status::OK();
     });
 
 REGISTER_OP("BasicLSTMCell")
@@ -239,7 +233,7 @@ REGISTER_OP("BasicLSTMCell")
     .Attr("state_is_tuple: bool = true")
     .Attr("activation: string = 'tanh'")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       c->set_output(0, c->input(2));
       c->set_output(1, c->input(1));
       c->set_output(2, c->input(2));
@@ -265,7 +259,7 @@ REGISTER_OP("BasicLSTMCellCStateGrad")
     .Attr("forget_bias: float = 1.0")
     .Attr("activation: string = 'tanh'")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       auto input_it_shape = c->input(4);
       auto hidden_size = c->Dim(input_it_shape, 1);
       auto batch_size = c->Dim(input_it_shape, 0);
@@ -285,7 +279,7 @@ REGISTER_OP("BasicLSTMCellWeightGrad")
     .Output("db: T")
     .Attr("T: {float16, float32}")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       auto input_x_shape = c->input(0);
       auto input_h_shape = c->input(1);
       auto input_dgate_shape = c->input(2);
@@ -309,7 +303,7 @@ REGISTER_OP("BasicLSTMCellInputGrad")
     .Attr("T: {float16, float32}")
     .Attr("keep_prob: float = 1.0")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
       auto input_dgate_shape = c->input(0);
       auto input_w_shape = c->input(1);
       auto four_hidden_size = c->Dim(input_dgate_shape, 1);
@@ -319,8 +313,7 @@ REGISTER_OP("BasicLSTMCellInputGrad")
       TF_RETURN_IF_ERROR(c->Divide(four_hidden_size, 4, true, &output_hidden_size));
       auto output_dht_shape = c->MakeShape({batch_size, output_hidden_size});
       DimensionHandle output_input_size;
-      TF_RETURN_IF_ERROR(c->Subtract(input_hidden_size, output_hidden_size,
-                                     &output_input_size));
+      TF_RETURN_IF_ERROR(c->Subtract(input_hidden_size, output_hidden_size, &output_input_size));
       auto output_dxt_shape = c->MakeShape({batch_size, output_input_size});
       c->set_output(0, output_dxt_shape);
       c->set_output(1, output_dht_shape);
@@ -328,67 +321,67 @@ REGISTER_OP("BasicLSTMCellInputGrad")
     });
 
 REGISTER_OP("DecodeAndResizeJpeg")
-        .Input("contents: string")
-        .Input("resize: int32")
-        .Output("image: uint8")
-        .SetShapeFn([](InferenceContext* c) {
-          const Tensor* rezise = c->input_tensor(1);
-          DimensionHandle h;
-          DimensionHandle w;
-          if (rezise != nullptr) {
-            auto rezise_vec = rezise->vec<int32>();
-            h = c->MakeDim(rezise_vec(0));
-            w = c->MakeDim(rezise_vec(1));
-          }
-          c->set_output(0, c->MakeShape({h, w, 3}));
-          return Status::OK();
-        });
+    .Input("contents: string")
+    .Input("resize: int32")
+    .Output("image: uint8")
+    .SetShapeFn([](InferenceContext *c) {
+      const Tensor *rezise = c->input_tensor(1);
+      DimensionHandle h;
+      DimensionHandle w;
+      if (rezise != nullptr) {
+        auto rezise_vec = rezise->vec<int32>();
+        h = c->MakeDim(rezise_vec(0));
+        w = c->MakeDim(rezise_vec(1));
+      }
+      c->set_output(0, c->MakeShape({h, w, 3}));
+      return Status::OK();
+    });
 
 REGISTER_OP("DecodeAndCropAndResizeJpeg")
-        .Input("contents: string")
-        .Input("crop_size: int32")
-        .Input("resize: int32")
-        .Output("image: uint8")
-        .SetShapeFn([](InferenceContext* c) {
-          const Tensor* rezise = c->input_tensor(2);
-          DimensionHandle h;
-          DimensionHandle w;
-          if (rezise != nullptr) {
-            auto rezise_vec = rezise->vec<int32>();
-            h = c->MakeDim(rezise_vec(0));
-            w = c->MakeDim(rezise_vec(1));
-          }
-          c->set_output(0, c->MakeShape({h, w, 3}));
-          return Status::OK();
-        });
+    .Input("contents: string")
+    .Input("crop_size: int32")
+    .Input("resize: int32")
+    .Output("image: uint8")
+    .SetShapeFn([](InferenceContext *c) {
+      const Tensor *rezise = c->input_tensor(2);
+      DimensionHandle h;
+      DimensionHandle w;
+      if (rezise != nullptr) {
+        auto rezise_vec = rezise->vec<int32>();
+        h = c->MakeDim(rezise_vec(0));
+        w = c->MakeDim(rezise_vec(1));
+      }
+      c->set_output(0, c->MakeShape({h, w, 3}));
+      return Status::OK();
+    });
 
 REGISTER_OP("AdamApplyOneAssign")
-        .Input("input0: T")
-        .Input("input1: T")
-        .Input("input2: T")
-        .Input("input3: T")
-        .Input("input4: T")
-        .Input("mul0_x: T")
-        .Input("mul1_x: T")
-        .Input("mul2_x: T")
-        .Input("mul3_x: T")
-        .Input("add2_y: T")
-        .Attr("T: {float16, float32}")
-        .SetShapeFn(shape_inference::NoOutputs);
+    .Input("input0: T")
+    .Input("input1: T")
+    .Input("input2: T")
+    .Input("input3: T")
+    .Input("input4: T")
+    .Input("mul0_x: T")
+    .Input("mul1_x: T")
+    .Input("mul2_x: T")
+    .Input("mul3_x: T")
+    .Input("add2_y: T")
+    .Attr("T: {float16, float32}")
+    .SetShapeFn(shape_inference::NoOutputs);
 
 REGISTER_OP("AdamApplyOneWithDecayAssign")
-        .Input("input0: T")
-        .Input("input1: T")
-        .Input("input2: T")
-        .Input("input3: T")
-        .Input("input4: T")
-        .Input("mul0_x: T")
-        .Input("mul1_x: T")
-        .Input("mul2_x: T")
-        .Input("mul3_x: T")
-        .Input("mul4_x: T")
-        .Input("add2_y: T")
-        .Attr("T: {float16, float32}")
-        .SetShapeFn(shape_inference::NoOutputs);
+    .Input("input0: T")
+    .Input("input1: T")
+    .Input("input2: T")
+    .Input("input3: T")
+    .Input("input4: T")
+    .Input("mul0_x: T")
+    .Input("mul1_x: T")
+    .Input("mul2_x: T")
+    .Input("mul3_x: T")
+    .Input("mul4_x: T")
+    .Input("add2_y: T")
+    .Attr("T: {float16, float32}")
+    .SetShapeFn(shape_inference::NoOutputs);
 }  // namespace
 }  // namespace tensorflow

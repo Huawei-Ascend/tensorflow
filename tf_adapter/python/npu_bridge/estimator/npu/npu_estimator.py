@@ -377,6 +377,9 @@ class NPUEstimator(estimator_lib.Estimator):
         # Init npu system: get task and device info from configuration file.
         self.__load_job_info(job_start_file)
 
+        # Check modie dir in NPUEstimator and NPURunConfig
+        model_dir = self.__check_model_dir(model_dir, config)
+
         # Wrap model_fn to adding npu sessionhooks.
         model_function = self.__augment_model_fn(model_fn, model_dir, config)
 
@@ -435,9 +438,8 @@ class NPUEstimator(estimator_lib.Estimator):
 
                 # 2. NPUCheckpointSaverHook
                 if config.save_checkpoints_steps or config.save_checkpoints_secs:
-                    new_model_dir = self.__check_model_dir(model_dir, config)
                     npu_hooks.append(NPUCheckpointSaverHook(
-                        checkpoint_dir=new_model_dir,
+                        checkpoint_dir=model_dir,
                         save_secs=config.save_checkpoints_secs,
                         save_steps=config.save_checkpoints_steps))
 

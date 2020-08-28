@@ -1,6 +1,17 @@
 /* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
-Copyright (C) 2019-2020. Huawei Technologies Co., Ltd. All rights reserved. foss@huawei.com
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Copyright (C) 2019-2020. Huawei Technologies Co., Ltd. All rights reserved.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -14,9 +25,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "tensorflow/core/framework/op.h"
-#include "tensorflow/core/framework/shape_inference.h"
 #include "tensorflow/core/framework/common_shape_fns.h"
+#include "tensorflow/core/framework/op.h"
 
 namespace tensorflow {
 using shape_inference::InferenceContext;
@@ -31,9 +41,9 @@ REGISTER_OP("HcomAllReduce")
     .Attr("fusion: int")
     .Attr("fusion_id: int")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        c->set_output(0, c->input(0));
-        return Status::OK();
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      c->set_output(0, c->input(0));
+      return Status::OK();
     })
     .Doc(R"doc(
 Outputs a tensor containing the reduction across all input tensors passed to ops.
@@ -55,30 +65,28 @@ REGISTER_OP("HcomAllGather")
     .Attr("group: string")
     .Attr("rank_size: int")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        // Scalar input is not supported.
-        shape_inference::ShapeHandle unused;
-        TF_RETURN_IF_ERROR(c->WithRankAtLeast(c->input(0), 1, &unused));
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      // Scalar input is not supported.
+      shape_inference::ShapeHandle unused;
+      TF_RETURN_IF_ERROR(c->WithRankAtLeast(c->input(0), 1, &unused));
 
-        shape_inference::ShapeHandle inSubshape;
-        TF_RETURN_IF_ERROR(c->Subshape(c->input(0), 1, &inSubshape));
+      shape_inference::ShapeHandle inSubshape;
+      TF_RETURN_IF_ERROR(c->Subshape(c->input(0), 1, &inSubshape));
 
-        int rankSize = 0;
-        auto inputFirstDimValue = c->Value(c->Dim(c->input(0), 0));
-        shape_inference::ShapeHandle outputFirstDimAsShape;
-        TF_CHECK_OK(c->GetAttr("rank_size", &rankSize));
-        Status rankSizeStatus = ((rankSize > 0) ?
-            (Status::OK()) : (errors::InvalidArgument("rankSize should be greater than 0.")));
-        TF_CHECK_OK(rankSizeStatus);
-        std::vector<shape_inference::DimensionHandle> outputFirstDim;
-        outputFirstDim.push_back(
-            c->MakeDim(rankSize * inputFirstDimValue));
-            outputFirstDimAsShape = c->MakeShape(outputFirstDim);
-        shape_inference::ShapeHandle output;
-        TF_RETURN_IF_ERROR(
-            c->Concatenate(outputFirstDimAsShape, inSubshape, &output));
-        c->set_output(0, output);
-        return Status::OK();
+      int rankSize = 0;
+      auto inputFirstDimValue = c->Value(c->Dim(c->input(0), 0));
+      shape_inference::ShapeHandle outputFirstDimAsShape;
+      TF_CHECK_OK(c->GetAttr("rank_size", &rankSize));
+      Status rankSizeStatus =
+          ((rankSize > 0) ? (Status::OK()) : (errors::InvalidArgument("rankSize should be greater than 0.")));
+      TF_CHECK_OK(rankSizeStatus);
+      std::vector<shape_inference::DimensionHandle> outputFirstDim;
+      outputFirstDim.push_back(c->MakeDim(rankSize * inputFirstDimValue));
+      outputFirstDimAsShape = c->MakeShape(outputFirstDim);
+      shape_inference::ShapeHandle output;
+      TF_RETURN_IF_ERROR(c->Concatenate(outputFirstDimAsShape, inSubshape, &output));
+      c->set_output(0, output);
+      return Status::OK();
     })
     .Doc(R"doc(
 
@@ -91,11 +99,9 @@ REGISTER_OP("HcomBroadcast")
     .Attr("group: string")
     .Attr("root_rank: int")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        for (int i = 0 ; i < c->num_inputs() ; i++) {
-            c->set_output(i, c->input(i));
-        }
-        return Status::OK();
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      for (int i = 0; i < c->num_inputs(); i++) { c->set_output(i, c->input(i)); }
+      return Status::OK();
     })
     .Doc(R"doc(
 Sends `input` to all devices that are connected to the output.
@@ -115,33 +121,32 @@ REGISTER_OP("HcomReduceScatter")
     .Attr("group: string")
     .Attr("rank_size: int")
     .SetIsStateful()
-    .SetShapeFn([](shape_inference::InferenceContext* c) {
-        // Scalar input is not supported.
-        shape_inference::ShapeHandle unused;
-        TF_RETURN_IF_ERROR(c->WithRankAtLeast(c->input(0), 1, &unused));
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      // Scalar input is not supported.
+      shape_inference::ShapeHandle unused;
+      TF_RETURN_IF_ERROR(c->WithRankAtLeast(c->input(0), 1, &unused));
 
-        shape_inference::ShapeHandle inSubshape;
-        TF_RETURN_IF_ERROR(c->Subshape(c->input(0), 1, &inSubshape));
+      shape_inference::ShapeHandle inSubshape;
+      TF_RETURN_IF_ERROR(c->Subshape(c->input(0), 1, &inSubshape));
 
-        int rankSize = 0;
-        auto inputFirstDimValue = c->Value(c->Dim(c->input(0), 0));
-        shape_inference::ShapeHandle outputFirstDimAsShape;
-        TF_CHECK_OK(c->GetAttr("rank_size", &rankSize));
-        Status rankSizeStatus = ((rankSize > 0) ?
-            (Status::OK()) : (errors::InvalidArgument("rank_size should be greater than 0.")));
-        TF_CHECK_OK(rankSizeStatus);
-        Status outputFirstDimStatus = ((inputFirstDimValue % rankSize) == 0) ?
-            (Status::OK()) : (errors::InvalidArgument("input first dim should be N * rank_size."));
-        TF_CHECK_OK(outputFirstDimStatus);
-        std::vector<shape_inference::DimensionHandle> outputFirstDim;
-        outputFirstDim.push_back(
-            c->MakeDim(inputFirstDimValue / rankSize));
-            outputFirstDimAsShape = c->MakeShape(outputFirstDim);
-        shape_inference::ShapeHandle output;
-        TF_RETURN_IF_ERROR(
-            c->Concatenate(outputFirstDimAsShape, inSubshape, &output));
-        c->set_output(0, output);
-        return Status::OK();
+      int rankSize = 0;
+      auto inputFirstDimValue = c->Value(c->Dim(c->input(0), 0));
+      shape_inference::ShapeHandle outputFirstDimAsShape;
+      TF_CHECK_OK(c->GetAttr("rank_size", &rankSize));
+      Status rankSizeStatus =
+          ((rankSize > 0) ? (Status::OK()) : (errors::InvalidArgument("rank_size should be greater than 0.")));
+      TF_CHECK_OK(rankSizeStatus);
+      Status outputFirstDimStatus = ((inputFirstDimValue % rankSize) == 0)
+          ? (Status::OK())
+          : (errors::InvalidArgument("input first dim should be N * rank_size."));
+      TF_CHECK_OK(outputFirstDimStatus);
+      std::vector<shape_inference::DimensionHandle> outputFirstDim;
+      outputFirstDim.push_back(c->MakeDim(inputFirstDimValue / rankSize));
+      outputFirstDimAsShape = c->MakeShape(outputFirstDim);
+      shape_inference::ShapeHandle output;
+      TF_RETURN_IF_ERROR(c->Concatenate(outputFirstDimAsShape, inSubshape, &output));
+      c->set_output(0, output);
+      return Status::OK();
     })
     .Doc(R"doc(
 

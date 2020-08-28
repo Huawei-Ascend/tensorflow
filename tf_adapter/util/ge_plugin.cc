@@ -1,63 +1,81 @@
-/**
-* Copyright (C) <2019>  <Huawei Technologies Co., Ltd.>. All Rights Reserved.
-* Description: a plugin control GEInitialize and GEFinalize
-*/
+/* Copyright 2017 The TensorFlow Authors. All Rights Reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-#include "tf_adapter/util/npu_plugin.h"
-#include <thread>
-#include "tf_adapter/common/common.h"
-#include "tf_adapter/util/npu_attrs.h"
-#include "tdt/tsd_client.h"
-#include "tdt/tdt_host_interface.h"
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Copyright (C) 2019-2020. Huawei Technologies Co., Ltd. All rights reserved.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+==============================================================================*/
+
+#include "framework/common/ge_inner_error_codes.h"
+#include "framework/common/types.h"
+#include "framework/omg/parser/model_parser.h"
+#include "framework/omg/parser/parser_api.h"
+#include "framework/omg/parser/parser_factory.h"
 #include "ge/ge_api.h"
 #include "ge/ge_api_types.h"
-#include "framework/common/types.h"
-#include "framework/common/ge_inner_error_codes.h"
-#include "framework/omg/parser/model_parser.h"
-#include "framework/omg/parser/parser_factory.h"
-#include "framework/omg/parser/parser_api.h"
+#include "tdt/tdt_host_interface.h"
+#include "tdt/tsd_client.h"
 #include "tensorflow/core/util/env_var.h"
+#include "tf_adapter/common/common.h"
+#include "tf_adapter/util/npu_attrs.h"
+#include "tf_adapter/util/npu_plugin.h"
+#include <thread>
 
 using namespace tensorflow;
 using namespace tdt;
 constexpr int kFatalSleepTime = 3000;
 namespace {
-inline string ToString(ge::Status status) {
-  return ::ge::StatusFactory::Instance()->GetErrDesc(status);
-}
-}
+inline string ToString(ge::Status status) { return ::ge::StatusFactory::Instance()->GetErrDesc(status); }
+}  // namespace
 
 GePlugin::GePlugin()
 
-    : device_id_(0),
-      isInit_(false),
-      isGlobal_(false) {
+    : device_id_(0), isInit_(false), isGlobal_(false) {
   LOG(INFO) << "[GePlugin] new constructor";
 }
 
 GePlugin::~GePlugin() {
-  LOG(INFO) << "[GePlugin] destory constructor begin";
+  LOG(INFO) << "[GePlugin] destroy constructor begin";
   Finalize();
-  LOG(INFO) << "[GePlugin] destory constructor end";
+  LOG(INFO) << "[GePlugin] destroy constructor end";
 }
 
-GePlugin* GePlugin::GetInstance() {
+GePlugin *GePlugin::GetInstance() {
   static GePlugin instance;
   return &instance;
 }
 
-void GePlugin::Init(std::map<std::string, std::string>& init_options, bool is_global) {
+void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_global) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (isInit_) {
-      LOG(INFO) << "[GePlugin] Ge has already initialized";
-      return;
+    LOG(INFO) << "[GePlugin] Ge has already initialized";
+    return;
   }
 
   LOG(INFO) << "[GePlugin] graph run mode : " << init_options[ge::OPTION_GRAPH_RUN_MODE];
   // prepare options for ge Initialize
 
   const int64 kMaxDeviceID = 7;
-  (void)ReadInt64FromEnvVar("DEVICE_ID", 0, &device_id_);
+  (void) ReadInt64FromEnvVar("DEVICE_ID", 0, &device_id_);
   if (device_id_ < 0 || device_id_ > kMaxDeviceID) {
     LOG(WARNING) << "[GePlugin] device_id should in [0, 7]. use default device id : 0.";
   }
@@ -71,7 +89,7 @@ void GePlugin::Init(std::map<std::string, std::string>& init_options, bool is_gl
   }
 
   int64 rankSizeNum = 1;
-  (void)ReadInt64FromEnvVar("RANK_SIZE", 1, &rankSizeNum);
+  (void) ReadInt64FromEnvVar("RANK_SIZE", 1, &rankSizeNum);
   if (rankSizeNum > UINT32_MAX) {
     rankSizeNum = UINT32_MAX;
     LOG(WARNING) << "[GePlugin] RANK_SIZE is larger than UINT32_MAX, set to UINT32_MAX.";
@@ -131,7 +149,7 @@ void GePlugin::Init(std::map<std::string, std::string>& init_options, bool is_gl
   if (tdt_status != TDT_OK) {
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GePlugin] Open TsdClient failed, tdt error code : " << tdt_status
-                << ", error message : " << TDT_GET_ERROR_STR(tdt_status);
+               << ", error message : " << TDT_GET_ERROR_STR(tdt_status);
   }
   LOG(INFO) << "[GePlugin] Open TsdClient success and tdt host init success.";
 
@@ -163,21 +181,15 @@ void GePlugin::Finalize() {
 
   // ge finalize
   ge::Status status = ge::GEFinalize();
-  if (status != ge::SUCCESS) {
-    LOG(ERROR) << "[GePlugin] GE finalize failed, ret : " << ToString(status);
-  }
+  if (status != ge::SUCCESS) { LOG(ERROR) << "[GePlugin] GE finalize failed, ret : " << ToString(status); }
 
   // parser finalize
   ge::Status status_parser = ge::ParserFinalize();
-  if (status_parser != ge::SUCCESS) {
-    LOG(ERROR) << "[GePlugin] Parser finalize failed, ret : " << ToString(status);
-  }
+  if (status_parser != ge::SUCCESS) { LOG(ERROR) << "[GePlugin] Parser finalize failed, ret : " << ToString(status); }
 
   LOG(INFO) << "[GePlugin] Close TsdClient and destroy tdt.";
   int32_t ret = tdt::TdtHostDestroy();
-  if (ret != 0) {
-    LOG(ERROR) << "[GePlugin] Close tdt failed, tdt_ret : " << ret;
-  }
+  if (ret != 0) { LOG(ERROR) << "[GePlugin] Close tdt failed, tdt_ret : " << ret; }
   TDT_StatusT tdt_status = TsdClose(device_id_);
   if (tdt_status != TDT_OK) {
     LOG(ERROR) << "[GePlugin] Close TsdClient failed, tdt_ret : " << tdt_status;
@@ -192,7 +204,7 @@ bool GePlugin::IsGlobal() {
   return isGlobal_;
 }
 
-void PluginInit(std::map<std::string, std::string>& init_options) {
+void PluginInit(std::map<std::string, std::string> &init_options) {
   GePlugin::GetInstance()->Init(init_options, true);
   LOG(INFO) << "npu plugin init success";
 }

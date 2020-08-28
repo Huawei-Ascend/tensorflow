@@ -1,5 +1,7 @@
 from npu_bridge import tf_adapter
 from npu_bridge.estimator.npu import util
+import json
+import os
 
 __auto_tune_mode = str(tf_adapter.AUTO_TUNE_MODE)
 __op_debug_level = str(tf_adapter.OP_DEBUG_LEVEL)
@@ -7,6 +9,7 @@ __option_exec_enable_scope_fusion_passes = str(tf_adapter.OPTION_EXEC_ENABLE_SCO
 __option_exec_profiling_mode = str(tf_adapter.OPTION_EXEC_PROFILING_MODE)
 __option_exec_profiling_options = str(tf_adapter.OPTION_EXEC_PROFILING_OPTIONS)
 __option_graph_run_mode = str(tf_adapter.OPTION_GRAPH_RUN_MODE)
+__option_exec_option_exec_hccl_flag = str(tf_adapter.OPTION_EXEC_HCCL_FLAG)
 
 def npu_global_init(graph_run_mode = 1,
                     op_debug_level = 0,
@@ -49,6 +52,14 @@ def npu_global_init(graph_run_mode = 1,
 
     if enable_scope_fusion_passes is not None:
         init[__option_exec_enable_scope_fusion_passes] = str(enable_scope_fusion_passes)
+
+    config_info = json.loads(os.environ.get('TF_CONFIG') or '{}')
+    task_env = config_info.get('task', {})
+    task_type = task_env.get('type', None)
+    exec_hccl_flag = 1
+    if task_type == 'evaluator':
+        exec_hccl_flag = 0
+    init[__option_exec_option_exec_hccl_flag] = str(exec_hccl_flag)
 
     init_options=tf_adapter.map_string_string(init)
     tf_adapter.PluginInit(init_options)
