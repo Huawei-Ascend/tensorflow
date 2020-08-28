@@ -83,6 +83,8 @@ def setup_python(env_path):
             python_bin_path)
       continue
     # Write tools/python_bin_path.sh
+    with open('PYTHON_BIN_PATH', 'w') as f:
+      f.write(python_bin_path)
     with open('COMPILE_FLAGS', 'w') as f:
       for flag in compile_args[2:]:
         f.write(flag + '\n')

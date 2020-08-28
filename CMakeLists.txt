@@ -23,6 +23,7 @@ endif ()
 
 file(STRINGS "${CMAKE_BINARY_DIR}/COMPILE_FLAGS" COMPILE_FLAGS)
 file(STRINGS "${CMAKE_BINARY_DIR}/LINK_FLAGS" LINK_FLAGS)
+file(STRINGS "${CMAKE_BINARY_DIR}/PYTHON_BIN_PATH" PYTHON_BIN_PATH)
 
 foreach (COMPILE_FLAG ${COMPILE_FLAGS})
     target_compile_options(_tf_adapter PUBLIC "${COMPILE_FLAG}")
@@ -33,3 +34,12 @@ foreach (LINK_FLAG ${LINK_FLAGS})
 endforeach (LINK_FLAG)
 
 set_target_properties(_tf_adapter PROPERTIES PREFIX "")
+
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/python DESTINATION ${CMAKE_BINARY_DIR}/dist)
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/dist/python/npu_bridge)
+
+add_custom_command(TARGET _tf_adapter
+        POST_BUILD
+        COMMAND ${PYTHON_BIN_PATH} ${CMAKE_BINARY_DIR}/dist/python/setup.py bdist_wheel
+        VERBATIM
+        )
