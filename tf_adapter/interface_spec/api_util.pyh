@@ -1,7 +1,0 @@
-# source file:python/npu_bridge/estimator/npu/util.py
-
-def set_iteration_per_loop(sess, train_op, iterations_per_loop=1):
-
-class IterationPerLoop():
-    def create_iteration_per_loop_var(self, train_op):
-    def load_iteration_per_loop_var(self, sess, iterations_per_loop=1):

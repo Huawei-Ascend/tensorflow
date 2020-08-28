@@ -1,3 +1,0 @@
-# source file:python/npu_bridge/estimator/npu/npu_scope.py
-
-def without_npu_compile_scope():

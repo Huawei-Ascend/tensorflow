@@ -1,9 +1,0 @@
-# source file:./python/npu_bridge/hccl/hccl_ops.py
-def allreduce(tensor, reduction, fusion=1, fusion_id=-1, group="hccl_world_group"):
-def allgather(tensor, rank_size, group="hccl_world_group"):
-def broadcast(tensor, root_rank, group="hccl_world_group"):
-def reduce_scatter(tensor, reduction, rank_size, group="hccl_world_group"):
-def send(tensor, sr_tag, dest_rank, group="hccl_world_group"):
-def receive(shape, data_type, sr_tag, src_rank, group="hccl_world_group"):
-
-

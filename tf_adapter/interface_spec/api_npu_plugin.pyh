@@ -1,7 +1,0 @@
-# source file:python/npu_bridge/estimator/npu/npu_plugin.py
-
-def npu_global_init(graph_run_mode = 1,op_debug_level = 0,is_tailing_optimization = False,enable_profiling = False,
-                    enable_options = "training_trace",auto_tune_mode = None,
-                    precision_mode = None,enable_scope_fusion_passes = None,):
-
-def npu_global_shutdown():

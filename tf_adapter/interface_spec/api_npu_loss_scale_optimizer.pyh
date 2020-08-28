@@ -1,4 +1,0 @@
-# source file:python/npu_bridge/estimator/npu/npu_loss_scale_optimizer.py
-
-class NPULossScaleOptimizer(optimizer.Optimizer):
-    def __init__(self, opt, loss_scale_manager, is_distributed=False):
