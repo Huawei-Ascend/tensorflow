@@ -1,39 +1,84 @@
-# tf_plugin
+#TF_Adapter
 
-#### 介绍
-{**以下是码云平台说明，您可以替换此简介**
-码云是 OSCHINA 推出的基于 Git 的代码托管平台（同时支持 SVN）。专为开发者提供稳定、高效、安全的云端软件开发协作平台
-无论是个人、团队、或是企业，都能够用码云实现代码托管、项目管理、协作开发。企业项目请看 [https://gitee.com/enterprises](https://gitee.com/enterprises)}
+TF_Adapter致力于将昇腾AI处理器卓越的运算能力，便捷地提供给使用Tensorflow框架的开发者。
+开发者只需安装TF_Adapter插件，并在现有Tensorflow脚本中添加少量配置，即可实现在昇腾AI处理器上加速自己的训练任务。
 
-#### 软件架构
-软件架构说明
+## 安装
+### 从源码安装
 
+您可以从源代码构建 TF_Adapter 软件包并将其安装在昇腾AI处理器环境上。
+> TF_Adapter 插件与 Tensorflow 有严格的匹配关系，从源码构建前，您需要确保已经正确安装了 [Tensorflow v1.15.0
+>版本](https://www.tensorflow.org/install) 。
 
-#### 安装教程
+同时系统满足以下要求：
+- GCC >= 7.3.0
+- CMake >= 3.14.0
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+#### 下载源码
 
-#### 使用说明
+```
+git clone https://gitee.com/ascend/tensorflow.git
+cd tensorflow
+```
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+#### 配置安装环境
+```BASH
+./configure
+```
+默认情况下，执行上述命会弹出如下的交互式的会话窗口
+> 您的会话可能会有所不同。
+```BASH
+Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /home/jenkins/prj/venv/bin/python]
+(You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]):
+```
+此时，要求您输入安装了 Tensorflow v1.15.0 版本的python解释器路径，如果默认路径是正确的，直接回车，否则请输入正确的 python 
+解释器路径。
+> 你可以通过设置 ASCEND_TARGET_PYTHON_BIN_PATH 
+>的环境变量，来抑制交互式窗口弹出，但是仍然要确保路径是有效的，否则，仍然会要求您输入正确的 python 解释器路径。
 
-#### 参与贡献
+键入后，会耗费几秒钟以确保您的输入是有效的，接着，会弹出下面的交互式窗口
+```
+Please specify the location of ascend. [Default is /usr/local/Ascend]
+(You can make this quiet by set env [ASCEND_INSTALL_PATH]):
+```
+此时，要求您输入昇腾处理器开发套件的安装路径，如果默认路径是正确的，直接回车，否则请输入正确的昇腾处理器开发套件安装路径。
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+> 你可以通过设置ASCEND_INSTALL_PATH
+>的环境变量，来抑制交互式窗口弹出，但是仍然要确保路径是有效的，否则，仍然会要求您输入正确的昇腾处理器开发套件安装路径。
 
+键入后，等待配置完成。
+#### 配置cmake
 
-#### 码云特技
+```
+mkdir build
+cd build
+cmake ..
+```
+#### 执行编译
+> 您应当根据实际编译环境，设置何时的并发编译数值。
+```BASH
+make -j8
+```
+编译结束后，安装包会生成在
+```
+./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+```
+#### 安装
+您可以使用 pip 安装 TF_Adapter 插件。
+```
+pip install ./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+```
+需要注意的是， 您应当保证安装路径与您编译时指定的 python
+ 解释器搜索路径是一致的。
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5.  码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+## 贡献
+
+欢迎参与贡献。
+
+## Release Notes
+
+Release Notes请参考[RELEASE](RELEASE.md).
+
+## License
+
+[Apache License 2.0](LICENSE)
