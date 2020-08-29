@@ -14,6 +14,7 @@ You can build the TF_Adapter software package from the source code and install i
 >版本](https://www.tensorflow.org/install) 。
 
 At the same time, the system meets the following requirements
+- Linux OS
 - GCC >= 7.3.0
 - CMake >= 3.14.0
 - [SWIG](http://www.swig.org/download.html)

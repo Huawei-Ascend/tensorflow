@@ -14,6 +14,7 @@ TF_Adapter致力于将昇腾AI处理器卓越的运算能力，便捷地提供�
 >版本](https://www.tensorflow.org/install) 。
 
 同时系统满足以下要求：
+- Linux OS
 - GCC >= 7.3.0
 - CMake >= 3.14.0
 - [SWIG](http://www.swig.org/download.html)
