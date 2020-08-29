@@ -28,8 +28,8 @@ cd tensorflow
 ```BASH
 ./configure
 ```
-默认情况下，执行上述命会弹出如下的交互式的会话窗口
-> 您的会话可能会有所不同。
+默认情况下，执行上述命会弹出如下的交互式会话窗口
+> 您的会话可能有所不同。
 ```BASH
 Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /home/jenkins/prj/venv/bin/python]
 (You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]):
@@ -37,7 +37,7 @@ Please specify the location of python with available tensorflow v1.15.0 installe
 此时，要求您输入安装了 Tensorflow v1.15.0 版本的python解释器路径，如果默认路径是正确的，直接回车，否则请输入正确的 python 
 解释器路径。
 > 你可以通过设置 ASCEND_TARGET_PYTHON_BIN_PATH 
->的环境变量，来抑制交互式窗口弹出，但是仍然要确保路径是有效的，否则，仍然会要求您输入正确的 python 解释器路径。
+>的环境变量，来抑制交互式窗口弹出，但是要确保路径是有效的，否则，仍然会要求您输入正确的 python 解释器路径。
 
 键入后，会耗费几秒钟以确保您的输入是有效的，接着，会弹出下面的交互式窗口
 ```
@@ -47,7 +47,7 @@ Please specify the location of ascend. [Default is /usr/local/Ascend]
 此时，要求您输入昇腾处理器开发套件的安装路径，如果默认路径是正确的，直接回车，否则请输入正确的昇腾处理器开发套件安装路径。
 
 > 你可以通过设置ASCEND_INSTALL_PATH
->的环境变量，来抑制交互式窗口弹出，但是仍然要确保路径是有效的，否则，仍然会要求您输入正确的昇腾处理器开发套件安装路径。
+>的环境变量，来抑制交互式窗口弹出，但是要确保路径是有效的，否则，仍然会要求您输入正确的昇腾处理器开发套件安装路径。
 
 键入后，等待配置完成。
 #### 配置cmake
