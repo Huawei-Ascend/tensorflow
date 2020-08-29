@@ -19,10 +19,15 @@ from __future__ import print_function
 import os
 import subprocess
 import sys
+try:
+  from shutil import which
+except ImportError:
+  from distutils.spawn import find_executable as which
 
 _COMPAT_TENSORFLOW_VERSION = "1.15.0"
 _PYTHON_BIN_PATH_ENV = "ASCEND_TARGET_PYTHON_BIN_PATH"
 _ASCEND_INSTALL_PATH_ENV = "ASCEND_INSTALL_PATH"
+_SWIG_INSTALL_PATH_ENV = "SWIG_INSTALL_PATH"
 
 
 def run_command(cmd):
@@ -72,8 +77,8 @@ def setup_python(env_path):
     try:
       compile_args = run_command([
         python_bin_path, '-c',
-        'import tensorflow as tf; print(tf.__version__ + "|" + tf.sysconfig.get_lib('
-        ') + "|" + "|".join(tf.sysconfig.get_compile_flags()))'
+        'import distutils.sysconfig; import tensorflow as tf; print(tf.__version__ + "|" + tf.sysconfig.get_lib('
+        ') + "|" + "|".join(tf.sysconfig.get_compile_flags()) + "|" + distutils.sysconfig.get_python_inc())'
       ]).split("|")
       if not compile_args[0].startswith(_COMPAT_TENSORFLOW_VERSION):
         print('Invalid python path: %s compat tensorflow version is %s'
@@ -88,11 +93,12 @@ def setup_python(env_path):
     with open(real_config_path('PYTHON_BIN_PATH'), 'w') as f:
       f.write(python_bin_path)
     with open(real_config_path('COMPILE_FLAGS'), 'w') as f:
-      for flag in compile_args[2:]:
+      for flag in compile_args[2:-1]:
         f.write(flag + '\n')
+      f.write("-I" + compile_args[-1] + '\n')
     with open(real_config_path('LINK_FLAGS'), 'w') as f:
       f.write('-L' + compile_args[1] + ' -l:libtensorflow_framework.so.1\n')
-      f.write('-L' + os.path.join(compile_args[0], 'python') + ' -l:_pywrap_tensorflow_internal.so\n')
+      f.write('-L' + os.path.join(compile_args[1], 'python') + ' -l:_pywrap_tensorflow_internal.so\n')
     break
 
 
@@ -110,7 +116,6 @@ def setup_ascend(env_path):
       custom_ascend_path = None
     if not ascend_path:
       ascend_path = default_ascend_path
-      break
     # Check if the path is valid
     if os.path.isdir(ascend_path) and os.access(ascend_path, os.X_OK):
       break
@@ -125,13 +130,38 @@ def setup_ascend(env_path):
     f.write("-L" + os.path.join(ascend_path, "driver", "lib64", "driver" + " -ltsdclient\n"))
     f.write("-L" + os.path.join(ascend_path, "driver", "lib64", "common" + " -lc_sec\n"))
 
+def setup_swig(env_path):
+  """Get swig install path."""
+  default_swig_path = which('swig') or "/usr/bin/swig"
+  ask_swig_path = ('Please specify the location of swig. [Default is '
+                     '%s]\n(You can make this quiet by set env [SWIG_INSTALL_PATH]): ') % default_swig_path
+  custom_swig_path = env_path
+  while True:
+    if not custom_swig_path:
+      swig_path = get_input(ask_swig_path)
+    else:
+      swig_path = custom_swig_path
+      custom_swig_path = None
+    if not swig_path:
+      swig_path = default_swig_path
+    # Check if the path is valid
+    if os.path.isfile(swig_path) and os.access(swig_path, os.X_OK):
+      break
+    elif not os.path.exists(swig_path):
+      print('Invalid swig path: %s cannot be found.' % swig_path)
+      continue
+    else:
+      print('%s is not executable.  Is it the swig binary?' % swig_path)
+      continue
+
+  with open(real_config_path('SWIG_BIN_PATH'), 'w') as f:
+    f.write(swig_path)
 
 def main():
   env_snapshot = dict(os.environ)
-  _PYTHON_BIN_PATH_ENV = "ASCEND_TARGET_PYTHON_BIN_PATH"
-  _ASCEND_INSTALL_PATH_ENV = "ASCEND_INSTALL_PATH"
   setup_python(env_snapshot.get(_PYTHON_BIN_PATH_ENV))
   setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
+  setup_swig(env_snapshot.get(_SWIG_INSTALL_PATH_ENV))
 
 
 if __name__ == '__main__':

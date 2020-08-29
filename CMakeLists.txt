@@ -13,18 +13,25 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/inc)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/external)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/soft_dp)
 
-file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/*.cc)
-add_library(_tf_adapter SHARED ${SOURCES})
-
 if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tools/COMPILE_FLAGS OR NOT EXISTS
         ${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS OR NOT EXISTS
-        ${CMAKE_CURRENT_LIST_DIR}/tools/PYTHON_BIN_PATH)
+        ${CMAKE_CURRENT_LIST_DIR}/tools/PYTHON_BIN_PATH OR NOT EXISTS
+        ${CMAKE_CURRENT_LIST_DIR}/tools/SWIG_BIN_PATH)
     message(FATAL_ERROR "No validate configuration found. Did you forget to configure first?")
 endif ()
 
 file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/COMPILE_FLAGS" COMPILE_FLAGS)
 file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS" LINK_FLAGS)
 file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/PYTHON_BIN_PATH" PYTHON_BIN_PATH)
+file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/SWIG_BIN_PATH" SWIG_BIN_PATH)
+
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/python DESTINATION ${CMAKE_BINARY_DIR}/dist)
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/swig DESTINATION ${CMAKE_BINARY_DIR}/dist)
+execute_process(COMMAND ${SWIG_BIN_PATH} -python -c++ -threads ${CMAKE_BINARY_DIR}/dist/swig/ge_plugin.i)
+file(COPY ${CMAKE_BINARY_DIR}/dist/swig/tf_adapter.py DESTINATION ${CMAKE_BINARY_DIR}/dist/python/npu_bridge)
+
+file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/*.cc)
+add_library(_tf_adapter SHARED ${SOURCES} ${CMAKE_BINARY_DIR}/dist/swig/ge_plugin_wrap.cxx)
 
 foreach (COMPILE_FLAG ${COMPILE_FLAGS})
     target_compile_options(_tf_adapter PUBLIC "${COMPILE_FLAG}")
@@ -36,11 +43,10 @@ endforeach (LINK_FLAG)
 
 set_target_properties(_tf_adapter PROPERTIES PREFIX "")
 
-file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/python DESTINATION ${CMAKE_BINARY_DIR}/dist)
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/dist/python/npu_bridge)
 
 add_custom_command(TARGET _tf_adapter
         POST_BUILD
-        COMMAND ${PYTHON_BIN_PATH} ${CMAKE_BINARY_DIR}/dist/python/setup.py bdist_wheel
+        COMMAND cd ${CMAKE_BINARY_DIR}/dist/python/ && ${PYTHON_BIN_PATH} setup.py bdist_wheel
         VERBATIM
         )

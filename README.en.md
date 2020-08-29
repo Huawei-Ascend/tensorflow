@@ -16,6 +16,7 @@ You can build the TF_Adapter software package from the source code and install i
 At the same time, the system meets the following requirements
 - GCC >= 7.3.0
 - CMake >= 3.14.0
+- [SWIG](http://www.swig.org/download.html)
 
 #### Download
 
@@ -38,8 +39,7 @@ Please specify the location of python with available tensorflow v1.15.0 installe
 
 At this point, you are required to enter the path of the python interpreter with Tensorflow v1.15.0 installed. If the default path is correct, press Enter, otherwise, please enter the correct python
 Interpreter path.
-> You can set ASCEND_TARGET_PYTHON_BIN_PATH
-Environment variable to suppress the pop-up of the interactive window, but still make sure that the path is valid, otherwise, you will still be asked to enter the correct path to the python interpreter.
+> You can set ASCEND_TARGET_PYTHON_BIN_PATH Environment variable to suppress the pop-up of the interactive window, but still make sure that the path is valid, otherwise, you will still be asked to enter the correct path to the python interpreter.
 
 
 After typing, it will take a few seconds to make sure your input is valid, and then the following interactive window will pop up
@@ -50,8 +50,17 @@ Please specify the location of ascend. [Default is /usr/local/Ascend]
 
 At this time, you are required to enter the installation path of the Ascend processor development kit. If the default path is correct, press Enter, otherwise, please enter the correct path to the Ascend processor development kit installation.
 
-> You can set ASCEND_INSTALL_PATH
-Environment variables to suppress the pop-up of interactive windows, but still make sure that the path is valid, otherwise, you will still be asked to enter the correct installation path of the Ascend processor development kit.
+> You can set ASCEND_INSTALL_PATH Environment variables to suppress the pop-up of interactive windows, but still make sure that the path is valid, otherwise, you will still be asked to enter the correct installation path of the Ascend processor development kit.
+
+
+After typing, it will follow the interaction window below
+```
+Please specify the location of swig. [Default is /usr/local/bin/swig]
+(You can make this quiet by set env [SWIG_INSTALL_PATH]):
+```
+At this time, you are required to enter the path of the SWIG executable file. If the default path is correct, press Enter, otherwise, please enter the correct path of the SWIG executable file.
+
+> You can suppress the interactive window pop-up by setting the SWIG_INSTALL_PATH environment variable, but make sure that the path is valid, otherwise, you will still be asked to enter the correct SWIG executable file path.
 
 After typing, wait for the configuration to complete.
 #### Configure cmake
