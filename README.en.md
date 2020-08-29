@@ -62,7 +62,6 @@ cd build
 cmake ..
 ```
 #### Build
-> You should set the concurrent compilation value according to the actual compilation environment.
 ```BASH
 make -j8
 ```
