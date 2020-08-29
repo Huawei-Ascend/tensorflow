@@ -40,6 +40,8 @@ def get_input(question):
     answer = ''
   return answer
 
+def real_config_path(file):
+  return os.path.join("tools", file)
 
 def setup_python(env_path):
   """Get python install path."""
@@ -83,12 +85,12 @@ def setup_python(env_path):
             python_bin_path)
       continue
     # Write tools/python_bin_path.sh
-    with open('PYTHON_BIN_PATH', 'w') as f:
+    with open(real_config_path('PYTHON_BIN_PATH'), 'w') as f:
       f.write(python_bin_path)
-    with open('COMPILE_FLAGS', 'w') as f:
+    with open(real_config_path('COMPILE_FLAGS'), 'w') as f:
       for flag in compile_args[2:]:
         f.write(flag + '\n')
-    with open('LINK_FLAGS', 'w') as f:
+    with open(real_config_path('LINK_FLAGS'), 'w') as f:
       f.write('-L' + compile_args[1] + ' -l:libtensorflow_framework.so.1\n')
       f.write('-L' + os.path.join(compile_args[0], 'python') + ' -l:_pywrap_tensorflow_internal.so\n')
     break
@@ -115,7 +117,7 @@ def setup_ascend(env_path):
     elif not os.path.exists(ascend_path):
       print('Invalid ascend path: %s cannot be found.' % ascend_path)
 
-  with open('LINK_FLAGS', 'a') as f:
+  with open(real_config_path('LINK_FLAGS'), 'a') as f:
     f.write(
       "-L" + os.path.join(ascend_path, "fwkacllib", "lib64" + " -lge_runner\n"))
     f.write("-L" + os.path.join(ascend_path, "fwkacllib", "lib64" + " -lfmk_parser\n"))
