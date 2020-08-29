@@ -5,7 +5,7 @@ TF_Adapter致力于将昇腾AI处理器卓越的运算能力，便捷地提供�
 
 ![framework](docs/framework.jpg)
 
-你可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
+您可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
 ## 安装
 ### 从源码安装
 
