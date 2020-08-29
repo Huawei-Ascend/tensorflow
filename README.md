@@ -76,12 +76,12 @@ make -j8
 ```
 编译结束后，安装包会生成在
 ```
-./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
 ```
 #### 安装
 您可以使用 pip 安装 TF_Adapter 插件。
 ```
-pip install ./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+pip install ./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
 ```
 需要注意的是， 您应当保证安装路径与您编译时指定的 python
  解释器搜索路径是一致的。

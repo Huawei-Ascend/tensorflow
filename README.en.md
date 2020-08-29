@@ -77,13 +77,13 @@ make -j8
 
 After compilation, the installation package will be generated in
 ```
-./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
 ```
 #### Install
 
 You can install the TF_Adapter plug-in using pip.
 ```
-pip install ./build/dist/npu_bridge-1.15.0-py3-none-any.whl
+pip install ./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
 ```
 
 It should be noted that you should ensure that the installation path is the same as the python you specified when compiling
