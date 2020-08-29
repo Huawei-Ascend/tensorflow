@@ -3,6 +3,9 @@
 TF_Adapter致力于将昇腾AI处理器卓越的运算能力，便捷地提供给使用Tensorflow框架的开发者。
 开发者只需安装TF_Adapter插件，并在现有Tensorflow脚本中添加少量配置，即可实现在昇腾AI处理器上加速自己的训练任务。
 
+![framework](docs/framework.jpg)
+
+你可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
 ## 安装
 ### 从源码安装
 
@@ -48,7 +51,7 @@ Please specify the location of ascend. [Default is /usr/local/Ascend]
 
 键入后，等待配置完成。
 #### 配置cmake
-
+> 根据您的网络状况，可能需要数分钟来下载TF_Adapter的依赖项目以完成配置。
 ```
 mkdir build
 cd build
