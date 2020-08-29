@@ -37,8 +37,9 @@ foreach (COMPILE_FLAG ${COMPILE_FLAGS})
     target_compile_options(_tf_adapter PUBLIC "${COMPILE_FLAG}")
 endforeach (COMPILE_FLAG)
 
+target_link_libraries(_tf_adapter PUBLIC "dl")
 foreach (LINK_FLAG ${LINK_FLAGS})
-    target_link_options(_tf_adapter PUBLIC "${LINK_FLAG}")
+    target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
 endforeach (LINK_FLAG)
 
 set_target_properties(_tf_adapter PROPERTIES PREFIX "")
