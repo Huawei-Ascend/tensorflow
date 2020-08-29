@@ -47,10 +47,10 @@ limitations under the License.
 #include "tensorflow/core/lib/gtl/map_util.h"
 #include "tensorflow/core/public/session_options.h"
 #include "tf_adapter/common/common.h"
+#include "tf_adapter/util/generate_report.h"
 #include "tf_adapter/util/infershape_util.h"
 #include "tf_adapter/util/npu_attrs.h"
 #include "tf_adapter/util/npu_ops_identifier.h"
-#include "tf_adapter/util/generate_report.h"
 
 namespace tensorflow {
 static const int64 kMicrosToMillis = 1000;
@@ -220,9 +220,9 @@ bool IsWhiteListSupport(const string &op_name, bool mix_compile_mode, const stri
 
   auto identifier = NpuOpsIdentifier::GetInstance(mix_compile_mode);
 
-  bool ans = (identifier->IsNpuSupported(op_name, node_name)) && !EndsWith(op_name, suffix_op) &&
-             !EndsWith(op_name, suffix_op_v2) && !(op_name == "Const") && !(op_name == "_Arg") &&
-             !(op_name == "_Retval") && !(op_name == "StringJoin");
+  bool ans = (identifier->IsNpuSupported(op_name, node_name)) && !EndsWith(op_name, suffix_op)
+      && !EndsWith(op_name, suffix_op_v2) && !(op_name == "Const") && !(op_name == "_Arg") && !(op_name == "_Retval")
+      && !(op_name == "StringJoin");
   if (!ans) {
     GenerateReport::Details infos;
     static const std::string message = "This op can only excute on host";
@@ -406,7 +406,8 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
       }
       if (!is_sink) {
         GenerateReport::Details infos;
-        static const std::string message = "Only if Iterator/IteratorV2 connect to IteratorGetNext, will them be excuted on npu.";
+        static const std::string message =
+            "Only if Iterator/IteratorV2 connect to IteratorGetNext, will them be excuted on npu.";
         infos.code = GenerateReport::ScenarioProblems;
         infos.message = message;
         GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
@@ -418,9 +419,9 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
         for (auto edge : node->in_edges()) {
           REQUIRES_NOT_NULL(edge);
           REQUIRES_NOT_NULL(edge->src());
-          if (edge->IsControlEdge() && edge->src()->name() != "_SOURCE" &&
-              IsWhiteListSupport(edge->src()->type_string(), mix_compile_mode, edge->src()->name()) &&
-              !IsWithoutNpuScope(edge->src())) {
+          if (edge->IsControlEdge() && edge->src()->name() != "_SOURCE"
+              && IsWhiteListSupport(edge->src()->type_string(), mix_compile_mode, edge->src()->name())
+              && !IsWithoutNpuScope(edge->src())) {
             candidates->insert(node);
             ctrlEdgeNum++;
             break;
@@ -1916,7 +1917,7 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
   int subgraphNum = 0;
   TF_RETURN_IF_ERROR(
       OMSplitter::MarkForPartition(graph, subgraphNum, mix_compile_mode, graph_num, func_lib, pass_options));
-  LOG(INFO) << "OMPartion subgraph_" << std::to_string(graph_num) << " markForPartition success.";
+  LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << " markForPartition success.";
   if (subgraphNum < 1) {
     LOG(INFO) << "subgraphNum is " << subgraphNum;
     return Status::OK();
@@ -2008,7 +2009,7 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
   }
   TF_RETURN_IF_ERROR(OMSplitter::OMPartitionSubgraphsInFunctions(
       OMSplitter::PARTITION_SUB_GRAPH_ATTR, graph, graph_format_value, func_lib, all_options, pass_options));
-  LOG(INFO) << "OMPartion subgraph_" << std::to_string(graph_num) << " SubgraphsInFunctions success.";
+  LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << "SubgraphsInFunctions success.";
   FixupSourceAndSinkEdges(graph->get());
 
   if (need_print != nullptr && strcmp("1", need_print) == 0) {
