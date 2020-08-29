@@ -1,6 +1,6 @@
 # Tensorflow Adapter For Ascend
 
-Tensorflow Adapter For Ascend(简称TF_Adapter)致力于将昇腾AI处理器卓越的运算能力，便捷地提供给使用Tensorflow框架的开发者。
+Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器卓越的运算能力，便捷地提供给使用Tensorflow框架的开发者。
 开发者只需安装TF_Adapter插件，并在现有Tensorflow脚本中添加少量配置，即可实现在昇腾AI处理器上加速自己的训练任务。
 
 ![framework](docs/framework.jpg)
