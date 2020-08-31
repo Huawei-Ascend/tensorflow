@@ -32,9 +32,10 @@ cd tensorflow
 ```
 
 By default, executing the above command will pop up the following interactive session window
+
 > Your session may be different.
 ```BASH
-Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /home/jenkins/prj/venv/bin/python]
+Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /usr/bin/python]
 (You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]):
 ```
 

@@ -33,7 +33,7 @@ cd tensorflow
 默认情况下，执行上述命会弹出如下的交互式会话窗口
 > 您的会话可能有所不同。
 ```BASH
-Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /home/jenkins/prj/venv/bin/python]
+Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /usr/bin/python]
 (You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]):
 ```
 此时，要求您输入安装了 Tensorflow v1.15.0 版本的python解释器路径，如果默认路径是正确的，直接回车，否则请输入正确的 python
