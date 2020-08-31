@@ -82,8 +82,8 @@ def setup_python(env_path):
       ]).split("|")
       if not compile_args[0].startswith(_COMPAT_TENSORFLOW_VERSION):
         print('Invalid python path: %s compat tensorflow version is %s'
-              ' got %s.' % python_bin_path, _COMPAT_TENSORFLOW_VERSION,
-              compile_args[0])
+              ' got %s.' % (python_bin_path, _COMPAT_TENSORFLOW_VERSION,
+              compile_args[0]))
         continue
     except subprocess.CalledProcessError:
       print('Invalid python path: %s tensorflow not installed.' %
