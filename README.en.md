@@ -1,5 +1,7 @@
 # TF_Adapter
 
+[查看中文](README.md)
+
 TF_Adapter is committed to providing the outstanding computing power of Shengteng AI processor to developers who use the Tensorflow framework.
 Developers only need to install the TF_Adapter plug-in and add a small amount of configuration to the existing Tensorflow script to accelerate their training tasks on the Shengteng AI processor.
 
