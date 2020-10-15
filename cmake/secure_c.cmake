@@ -2,8 +2,8 @@ include(FetchContent)
 
 FetchContent_Declare(
         secure_c
-        URL https://gitee.com/openeuler/bounds_checking_function/repository/archive/v1.1.10.tar.gz
-        URL_HASH MD5=0782dd2351fde6920d31a599b23d8c91
+        URL https://gitee.com/openeuler/libboundscheck/repository/archive/v1.1.10.tar.gz
+        URL_HASH MD5=193f0ca5246c1dd84920db34d2d8249f
 )
 FetchContent_GetProperties(secure_c)
 if (NOT secure_c_POPULATED)
