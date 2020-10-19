@@ -269,8 +269,7 @@ class HostQueueDatasetOp : public DatasetOpKernel {
                   std::shared_ptr<void>(const_cast<char *>(tensor.tensor_data().data()), [](void *elem) {});
             } else if (tensor.dtype() == DT_STRING) {
               if (tensor.dims() != 0) {
-                LOG(ERROR) << "input of DT_STRING type should be scalar,"
-                              " current dims:"
+                LOG(ERROR) << "Input of DT_STRING type should be scalar, current dims:"
                            << tensor.dims();
                 mutex_lock lck(mu_);
                 cancelled_ = true;
