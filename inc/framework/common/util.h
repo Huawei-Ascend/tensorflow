@@ -345,7 +345,15 @@ std::string ToString(const google::protobuf::RepeatedField<T> &rpd_field) {
 /// @return Timestamp, in microseconds (US)
 ///
 ///
-uint64_t GetCurrentTimestap();
+uint64_t GetCurrentTimestamp();
+
+///
+/// @ingroup domi_common
+/// @brief Obtains the absolute time (timestamp) of the current system.
+/// @return Timestamp, in seconds (US)
+///
+///
+uint32_t GetCurrentSecondTimestap();
 
 ///
 /// @ingroup domi_common
@@ -390,6 +398,24 @@ bool CheckOutputPathValid(const std::string &file_path, const std::string &atc_p
 /// @param [out] result
 ///
 bool ValidateStr(const std::string &filePath, const std::string &mode);
+
+///
+/// @ingroup domi_common
+/// @brief Check whether the file is normal file.
+/// @param [in] file_path file path
+/// @param [out] result
+///
+bool IsValidFile(const char *file_path);
+
+///
+/// @ingroup domi_common
+/// @brief Check path invalid
+/// @param [in] path, path to be checked
+/// @param [in] length, length of path
+/// @return 0 success
+/// @return -1 fail
+///
+Status CheckPath(const char *path, size_t length);
 }  // namespace ge
 
 #endif  // INC_FRAMEWORK_COMMON_UTIL_H_
