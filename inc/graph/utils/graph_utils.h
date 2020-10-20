@@ -19,25 +19,25 @@
 
 #include <fstream>
 #include <iostream>
+#include <list>
 #include <map>
 #include <string>
-#include <vector>
-#include <list>
 #include <unordered_map>
+#include <vector>
 
 #include "graph/anchor.h"
-#include "graph/node.h"
 #include "graph/compute_graph.h"
-#include "graph/utils/anchor_utils.h"
 #include "graph/graph.h"
 #include "graph/model.h"
+#include "graph/node.h"
+#include "graph/utils/anchor_utils.h"
 
 #define GE_DUMP(compute_graph, name)                                                                               \
   do {                                                                                                             \
     GraphUtils::DumpGEGraph(compute_graph, name);                                                                  \
     GraphUtils::DumpGEGraphToOnnx(*compute_graph, name);                                                           \
+    uint64_t i = 0;                                                                                                \
     for (const auto &sub_graph_func : compute_graph->GetAllSubgraphs()) {                                          \
-      static int8_t i = 0;                                                                                         \
       auto sub_graph_func_name = std::string(name) + std::string("_sub_graph_") + std::to_string(i++);             \
       GraphUtils::DumpGEGraph(sub_graph_func, sub_graph_func_name);                                                \
       GraphUtils::DumpGEGraphToOnnx(*sub_graph_func, sub_graph_func_name);                                         \
@@ -132,9 +132,7 @@ struct NodeIndexIO {
   IOType io_type_ = kOut;
   std::string value_;
 
-  const std::string &ToString() const {
-    return value_;
-  }
+  const std::string &ToString() const { return value_; }
 };
 
 class GraphUtils {
@@ -205,13 +203,25 @@ class GraphUtils {
 
   static bool MatchDumpStr(const std::string &suffix);
 
-  static void DumpGEGraph(const ge::ComputeGraphPtr &graph, const std::string &suffix, bool is_always_dump = false);
+  static void DumpGEGraph(const ge::ComputeGraphPtr &graph,
+                          const std::string &suffix,
+                          bool is_always_dump = false,
+                          const std::string &user_graph_name = "");
+
+  static void DumpGEGrph(const ge::ComputeGraphPtr &graph,
+                                  const std::string &path,
+                                  const std::string &suffix);
 
   static bool LoadGEGraph(const char *file, ge::ComputeGraph &compute_graph);
+
+  static bool LoadGEGraph(const char *file, ge::ComputeGraphPtr &compute_graph);
 
   static void BreakConnect(const std::map<OperatorImplPtr, NodePtr> &all_nodes_infos);
 
   static void DumpGEGraphToOnnx(const ge::ComputeGraph &compute_graph, const std::string &suffix);
+
+  static void DumpGrphToOnnx(const ge::ComputeGraph &compute_graph,
+                             const std::string &path, const std::string &suffix);
 
   static bool LoadGEGraphFromOnnx(const char *file, ge::ComputeGraph &compute_graph);
 
@@ -479,7 +489,7 @@ class ComputeGraphBuilder {
   /// @param [in] op_desc
   /// @return ComputeGraphBuilder
   ///
-  virtual ComputeGraphBuilder& AddNode(const OpDescPtr &op_desc);
+  virtual ComputeGraphBuilder &AddNode(const OpDescPtr &op_desc);
 
   ///
   /// @brief Add data-link among nodes in graph
@@ -489,7 +499,7 @@ class ComputeGraphBuilder {
   /// @param [in] in_anchor_ind
   /// @return ComputeGraphBuilder
   ///
-  virtual ComputeGraphBuilder& AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
+  virtual ComputeGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
                                            const std::string &dst_name, uint32_t in_anchor_ind);
 
   ///
@@ -498,7 +508,7 @@ class ComputeGraphBuilder {
   /// @param [in] dst_name
   /// @return ComputeGraphBuilder
   ///
-  virtual ComputeGraphBuilder& AddControlLink(const std::string &src_name, const std::string &dst_name);
+  virtual ComputeGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name);
 
   ///
   /// @brief Build graph
@@ -558,7 +568,8 @@ class ComputeGraphBuilder {
 
 class CompleteGraphBuilder : public ComputeGraphBuilder {
  public:
-  explicit CompleteGraphBuilder(std::string name) : name_(std::move(name)), parent_node_(nullptr) {}
+  explicit CompleteGraphBuilder(std::string name, bool retval_flag = true)
+      : name_(std::move(name)), parent_node_(nullptr), retval_flag_(retval_flag) {}
   CompleteGraphBuilder(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder &operator=(const CompleteGraphBuilder &) = delete;
   CompleteGraphBuilder(const CompleteGraphBuilder &&) = delete;
@@ -570,7 +581,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] op_desc
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& AddNode(const OpDescPtr &op_desc) override;
+  CompleteGraphBuilder &AddNode(const OpDescPtr &op_desc) override;
 
   ///
   /// @brief Add data-link among nodes in graph
@@ -580,7 +591,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] in_anchor_ind
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
+  CompleteGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
                                     const std::string &dst_name, uint32_t in_anchor_ind) override;
 
   ///
@@ -589,7 +600,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] dst_name
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& AddControlLink(const std::string &src_name, const std::string &dst_name) override;
+  CompleteGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name) override;
 
   ///
   /// @brief Set index_th input anchor for graph
@@ -598,7 +609,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] anchor_inds
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& SetInput(uint32_t index, const std::vector<std::string> &node_names,
+  CompleteGraphBuilder &SetInput(uint32_t index, const std::vector<std::string> &node_names,
                                  const std::vector<uint32_t> &anchor_inds);
 
   ///
@@ -606,7 +617,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] index
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& SetUselessInput(uint32_t index);
+  CompleteGraphBuilder &SetUselessInput(uint32_t index);
 
   ///
   /// @brief Add output anchor for graph
@@ -614,35 +625,35 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   /// @param [in] anchor_ind
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& AddOutput(const std::string &owner_node_name, uint32_t anchor_ind);
+  CompleteGraphBuilder &AddOutput(const std::string &owner_node_name, uint32_t anchor_ind);
 
   ///
   /// @brief Add target for graph
   /// @param [in] target_name
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& AddTarget(const std::string &target_name);
+  CompleteGraphBuilder &AddTarget(const std::string &target_name);
 
   ///
   /// @brief Set parent-node of graph
   /// @param [in] parent_node
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& SetParentNode(const NodePtr &parent_node);
+  CompleteGraphBuilder &SetParentNode(const NodePtr &parent_node);
 
   ///
   /// @brief Set mapping-relation of parent-node in_anchor_ind & Data-node
   /// @param [in] input_mapping: index_of_graph_input -> in_anchor_index_of_parent_node
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& SetInputMapping(const std::map<uint32_t, uint32_t> &input_mapping);
+  CompleteGraphBuilder &SetInputMapping(const std::map<uint32_t, uint32_t> &input_mapping);
 
   ///
   /// @brief Set mapping-relation of parent-node out_anchor_ind & NetOutput-node out_anchor_ind
   /// @param [in] output_mapping: index_of_graph_output -> out_anchor_index_of_parent_node
   /// @return CompleteGraphBuilder
   ///
-  CompleteGraphBuilder& SetOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
+  CompleteGraphBuilder &SetOutputMapping(const std::map<uint32_t, uint32_t> &output_mapping);
 
   ///
   /// @brief Build graph
@@ -686,8 +697,37 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   ///
   void BuildGraphTargets(graphStatus &error_code, std::string &error_msg);
 
+  ///
+  /// @brief Add NetOutput node
+  /// @param [out] error_code
+  /// @param [out] error_msg
+  /// @return void
+  ///
+  void AddNetOutputNode(graphStatus &error_code, std::string &error_msg);
+
+  ///
+  /// @brief Build NetOutput nodes with data & ctrl edges
+  /// @param [in] net_output_desc
+  /// @param [in] peer_out_anchors
+  /// @param [out] error_code
+  /// @param [out] error_msg
+  /// @return void
+  ///
+  void BuildNetOutputNodeWithLink(const OpDescPtr &net_output_desc,
+                                  const std::vector<OutDataAnchorPtr> &peer_out_anchors,
+                                  graphStatus &error_code, std::string &error_msg);
+
+  ///
+  /// @brief process after build
+  /// @param [out] error_code
+  /// @param [out] error_msg
+  /// @return void
+  ///
+  void PostProcess(graphStatus &error_code, std::string &error_msg);
+
   std::string name_;
   NodePtr parent_node_;
+  bool retval_flag_;
   std::map<uint32_t, std::pair<std::vector<std::string>, std::vector<uint32_t>>> graph_inputs_;
   std::vector<std::pair<std::string, uint32_t>> graph_outputs_;
   std::vector<std::string> graph_targets_;
@@ -698,7 +738,7 @@ class CompleteGraphBuilder : public ComputeGraphBuilder {
   std::map<uint32_t, uint32_t> output_mapping_;
 };
 
-class PartialGraphBuilder : public ComputeGraphBuilder  {
+class PartialGraphBuilder : public ComputeGraphBuilder {
  public:
   PartialGraphBuilder() = default;
   PartialGraphBuilder(const PartialGraphBuilder &) = delete;
@@ -712,7 +752,7 @@ class PartialGraphBuilder : public ComputeGraphBuilder  {
   /// @param [in] op_desc
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder& AddNode(const OpDescPtr &op_desc) override;
+  PartialGraphBuilder &AddNode(const OpDescPtr &op_desc) override;
 
   ///
   /// @brief Add data-link among nodes in graph
@@ -722,7 +762,7 @@ class PartialGraphBuilder : public ComputeGraphBuilder  {
   /// @param [in] in_anchor_ind
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder& AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
+  PartialGraphBuilder &AddDataLink(const std::string &src_name, uint32_t out_anchor_ind,
                                    const std::string &dst_name, uint32_t in_anchor_ind) override;
 
   ///
@@ -731,21 +771,21 @@ class PartialGraphBuilder : public ComputeGraphBuilder  {
   /// @param [in] dst_name
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder& AddControlLink(const std::string &src_name, const std::string &dst_name) override;
+  PartialGraphBuilder &AddControlLink(const std::string &src_name, const std::string &dst_name) override;
 
   ///
   /// @brief Set owner graph
   /// @param [in] graph
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder& SetOwnerGraph(const ComputeGraphPtr &graph);
+  PartialGraphBuilder &SetOwnerGraph(const ComputeGraphPtr &graph);
 
   ///
   /// @brief Add exist node
   /// @param [in] node
   /// @return PartialGraphBuilder
   ///
-  PartialGraphBuilder& AddExistNode(const NodePtr &node);
+  PartialGraphBuilder &AddExistNode(const NodePtr &node);
 
   ///
   /// @brief Build multi nodes with links

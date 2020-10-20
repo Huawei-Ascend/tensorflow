@@ -48,11 +48,18 @@ enum FrameworkType {
 };
 
 enum OpEngineType {
-    ENGINE_SYS = 0, // default engine
-    ENGINE_AICORE = 1,
-    ENGINE_VECTOR = 2,
-    ENGINE_AICUBE = 3, // not support
-    ENGINE_AIVECTOR = 4 // not support
+  ENGINE_SYS = 0,  // default engine
+  ENGINE_AICORE = 1,
+  ENGINE_VECTOR = 2,
+  ENGINE_AICUBE = 3,   // not support
+  ENGINE_AIVECTOR = 4  // not support
+};
+
+enum InputAippType{
+  DATA_WITHOUT_AIPP = 0,
+  DATA_WITH_STATIC_AIPP,
+  DATA_WITH_DYNAMIC_AIPP,
+  DYNAMIC_AIPP_NODE
 };
 
 const char *const GE_ENGINE_ATTR_MEM_TYPE_HBM = "HBM";
@@ -100,6 +107,7 @@ struct OutputData {
 struct Command {
   std::string cmd_type;                 // Command type
   std::vector<std::string> cmd_params;  // Command params
+  uint64_t module_index; // prof module
 };
 
 // The definition of I/O shape description
@@ -136,6 +144,7 @@ struct OriginInputInfo {
 
 // The structure of AIPP info
 struct AippConfigInfo {
+  int8_t aipp_mode;
   int8_t input_format;
   int32_t src_image_size_w;
   int32_t src_image_size_h;
@@ -183,6 +192,9 @@ struct AippConfigInfo {
   float var_reci_chn_1;
   float var_reci_chn_2;
   float var_reci_chn_3;
+  int8_t support_rotation;
+  uint32_t related_input_rank;
+  uint32_t max_src_image_size;
 };
 
 // The structure of offline Modeldata
@@ -261,16 +273,31 @@ struct ComputeGraphDescInfo {
 
 struct OpDescInfo {
   std::string op_name;
+  std::string op_type;
   uint32_t task_id;
   uint32_t stream_id;
   std::vector<Format> input_format;
   std::vector<std::vector<int64_t>> input_shape;
   std::vector<DataType> input_data_type;
   std::vector<void *> input_addrs;
+  std::vector<int64_t> input_size;
   std::vector<Format> output_format;
   std::vector<std::vector<int64_t>> output_shape;
   std::vector<DataType> output_data_type;
   std::vector<void *> output_addrs;
+  std::vector<int64_t> output_size;
+};
+struct ModelDumpConfig {
+  std::string model_name;
+  std::vector<std::string> layers;
+};
+
+struct DumpConfig {
+  std::string dump_path;
+  std::string dump_mode;
+  std::string dump_status;
+  std::string dump_op_switch;
+  std::vector<ModelDumpConfig> dump_list;
 };
 }  // namespace ge
 #endif  // INC_FRAMEWORK_COMMON_GE_TYPES_H_

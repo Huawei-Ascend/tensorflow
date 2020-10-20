@@ -21,16 +21,31 @@
 #include <string>
 #include <vector>
 #include <map>
+#include <unordered_map>
 #include "ge/ge_api_error_codes.h"
 #include "register/register_error_codes.h"
 #include "register/register_types.h"
 #include "graph/operator.h"
+
+#define CHECK_INNER_NODE_CONDITION(cond, fusion_rlt)  \
+  do {                                                \
+    if (!(cond)) {                                    \
+      if ((fusion_rlt) != nullptr) {                  \
+        (fusion_rlt)->SetType(ge::kScopeInvalidType); \
+      }                                               \
+      return;                                         \
+    }                                                 \
+  } while (0)
 
 namespace domi {
 class TensorFlowModelParser;
 }  // namespace domi
 namespace ge {
 const int32_t kFusionDisableIndex = 99999;
+const char *const kScopeToMultiNodes = "ScopeToMultiNodes";
+const char *const kScopeInvalidType = "ScopeInvalidType";
+const char *const kInputFromFusionScope = "InputFromFusionScope";
+const char *const kOutputToFusionScope = "OutputToFusionScope";
 class ScopePattern;
 using ScopeFusionPatterns = std::vector<std::vector<ScopePattern *>>;
 
@@ -38,15 +53,16 @@ class ScopePassManager;
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY Scope {
  public:
-  explicit Scope(const std::string &name, const std::string &sub_type = "", Scope *father_scope = nullptr);
+  Scope();
+  Status Init(const std::string &name, const std::string &sub_type = "", Scope *father_scope = nullptr);
   ~Scope();
 
-  std::string Name() const;
-  std::string SubType() const;
-  std::map<std::string, ge::OperatorPtr> AllNodesMap() const;
+  const std::string &Name() const;
+  const std::string &SubType() const;
+  const std::unordered_map<std::string, ge::OperatorPtr> &AllNodesMap() const;
   Scope *GetSubScope(const std::string &scope_name) const;
-  std::string LastName() const;
-  std::vector<Scope *> GetAllSubScopes() const;
+  const std::string LastName() const;
+  const std::vector<Scope *> &GetAllSubScopes() const;
   const Scope *GetFatherScope() const;
 
  private:
@@ -62,21 +78,57 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY Scope {
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY FusionScopesResult {
  public:
   FusionScopesResult();
+  Status Init();
   ~FusionScopesResult();
   void SetName(const std::string &name);
   void SetType(const std::string &type);
   void SetDescription(const std::string &description);
-  std::string Name() const;
-  std::vector<ge::OperatorPtr> Nodes() const;
+  const std::string &Name() const;
+  const std::vector<ge::OperatorPtr> &Nodes() const;
   void InsertInputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map);
   void InsertOutputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map);
+
+  class InnerNodeInfo {
+   public:
+    explicit InnerNodeInfo(const std::string &fusion_node_name);
+    InnerNodeInfo(const std::string &fusion_node_name, const std::string &name, const std::string &type);
+    InnerNodeInfo(InnerNodeInfo &&other) noexcept;
+    InnerNodeInfo &operator=(InnerNodeInfo &&other) noexcept;
+    InnerNodeInfo(const InnerNodeInfo &) = delete;
+    InnerNodeInfo &operator=(const InnerNodeInfo &) = delete;
+    ~InnerNodeInfo();
+    InnerNodeInfo &SetName(const std::string &name);
+    InnerNodeInfo &SetType(const std::string &type);
+    InnerNodeInfo &InsertInput(const std::string &input_node, int32_t peer_out_idx);
+    InnerNodeInfo &InsertOutput(const std::string &output_node, int32_t peer_in_idx);
+    ge::graphStatus BuildInnerNode();
+    ge::graphStatus SetInputFormat(const std::string &input_name, const std::string &format);
+    ge::graphStatus SetOutputFormat(const std::string &output_name, const std::string &format);
+    ge::graphStatus SetDynamicInputFormat(const std::string &input_name, uint32_t index, const std::string &format);
+    ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, uint32_t index, const std::string &format);
+    ge::Operator *MutableOperator();
+
+    std::string GetName() const;
+    std::string GetType() const;
+    std::vector<std::pair<std::string, int32_t>> GetInputs() const;
+    std::vector<std::pair<std::string, int32_t>> GetOutputs() const;
+
+   private:
+    class InnerNodeInfoImpl;
+    std::unique_ptr<InnerNodeInfoImpl> impl_;
+  };
+
+  InnerNodeInfo *AddInnerNode(const std::string &name, const std::string &type);
+  InnerNodeInfo *MutableRecentInnerNode();
+  InnerNodeInfo *MutableInnerNode(uint32_t index);
+  ge::graphStatus CheckInnerNodesInfo();
 
  private:
   class FusionScopesResultImpl;
   std::unique_ptr<FusionScopesResultImpl> impl_;
   friend class ScopeGraph;
   friend class ScopeBasePass;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeTree {
@@ -87,7 +139,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeTree {
   ScopeTree &operator=(const ScopeTree &scopetree) = delete;
   ~ScopeTree();
 
-  std::vector<Scope *> GetAllScopes() const;
+  const std::vector<Scope *> &GetAllScopes() const;
 
  private:
   class ScopeTreeImpl;
@@ -105,14 +157,14 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeGraph {
   ~ScopeGraph();
 
   const ScopeTree *GetScopeTree() const;
-  std::map<std::string, ge::OperatorPtr> GetNodesMap() const;
+  const std::unordered_map<std::string, ge::OperatorPtr> &GetNodesMap() const;
 
  private:
   class ScopeGraphImpl;
   std::unique_ptr<ScopeGraphImpl> impl_;
   friend class ScopePassManager;
   friend class ScopeBasePass;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeAttrValue {
@@ -154,7 +206,8 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBa
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeAttrFeature : ScopeBaseFeature {
  public:
-  NodeAttrFeature(std::string nodeType, std::string attr_name, ge::DataType datatype, ScopeAttrValue attr_value);
+  NodeAttrFeature(std::string nodeType, std::string attr_name,
+                  ge::DataType datatype, ScopeAttrValue &attr_value);
   NodeAttrFeature(NodeAttrFeature const &feature);
   NodeAttrFeature &operator=(NodeAttrFeature const &feature);
   ~NodeAttrFeature();
@@ -251,7 +304,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistry {
   class ScopeFusionPassRegistryImpl;
   /*lint -e148*/
   std::unique_ptr<ScopeFusionPassRegistryImpl> impl_;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeUtil {

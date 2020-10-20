@@ -33,6 +33,8 @@ struct RunContext {
   uint64_t sessionId;
   uint64_t dataMemSize;
   uint8_t *dataMemBase;
+  std::map<int64_t, uint64_t> mem_type_data_mem_size;
+  std::map<int64_t, uint8_t *> mem_type_data_mem_base;
   uint64_t weightMemSize;
   uint8_t *weightMemBase;
   ge::Buffer weightsBuffer;

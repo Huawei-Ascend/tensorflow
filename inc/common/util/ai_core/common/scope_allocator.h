@@ -1,17 +1,12 @@
 /**
- * Copyright 2019 Huawei Technologies Co., Ltd
+ * @file scope_allocator.h
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright (c) Huawei Technologies Co., Ltd. 2019-2019. All rights reserved.
  *
- * http://www.apache.org/licenses/LICENSE-2.0
+ * @brief tbe fusion scope id allocator
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @version 1.0
+ *
  */
 
 #ifndef INC_COMMON_UTILS_AI_CORE_COMMON_SCOPE_ALLOCATOR_H_
@@ -32,10 +27,11 @@ class ScopeAllocator {
   int64_t GetCurrentScopeId();
   int64_t AllocateScopeId(void);
   bool HasScopeAttr(ge::ConstOpDescPtr opdef);
-  bool GetScopeAttr(ge::ConstOpDescPtr opdef, int64_t &scopeId);
-  bool SetScopeAttr(ge::OpDescPtr opdef, int64_t scopeId);
+  bool GetScopeAttr(ge::ConstOpDescPtr opdef, int64_t &scope_id);
+  bool SetScopeAttr(ge::OpDescPtr opdef, int64_t scope_id);
+  bool ResetScopeId(int64_t scope_id);
  private:
-    int64_t scopeId;
+    int64_t scope_id;
 };
 }  // namespace fe
 #endif

@@ -434,6 +434,7 @@ REGISTER_OPTYPE_DECLARE(HCOMREDUCESCATTER, "HcomReduceScatter");
 REGISTER_OPTYPE_DECLARE(HCOMSEND, "HcomSend");
 REGISTER_OPTYPE_DECLARE(HCOMRECEIVE, "HcomReceive");
 REGISTER_OPTYPE_DECLARE(HCOMREMOTEREAD, "HcomRemoteRead");
+REGISTER_OPTYPE_DECLARE(HCOMREMOTEREFREAD, "HcomRemoteRefRead");
 REGISTER_OPTYPE_DECLARE(HCOMREMOTEWRITE, "HcomRemoteWrite");
 
 REGISTER_OPTYPE_DECLARE(VARASSIGN, "VarAssign");
@@ -851,9 +852,9 @@ static constexpr int32_t PARTITION_TYPE_WEIGHTS = 1;
 static constexpr int32_t PARTITION_TYPE_TASK_INFO = 2;
 
 // number of partitions in the current model
-static constexpr uint32_t PARTITION_SIZE = 4;
+static constexpr uint32_t PARTITION_SIZE = 5;
 
-enum ModelPartitionType { MODEL_DEF = 0, WEIGHTS_DATA, TASK_INFO, TBE_KERNELS };
+enum ModelPartitionType { MODEL_DEF = 0, WEIGHTS_DATA, TASK_INFO, TBE_KERNELS, CUST_AICPU_KERNELS };
 
 struct ModelPartitionMemInfo {
   ModelPartitionType type;

@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-/*lint -e* */
 #ifndef INC_FRAMEWORK_COMMON_GE_INNER_ERROR_CODES_H_
 #define INC_FRAMEWORK_COMMON_GE_INNER_ERROR_CODES_H_
 
@@ -97,6 +96,7 @@ GE_ERRORNO_COMMON(INTERNAL_ERROR, 4, "Internal errors");              // 1343225
 GE_ERRORNO_COMMON(CSEC_ERROR, 5, "Failed to call libc_sec API!");     // 1343225861
 GE_ERRORNO_COMMON(TEE_ERROR, 6, "Failed to call tee API!");           // 1343225862
 GE_ERRORNO_COMMON(END_OF_SEQUENCE, 7, "End of sequence!");            // 1343225863
+GE_ERRORNO_COMMON(PATH_INVALID, 8, "Path is invalid!");               // 1343225864
 
 // Error code for plugin manager
 GE_ERRORNO_COMMON(GE_PLGMGR_PATH_INVALID, 30, "Path is invalid!");                   // 1343225886
@@ -127,6 +127,10 @@ GE_ERRORNO_CLIENT(GE_CLI_GE_NOT_INITIALIZED, 11, "GE is not yet initialized or i
 GE_ERRORNO_INIT(GE_MULTI_INIT, 0, "Multiple initializations are not supported.");            // 1343234048
 GE_ERRORNO_INIT(GE_FINALIZE_NOT_INIT, 1, "Finalize is not allowed before initialization.");  // 1343234049
 GE_ERRORNO_INIT(GE_MULTI_FINALIZE, 2, "Multiple finalizations are not supported.");          // 1343234050
+GE_ERRORNO_INIT(GE_PROF_MULTI_INIT, 3, "Multiple profiling initializations are not supported.");          // 1343234051
+GE_ERRORNO_INIT(GE_PROF_NOT_INIT, 4, "Profing initializations have not been done.");          // 1343234052
+GE_ERRORNO_INIT(GE_PROF_MODE_CONFLICT, 5,
+                "Profiling command mode which is preferred is running, the api mode will not work.");   // 1343234053
 
 // Session module error code definition
 GE_ERRORNO_SESSION(GE_SESS_INIT_FAILED, 0, "Failed to initialize session.");                          // 1343238144
@@ -299,6 +303,7 @@ GE_ERRORNO_EXECUTOR(GE_EXEC_ALLOC_WEIGHT_MEM_FAILED, 16, "Failed to allocate wei
 GE_ERRORNO_EXECUTOR(GE_EXEC_ALLOC_VAR_MEM_FAILED, 17, "Failed to allocate variable memory.");
 GE_ERRORNO_EXECUTOR(GE_AIPP_NOT_EXIST, 18, "GE AIPP is not exist.");
 GE_ERRORNO_EXECUTOR(GE_DYNAMIC_AIPP_NOT_SUPPORT_QUERY, 19, "GE Dynamic AIPP is not support to query temporarily.");
+GE_ERRORNO_EXECUTOR(GE_EXEC_ALLOC_P2P_MEM_FAILED, 20, "Failed to allocate P2P memory");
 
 // Generator module error code definition
 GE_ERRORNO_GENERATOR(GE_GENERATOR_GRAPH_MANAGER_INIT_FAILED, 1, "Graph manager initialize failed.");
