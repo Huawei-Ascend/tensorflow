@@ -46,6 +46,9 @@ Status MarkForPartition(const GraphOptimizationPassOptions &options, int &cluste
 // functions to introduce.
 Status OMPartitionSubgraphsInFunctions(string groupAttribute, const GraphOptimizationPassOptions &options,
                                        string graph_format);
+
+bool IsNpuSupportingNode(const NodeDef &node_def, bool mix_compile_mode, FunctionLibraryDefinition *func_lib);
+bool IsNpuSupportingNode(Node *node, bool mix_compile_mode, FunctionLibraryDefinition *func_lib);
 }  // namespace OMSplitter
 
 class OMPartitionSubgraphsPass : public GraphOptimizationPass {

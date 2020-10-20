@@ -1,17 +1,3 @@
-# Copyright 2019-2020 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
 """Inter-process communication using HCOM."""
 
 from __future__ import absolute_import
@@ -172,12 +158,6 @@ class NPUBasics(object):
                 index = device_info.get('Index', None)
                 util_lib.check_nonnegative_integer(index, 'Index')
 
-                dev_index = device_info.get('dev_index', None)
-                util_lib.check_nonnegative_integer(dev_index, 'dev_index')
-
-                server_id = device_info.get('server_id', None)
-                util_lib.check_not_none(device_info, 'server_id')
-
                 # 2. Get the rank_table_file and check it.
                 rank_table_file = data.get('rank_table_file', None)
                 util_lib.check_not_none(rank_table_file, 'rank_table_file')
@@ -190,7 +170,7 @@ class NPUBasics(object):
                 local_checkpoint_dir = data.get('local_checkpoint_dir', None)
 
                 # 5. Init the JobInfo.
-                device_info = DeviceInfo(index=str(index), server_id=server_id, dev_index=dev_index)
+                device_info = DeviceInfo(index=str(index))
                 job_info = JobInfo(device_info=device_info, rank_table_file=rank_table_file,
                                    local_checkpoint_dir=local_checkpoint_dir, rank_size=rank_size)
                 return job_info
@@ -210,12 +190,6 @@ class NPUBasics(object):
             if(identity == ""):
                 identity = os.getenv('RANK_ID', "")
 
-            dev_index = os.getenv('DEVICE_ID')
-            if dev_index != None and dev_index.isdigit() and int(dev_index) <=7 and int(dev_index) >= 0:
-                dev_index = int(dev_index)
-            else:
-                raise RuntimeError("DEVICE_ID environment variable should in [0, 7]")
-
             checkpoint_dir = os.getenv('LOCAL_CHECKPOINT_DIR', "")
 
             # cann't get rank_size from env, set to default 1
@@ -224,7 +198,7 @@ class NPUBasics(object):
                 print("set rank_size to default 1")
                 rank_size = 1
 
-            device_info = DeviceInfo(index=str(identity), server_id="192.168.1.1", dev_index=int(dev_index))
+            device_info = DeviceInfo(index=str(identity))
             job_info = JobInfo(job_id=job_id,
                                heartbeat_time=heartbeat,
                                device_info=device_info,

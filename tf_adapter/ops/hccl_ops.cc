@@ -61,7 +61,7 @@ group: all devices of the group participating in this reduction.
 REGISTER_OP("HcomAllGather")
     .Input("input: T")
     .Output("output: T")
-    .Attr("T: {int8, int16, int32, float16, float32}")
+    .Attr("T: {int8, int16, int32, float16, float32, int64, uint64}")
     .Attr("group: string")
     .Attr("rank_size: int")
     .SetIsStateful()
@@ -154,7 +154,7 @@ REGISTER_OP("HcomReduceScatter")
 
 REGISTER_OP("HcomSend")
     .Input("input: T")
-    .Attr("T: {int8, int16, int32, float16, float32}")
+    .Attr("T: {int8, int16, int32, float16, float32, int64, uint64}")
     .Attr("group: string")
     .Attr("sr_tag: int")
     .Attr("dest_rank: int")
@@ -166,7 +166,7 @@ REGISTER_OP("HcomSend")
 
 REGISTER_OP("HcomReceive")
     .Output("output: T")
-    .Attr("T: {int8, int16, int32, float16, float32}")
+    .Attr("T: {int8, int16, int32, float16, float32, int64, uint64}")
     .Attr("shape: shape")
     .Attr("group: string")
     .Attr("sr_tag: int")
@@ -176,4 +176,30 @@ REGISTER_OP("HcomReceive")
     .Doc(R"doc(
 
 )doc");
+
+REGISTER_OP("HcomRemoteRead")
+    .Input("remote: T")
+    .Output("local: dtype")
+    .Attr("T: {int64, uint64}")
+    .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+        c->set_output(0, c->UnknownShape()); // 第一维shape确定，第二维unknown
+        return Status::OK();
+    })
+    .Doc(R"doc(
+
+)doc");
+
+REGISTER_OP("HcomRemoteWrite")
+    .Input("remote: T")
+    .Input("local: dtype")
+    .Attr("T: {int64, uint64}")
+    .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::NoOutputs)
+    .Doc(R"doc(
+
+)doc");
+
 }  // namespace tensorflow

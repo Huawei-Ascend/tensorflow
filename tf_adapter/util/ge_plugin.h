@@ -51,7 +51,7 @@ class GePlugin {
 
   ~GePlugin();
 
-  int64 device_id_;
+  uint32_t device_id_;
   bool isInit_;
   bool isGlobal_;
   std::map<std::string, std::string> init_options_;

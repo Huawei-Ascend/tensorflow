@@ -30,6 +30,7 @@ limitations under the License.
 
 #include "ge/ge_api_types.h"
 #include "ge_plugin.h"
+#include "framework/memory/memory_api.h"
 #include <map>
 #include <string>
 
@@ -40,9 +41,17 @@ const char *const OPTION_EXEC_PROFILING_MODE = ge::OPTION_EXEC_PROFILING_MODE;
 const char *const OPTION_EXEC_PROFILING_OPTIONS = ge::OPTION_EXEC_PROFILING_OPTIONS;
 const char *const OPTION_GRAPH_RUN_MODE = ge::OPTION_GRAPH_RUN_MODE;
 const char* const OPTION_EXEC_HCCL_FLAG = ge::OPTION_EXEC_HCCL_FLAG;
+const char* const OPTION_EXEC_PROFILING_FPPONIT_OPTIONS = ge::OPTION_EXEC_PROFILING_FPPONIT_OPTIONS;
+const char* const OPTION_EXEC_PROFILING_BPPONIT_OPTIONS = ge::OPTION_EXEC_PROFILING_BPPONIT_OPTIONS;
 
 void PluginInit(std::map<std::string, std::string> &init_options);
 
 void PluginFinalize();
+
+int32_t RdmaInitAndRegister(const std::vector<ge::HostVarInfo> &var_info, size_t size);
+
+int32_t GetVarAddrAndSize(const std::string &var_name, uint64_t &base_addr, uint64_t &var_size);
+
+int32_t MallocSharedMem(const ge::TensorInfo &tensor_info, uint64_t &dev_addr, uint64_t &memory_size);
 
 #endif  // TENSORFLOW_NPU_PLUGIN_H_

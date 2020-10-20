@@ -34,6 +34,7 @@ limitations under the License.
 #include <fstream>
 #include <map>
 #include <memory>
+#include <mmpa/mmpa_api.h>
 #include <queue>
 #include <securec.h>
 #include <securectype.h>
@@ -57,9 +58,11 @@ limitations under the License.
 
 #include "framework/common/ge_inner_error_codes.h"
 #include "framework/common/types.h"
+#include "framework/omg/omg_inner_types.h"
 #include "framework/omg/parser/model_parser.h"
 #include "framework/omg/parser/parser_api.h"
 #include "framework/omg/parser/parser_factory.h"
+#include "framework/omg/parser/parser_inner_ctx.h"
 #include "ge/ge_api.h"
 #include "ge/ge_api_types.h"
 #include "tdt/tdt_host_interface.h"
@@ -116,8 +119,8 @@ Status BuildOutputTensorInfo(OpKernelContext *ctx, std::vector<ge::OutputTensorI
         auto err = memcpy_s(dst_ptr, SECUREC_MEM_MAX_LEN, src_ptr, SECUREC_MEM_MAX_LEN);
         if (err != EOK) {
           LOG(ERROR) << "[GEOP] Outputs mem copy failed, index:" << i << ", errret:" << err
-                     << ", dst_ptr:" << (int64_t) dst_ptr << ", dst_size:" << SECUREC_MEM_MAX_LEN
-                     << ", src_ptr:" << (int64_t) src_ptr << ", src_size:" << SECUREC_MEM_MAX_LEN;
+                     << ", dst_ptr:" << (uintptr_t) dst_ptr << ", dst_size:" << SECUREC_MEM_MAX_LEN
+                     << ", src_ptr:" << (uintptr_t) src_ptr << ", src_size:" << SECUREC_MEM_MAX_LEN;
           return errors::InvalidArgument("Outputs mem copy failed, index:", i);
         }
         left_size -= SECUREC_MEM_MAX_LEN;
@@ -125,11 +128,13 @@ Status BuildOutputTensorInfo(OpKernelContext *ctx, std::vector<ge::OutputTensorI
         dst_ptr = static_cast<void *>(static_cast<char *>(dst_ptr) + SECUREC_MEM_MAX_LEN);
         src_ptr = static_cast<void *>(static_cast<char *>(src_ptr) + SECUREC_MEM_MAX_LEN);
       }
+      REQUIRES_NOT_NULL(dst_ptr);
+      REQUIRES_NOT_NULL(src_ptr);
       auto err = memcpy_s(dst_ptr, left_size, src_ptr, left_size);
       if (err != EOK) {
         LOG(ERROR) << "[GEOP] Outputs mem copy failed, index:" << i << ", errret:" << err
-                   << ", dst_ptr:" << (int64_t) dst_ptr << ", dst_size:" << left_size
-                   << ", src_ptr:" << (int64_t) src_ptr << ", src_size:" << left_size;
+                   << ", dst_ptr:" << (uintptr_t)dst_ptr << ", dst_size:" << left_size
+                   << ", src_ptr:" << (uintptr_t)src_ptr << ", src_size:" << left_size;
         return errors::InvalidArgument("Outputs mem copy failed, index:", i);
       }
     }
@@ -160,9 +165,10 @@ const int kMaxCacheNum = 10;
 const int kFatalSleepTime = 3000;
 
 GeOp::GeOp(OpKernelConstruction *ctx)
-    : AsyncOpKernel(ctx), init_flag_(false), build_flag_(false), shape_flag_(false), add_graph_flag_(false),
-      sess_init_flag_(false), compute_graph_empty_(false), data_format_(""), graph_id_(0), cache_graph_id_(1),
-      is_initialized_graph_(false), need_iteration_(false), tf_session_(""), ge_session_(nullptr), job_type_("") {
+    : AsyncOpKernel(ctx), init_flag_(false), build_flag_(false), add_graph_flag_(false),
+      sess_init_flag_(false), compute_graph_empty_(false), data_format_(""), graph_id_(0),
+      is_initialized_graph_(false), need_iteration_(false), tf_session_(""), ge_session_(nullptr),
+      job_type_(""), is_host_graph_(false), is_train_graph_(false) {
   Initialize(ctx);
 }
 
@@ -192,7 +198,16 @@ void GeOp::Initialize(OpKernelConstruction *ctx) {
   OP_REQUIRES_OK(ctx, ctx->GetAttr("_NpuOptimizer", &sess_config));
   std::map<std::string, std::string> init_options = NpuAttrs::GetInitOptions(ctx);
   std::map<std::string, std::string> pass_options = NpuAttrs::GetPassOptions(ctx);
+  iteration_per_loop_ = std::atoi(pass_options["iterations_per_loop"].c_str());
   job_type_ = pass_options["job"];
+  mstune_mode_ = init_options["ge.buildMode"];
+  work_path_ = init_options["ge.tuningPath"];
+  if (!mstune_mode_.empty() && !work_path_.empty()) {
+    handle_ = mmDlopen("libmstune_train.so", MMPA_RTLD_NOW);
+    OP_REQUIRES(ctx, handle_ != nullptr, errors::InvalidArgument("libmstune_train.so dlopen failed, ", mmDlerror()));
+    tuning_api_ = (MsTuningFunc)mmDlsym(handle_, const_cast<char*>("MsGradientTuning"));
+    OP_REQUIRES(ctx, tuning_api_ != nullptr, errors::InvalidArgument("dlsym MsGradientTuning API failed, ", mmDlerror()));
+  }
   if (GePlugin::GetInstance()->IsGlobal()) {
     LOG(INFO) << "[GEOP] GePlugin global, skip GePlugin init";
   } else {
@@ -227,14 +242,16 @@ void GeOp::Finalize() {
 
       if (!SessionManager::GetInstance().IsGeSessionExist()) {
         if (!GePlugin::GetInstance()->IsGlobal()) {
-          Status save_ret = GenerateReport::GetInstance()->SaveUnsupportedInfo();
-          if (save_ret != Status::OK()) {
-            LOG(WARNING) << "[GEOP] Save check report failed.";
-          }
           GePlugin::GetInstance()->Finalize();
           LOG(INFO) << "[GEOP] GePlugin Finalize success";
         } else {
           LOG(INFO) << "[GEOP] GePlugin global, skip GePlugin Finalize";
+        }
+        if (!GenerateReport::GetInstance()->SaveUnsupportedInfo().ok()) {
+          LOG(WARNING) << "[GEOP] Save check report failed.";
+        }
+        if (!mstune_mode_.empty() && !work_path_.empty()) {
+          (void)mmDlclose(handle_);
         }
       }
     }
@@ -244,9 +261,9 @@ void GeOp::Finalize() {
   return;
 }
 
-int GeOp::InitRebuildFlag() {
+int GeOp::InitRebuildFlag(uint32_t cache_graph_id) {
   if (!build_flag_) {
-    LOG(INFO) << "[GEOP] tf session " << tf_session_ << ", graph id: " << cache_graph_id_
+    LOG(INFO) << "[GEOP] tf session " << tf_session_ << ", graph id: " << cache_graph_id
               << " does not build yet, no need to check rebuild";
     return 0;
   }
@@ -254,18 +271,18 @@ int GeOp::InitRebuildFlag() {
     LOG(ERROR) << "[GEOP] GE session is nullptr";
     return -1;
   }
-  if (!ge_session_->IsGraphNeedRebuild(cache_graph_id_)) {
-    LOG(INFO) << "[GEOP] tf session " << tf_session_ << ", graph id: " << cache_graph_id_ << " no need to rebuild";
+  if (!ge_session_->IsGraphNeedRebuild(cache_graph_id)) {
+    LOG(INFO) << "[GEOP] tf session " << tf_session_ << ", graph id: " << cache_graph_id << " no need to rebuild";
     return 0;
   }
 
-  LOG(INFO) << "[GEOP] The graph need rebuild, graph id " << cache_graph_id_;
+  LOG(INFO) << "[GEOP] The graph need rebuild, graph id " << cache_graph_id;
 
   // The graph need to rebuild, remove it from GE first.
-  LOG(INFO) << "[GEOP] tf session: " << tf_session_ << ", graph id: " << cache_graph_id_;
-  auto ret = ge_session_->RemoveGraph(cache_graph_id_);
+  LOG(INFO) << "[GEOP] tf session: " << tf_session_ << ", graph id: " << cache_graph_id;
+  auto ret = ge_session_->RemoveGraph(cache_graph_id);
   if (ret != ge::SUCCESS) {
-    LOG(ERROR) << "[GEOP] Failed to remove graph " << cache_graph_id_ << " from ge, error code " << ret;
+    LOG(ERROR) << "[GEOP] Failed to remove graph " << cache_graph_id << " from ge, error code " << ret;
     return -1;
   }
 
@@ -316,46 +333,39 @@ void GeOp::ClearGraphIdCount(std::string &tf_session) {
   if (it != session_and_graph_id_map_.end()) { session_and_graph_id_map_.erase(it); }
 }
 
-void GeOp::CacheShapeChangeGraphs() {
+void GeOp::GetExecGraphId(OpKernelContext *ctx, uint32_t &cache_graph_id,
+                          std::vector<std::string> input_shapes) {
   size_t num = cache_graphs_.size();
-  std::pair<std::map<std::vector<std::string>, uint32_t>::iterator, bool> ret;
-  uint32_t tmp_graph_id = 0;
-  if (num >= kMaxCacheNum) {
-    LOG(INFO) << "[GEOP] the cache vector size is : " << num << " , begin erase the least uesed";
-    std::sort(graph_counts_.begin(), graph_counts_.end(), CmpValue);
-    uint32_t erased_graph_id = cache_graphs_[graph_counts_[0].first];
-    cache_graphs_.erase(graph_counts_[0].first);
-    graph_counts_.erase(graph_counts_.begin());
-    ge::Status status = ge_session_->RemoveGraph(erased_graph_id);
-    if (status != ge::SUCCESS) { LOG(WARNING) << "[GEOP] GE Remove Graph failed, ret : " << ToString(status); }
-    ret = cache_graphs_.insert(std::make_pair(inputs_shape_string_, erased_graph_id));
-    tmp_graph_id = erased_graph_id;
-  } else {
-    ret = cache_graphs_.insert(std::make_pair(inputs_shape_string_, graph_id_ + num));
-    tmp_graph_id = graph_id_ + num;
-  }
-  if (ret.second) {
-    build_flag_ = false;
-    compute_graph_empty_ = false;
-    graph_counts_.push_back(std::make_pair(inputs_shape_string_, 1));
-    cache_graph_id_ = tmp_graph_id;
-  } else {
+  if (cache_graphs_.find(input_shapes) != cache_graphs_.end()) {
     for (auto &graph_count : graph_counts_) {
-      if (graph_count.first == inputs_shape_string_) {
+      if (graph_count.first == input_shapes) {
         graph_count.second += 1;
         break;
       }
     }
-    cache_graph_id_ = cache_graphs_[inputs_shape_string_];
+    cache_graph_id = cache_graphs_[input_shapes];
     build_flag_ = true;
-    shape_flag_ = false;
+  } else {
+    if (num >= kMaxCacheNum) {
+      LOG(INFO) << "[GEOP] the cache vector size is : " << num << " , begin erase the least uesed";
+      std::sort(graph_counts_.begin(), graph_counts_.end(), CmpValue);
+      uint32_t erased_graph_id = cache_graphs_[graph_counts_[0].first];
+      cache_graphs_.erase(graph_counts_[0].first);
+      graph_counts_.erase(graph_counts_.begin());
+      ge::Status status = ge_session_->RemoveGraph(erased_graph_id);
+      if (status != ge::SUCCESS) { LOG(WARNING) << "[GEOP] GE Remove Graph failed, ret : " << ToString(status); }
+      cache_graph_id = erased_graph_id;
+    } else {
+      cache_graph_id = graph_id_ + num;
+    }
+    build_flag_ = false;
+    compute_graph_empty_ = false;
   }
 }
 
 void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
   // ctx is not nullptr
   OP_REQUIRES_ASYNC(ctx, init_flag_, errors::InvalidArgument("GeOp not Initialize success."), done);
-
   // ge ge session
   if (!sess_init_flag_) {
     if (job_type_ != "localhost") {  // in ps mode : ctx->session_handle() is empty
@@ -371,7 +381,6 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
     {
       mutex_lock lock{mu_};
       bool res = IncrementGraphIdCount(tf_session_, graph_id_);
-      cache_graph_id_ = graph_id_;
       if (!res || graph_id_ < kInvalidGraphId) {
         OP_REQUIRES_ASYNC(ctx, false, errors::Unavailable("Get ge session failed."), done);
         return;
@@ -393,36 +402,32 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
   LOG(INFO) << "[GEOP] Begin GeOp::ComputeAsync"
             << ", kernel_name:" << geop_name << ", num_inputs:" << num_inputs << ", num_outputs:" << ctx->num_outputs();
   int64 startTime = InferShapeUtil::GetCurrentTimestap();
-
-  if (!build_flag_) {
-    // record input shape
-    inputs_shape_string_.clear();
-    for (uint32_t i = 0; i < num_inputs; i++) {
-      Tensor input(ctx->input(i));
-      inputs_shape_string_.push_back(input.shape().DebugString());
-    }
-    cache_graphs_.insert(std::make_pair(inputs_shape_string_, cache_graph_id_));
-    graph_counts_.push_back(std::make_pair(inputs_shape_string_, 1));
-  } else if (inputs_shape_string_.size() == num_inputs) {
-    for (uint32_t i = 0; i < num_inputs; i++) {
-      if (inputs_shape_string_.at(i) == ctx->input(i).shape().DebugString()) {
-        continue;
-      } else {
-        // input_shape change, build GEOP for one more time
-        inputs_shape_string_.at(i) = ctx->input(i).shape().DebugString();
-        shape_flag_ = true;
-      }
-    }
-    if (shape_flag_) { CacheShapeChangeGraphs(); }
-  } else {
-    build_flag_ = false;
-    compute_graph_empty_ = false;
+  std::vector<std::string> input_shapes;
+  for (int i = 0; i < ctx->num_inputs(); i++) {
+    input_shapes.push_back(ctx->input(i).shape().DebugString());
   }
 
-  auto ret = InitRebuildFlag();
-  if (ret != 0) {
-    OP_REQUIRES_ASYNC(ctx, false, errors::Unavailable("Failed to check rebuild flag"), done);
-    return;
+  // if input shapes changed, cache graphs
+  uint32_t cache_graph_id;
+  bool is_set_dynamic_config = !sess_options_["ge.inputShape"].empty() && !sess_options_["ge.dynamicDims"].empty();
+  bool is_tuning = !mstune_mode_.empty() && !work_path_.empty();
+  if (is_set_dynamic_config && is_tuning) {
+    LOG(FATAL) << "dynamic input config can not use with mstuning.";
+  } else if (is_set_dynamic_config && !is_tuning) {
+    cache_graph_id = graph_id_;
+    if (InitRebuildFlag(cache_graph_id) != 0) {
+      OP_REQUIRES_ASYNC(ctx, false, errors::Internal("Failed to check rebuild flag"), done);
+      return;
+    }
+  } else if (!is_set_dynamic_config && is_tuning) {
+    cache_graph_id = graph_id_;
+  } else {
+    // if set dynamic input config, do not cache graphs.
+    GetExecGraphId(ctx, cache_graph_id, input_shapes);
+    if (InitRebuildFlag(cache_graph_id) != 0) {
+      OP_REQUIRES_ASYNC(ctx, false, errors::Internal("Failed to check rebuild flag"), done);
+      return;
+    }
   }
 
   if (!build_flag_) {
@@ -464,7 +469,7 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
     LOG(INFO) << "[GEOP] In GEOP computeAsync, kernel_name:" << geop_name << " ,TFadapter cost time: ["
               << ((endTime - startTime) / kMicrosToMillis) << " ms]";
     LOG(INFO) << "[GEOP] TFadpter process graph success, GE parser begin, kernel_name:" << geop_name
-              << " ,tf session: " << tf_session_ << " ,graph id :" << cache_graph_id_;
+              << " ,tf session: " << tf_session_ << " ,graph id :" << cache_graph_id;
     // parser,  tensorflow graph to ge graph
     std::shared_ptr<domi::ModelParser> model_parser =
         domi::ModelParserFactory::Instance()->CreateModelParser(domi::FrameworkType::TENSORFLOW);
@@ -486,8 +491,8 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
         return nullptr;
       }
       // get infershape
-      Graph subgraph(OpRegistry::Global());
-      Status status = InferShapeUtil::getSubGraphFromFunctionDef(*func_def, &subgraph);
+      Graph subgraph(flib_def);
+      Status status = InferShapeUtil::GetSubGraphFromFunctionDef(*flib_def, *func_def, &subgraph);
       if (status != Status::OK()) {
         LOG(ERROR) << "[GEOP] Get subgraph from functiondef fail.";
         return nullptr;
@@ -512,9 +517,6 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
       }
       subgraph.ToGraphDef(sub_graph_def.get());
 
-      // change function op to subgraph type
-      ChangeFunctionOpToSubgraph(*sub_graph_def.get(), *flib_def);
-
       unique_ptr<google::protobuf::Message> graph_def_out(std::move(sub_graph_def));
 
       char *need_print = getenv("PRINT_MODEL");
@@ -531,9 +533,10 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
         reinterpret_cast<google::protobuf::Message *>(&ori_graph_def), build_sub_graph, compute_graph);
     OP_REQUIRES_ASYNC(ctx, status == ge::SUCCESS, errors::Internal("graph parse failed, domi_ret : ", ToString(status)),
                       done);
+    domi::GetContext().format = ge::GetParserContext().format;
 
     LOG(INFO) << "[GEOP] Tensorflow graph parse to ge graph success, kernel_name:" << geop_name
-              << " ,tf session: " << tf_session_ << " ,graph id: " << cache_graph_id_;
+              << " ,tf session: " << tf_session_ << " ,graph id: " << cache_graph_id;
 
     size_t nodes = compute_graph->GetAllNodesSize();
     if (nodes == 0) {
@@ -542,39 +545,84 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
       int64 endTime = InferShapeUtil::GetCurrentTimestap();
       LOG(INFO) << "[GEOP] End GeOp::ComputeAsync, compute_graph is empty, kernel_name:" << geop_name
                 << ", ret_status:" << ToString(ge::SUCCESS) << " , tf session: " << tf_session_
-                << " ,graph id: " << cache_graph_id_ << " [" << ((endTime - startTime) / kMicrosToMillis) << " ms]";
+                << " ,graph id: " << cache_graph_id << " [" << ((endTime - startTime) / kMicrosToMillis) << " ms]";
       done();
       return;
     }
 
     // convert to ge::graph
     ge::Graph ge_graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
-    ge_graph.SetNeedIteration(this->need_iteration_);
+    if (iteration_per_loop_ > 1) {
+      ge_graph.SetNeedIteration(this->need_iteration_);
+    }
+
+    if (is_host_graph_) {
+      LOG(INFO) << "[GEOP] set graph option.";
+      graph_options_["ge.exec.placement"] = "HOST";
+    }
+    if (is_tuning) {
+      if (!is_train_graph_) {
+        LOG(INFO) << "[GEOP] in tune mode, nontraining graphs should be cache.";
+        OP_REQUIRES_ASYNC(ctx, SessionManager::GetInstance().CacheGeGraphs(ge_session_, ge_graph),
+          errors::Internal("[GEOP] cache ge session failed."), done);
+        build_flag_ = true;
+        BuildOutTensorInfo(ctx);
+        done();
+        return;
+      } else {
+        LOG(INFO) << "[GEOP] in tune mode, training graph handled by tools.";
+        uint32_t device_id = 0;
+        OP_REQUIRES_OK_ASYNC(ctx, GetEnvDeviceID(device_id), done);
+        std::map<string, string> tune_options = {{"work_path", work_path_},
+                                                 {"job_type", mstune_mode_},
+                                                 {"devices", std::to_string(device_id)}};
+        std::vector<ge::Graph> ge_graphs;
+        OP_REQUIRES_ASYNC(ctx, SessionManager::GetInstance().GetGeGraphs(ge_session_, ge_graphs),
+          errors::Internal("[GEOP] ge ge session nontraining graphs failed."), done);
+        MsTuneStatus tune_ret = (*tuning_api_)(ge_graph, ge_graphs, ge_session_, tune_options);
+        OP_REQUIRES_ASYNC(ctx, tune_ret == MSTUNE_SUCCESS, errors::Internal("[GEOP] exec msTuning func failed."), done);
+        LOG(INFO) << "[GEOP] msTuning success.";
+        build_flag_ = true;
+        BuildOutTensorInfo(ctx);
+        done();
+        return;
+      }
+    }
 
     // call ge session addGraph api
-    status = ge_session_->AddGraph(cache_graph_id_, ge_graph);
+    status = ge_session_->AddGraph(cache_graph_id, ge_graph, graph_options_);
     if (status != ge::SUCCESS) {
       std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
       LOG(FATAL) << "[GEOP] call ge session add graph failed, kernel: " << geop_name << " ,tf session: " << tf_session_
-                 << ", graph id: " << cache_graph_id_;
+                 << ", graph id: " << cache_graph_id;
       OP_REQUIRES_ASYNC(ctx, status == ge::SUCCESS,
                         errors::Unavailable("[GEOP] GE session add graph failed, domi_ret : ", ToString(status)), done);
     } else {
       add_graph_flag_ = true;
       LOG(INFO) << "[GEOP] Add graph to ge session success, kernel_name:" << geop_name
-                << " ,tf session: " << tf_session_ << " ,graph id:" << cache_graph_id_;
+                << " ,tf session: " << tf_session_ << " ,graph id:" << cache_graph_id;
     }
-
     build_flag_ = true;
+    if (!is_set_dynamic_config) {
+      cache_graphs_.insert(std::make_pair(input_shapes, cache_graph_id));
+      graph_counts_.push_back(std::make_pair(input_shapes, 1));
+    }
   } else {
     if (compute_graph_empty_) {
       int64 endTime = InferShapeUtil::GetCurrentTimestap();
       LOG(INFO) << "[GEOP] End GeOp::ComputeAsync, compute_graph is empty, kernel_name:" << geop_name
                 << ", ret_status:" << ToString(ge::SUCCESS) << " , tf session: " << tf_session_
-                << " ,graph id: " << cache_graph_id_ << " [" << ((endTime - startTime) / kMicrosToMillis) << " ms]";
+                << " ,graph id: " << cache_graph_id << " [" << ((endTime - startTime) / kMicrosToMillis) << " ms]";
       done();
       return;
     }
+  }
+
+  if (is_tuning) {
+    LOG(INFO) << "in mstune mode, graph only execute once, The remaining steps return directly.";
+    BuildOutTensorInfo(ctx);
+    done();
+    return;
   }
 
   int64 run_start_time = InferShapeUtil::GetCurrentTimestap();
@@ -601,34 +649,22 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
   OP_REQUIRES_OK_ASYNC(ctx, (BuildInputTensorInfo(ctx, inputs)), done);
 
   LOG(INFO) << "[GEOP] Call ge session RunGraphAsync, kernel_name:" << geop_name << " ,tf session: " << tf_session_
-            << " ,graph id: " << cache_graph_id_;
+            << " ,graph id: " << cache_graph_id;
   // call ge session runGraphAsync api
-  ge::Status status = ge_session_->RunGraphAsync(cache_graph_id_, inputs, callback);
+  ge::Status status = ge_session_->RunGraphAsync(cache_graph_id, inputs, callback);
   if (status != ge::SUCCESS) {
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GEOP] call ge session RunGraphAsync Failed, kernel:" << geop_name << " ,tf session: " << tf_session_
-               << " ,graph id: " << cache_graph_id_;
+               << " ,graph id: " << cache_graph_id;
   }
   OP_REQUIRES_ASYNC(ctx, status == ge::SUCCESS,
                     errors::Unavailable("ge session run graph failed, ret_status:", ToString(status)), done);
 
   int64 endTime = InferShapeUtil::GetCurrentTimestap();
   LOG(INFO) << "[GEOP] End GeOp::ComputeAsync, kernel_name:" << geop_name << ", ret_status:" << ToString(status)
-            << " ,tf session: " << tf_session_ << " ,graph id: " << cache_graph_id_ << " ["
+            << " ,tf session: " << tf_session_ << " ,graph id: " << cache_graph_id << " ["
             << ((endTime - startTime) / kMicrosToMillis) << " ms]";
   return;
-}
-
-void GeOp::ChangeFunctionOpToSubgraph(GraphDef &sub_graph_def, const FunctionLibraryDefinition &flib_def) {
-  std::vector<string> function_names = flib_def.ListFunctionNames();
-  for (NodeDef &node_def : *sub_graph_def.mutable_node()) {
-    for (string func_name : function_names) {
-      if (node_def.op() == func_name) {
-        node_def.set_op(SubGraph);
-        LOG(INFO) << "Node " << node_def.name() << " change op type from " << func_name << " to " << SubGraph;
-      }
-    }
-  }
 }
 
 void GeOp::AddNodeAttrs(Node *node, bool &is_initialize) {
@@ -642,6 +678,13 @@ void GeOp::AddNodeAttrs(Node *node, bool &is_initialize) {
   if (node->name() == "IterationOp") {
     this->need_iteration_ = true;
     LOG(INFO) << "subgraph  has iteration op.";
+  }
+  if (node->name() == "var_in_host") {
+    is_host_graph_ = true;
+    LOG(INFO) << "[GeOp] variable subgraph is initialized in host.";
+  }
+  if (node->name().find("_Allreduce") != string::npos) {
+    is_train_graph_ = true;
   }
   // clear device info && attr
   node_def.set_device("");
@@ -660,10 +703,31 @@ void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const Function
   Graph graph(OpRegistry::Global());
   OP_REQUIRES_OK_ASYNC(ctx, InferShapeUtil::InferShape(input_vec, &flib_def, &func_def, &graph), done);
 
+  bool is_tuning = !mstune_mode_.empty() && !work_path_.empty();
   for (Node *node : graph.nodes()) {
     AddNodeAttrs(node, is_initialize);
     // Add Input&Output Desc into NodeDef
     OP_REQUIRES_OK_ASYNC(ctx, this->GenerateDesc(node), done);
+    if (is_tuning) {
+      // output handle
+      NodeDef &node_def = const_cast<NodeDef &>(node->def());
+      if (node->type_string() == "_Retval") {
+        int index = node_def.attr().at("index").i();
+        // format: AttrValue.list(ListValue).func(repeated NameAttrList)
+        NameAttrList desc_attr = node_def.attr().at(INPUT_DESC).list().func(0);
+
+        std::vector<int64> dims;
+        int dim_num = desc_attr.attr().at(SERIALIZE_SHAPE).list().i_size();
+        for (int t = 0; t < dim_num; t++) {
+          int64 dim_i = (int64_t) desc_attr.attr().at(SERIALIZE_SHAPE).list().i(t);
+          if (dim_i < 0) { dim_i = 1; }
+          dims.push_back(dim_i);
+        }
+
+        TensorShape out_shape(dims);
+        outputs_shape_.insert(std::map<int, TensorShape>::value_type(index, out_shape));
+      }
+    }
   }
 
   graph.ToGraphDef(&graph_def);
@@ -696,6 +760,17 @@ Status GeOp::BuildInputTensorInfo(OpKernelContext *ctx, std::vector<ge::InputTen
     input.length = static_cast<int64_t>(total_bytes);
 
     inputs.push_back(input);
+  }
+  return Status::OK();
+}
+
+Status GeOp::BuildOutTensorInfo(OpKernelContext *ctx) {
+  int num_outputs = ctx->num_outputs();
+    // populate outputs
+  for (int i = 0; i < num_outputs; i++) {
+    TensorShape out_shape = outputs_shape_.at(i);
+    Tensor *tensor = nullptr;
+    TF_RETURN_IF_ERROR(ctx->allocate_output(i, out_shape, &tensor));
   }
   return Status::OK();
 }

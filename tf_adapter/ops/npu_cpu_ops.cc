@@ -36,8 +36,9 @@ using shape_inference::ShapeHandle;
 
 REGISTER_OP("EmbeddingRankId")
     .Input("addr_table: uint64")
-    .Input("index: uint32")
+    .Input("index: T")
     .Output("rank_id: uint64")
+    .Attr("T: {int64,int32,uint64}")
     .Attr("row_memory: int = 320")
     .Attr("mode: string = 'mod' ")
     .SetAllowsUninitializedInput()

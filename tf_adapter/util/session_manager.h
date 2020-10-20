@@ -52,6 +52,12 @@ class SessionManager {
   // Whether a ge session exist.
   bool IsGeSessionExist();
 
+  // get ge session nontraining graphs
+  bool GetGeGraphs(ge::Session *ge_session, std::vector<ge::Graph> &ge_graphs);
+
+  // cache ge session nontraining graphs
+  bool CacheGeGraphs(ge::Session *ge_session, ge::Graph &ge_graph);
+
  private:
   // Create a ge session to run the compute graph divided by tf session.
   bool CreateGeSession(const std::string &session, ge::Session *&ge_session,
@@ -60,5 +66,7 @@ class SessionManager {
   void PrintGeSessionOptions(std::map<std::string, std::string> &sess_options);
   // Mapping relationship between tf session and ge session.
   std::unordered_map<std::string, ge::Session *> ge_sessions_;
+  // cache ge nontraining graphs
+  std::unordered_map<ge::Session *, std::vector<ge::Graph>> ge_graphs_;
 };
 #endif

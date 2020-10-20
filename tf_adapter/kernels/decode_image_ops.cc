@@ -25,7 +25,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#include "ExternalSoftDp.h"
+#include "soft_dp/ExternalSoftDp.h"
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tf_adapter/util/plugin_load_manager.h"
 #include <dlfcn.h>

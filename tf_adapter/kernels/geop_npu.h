@@ -38,9 +38,12 @@ limitations under the License.
 #include "ge/ge_api_types.h"
 #include "graph/tensor.h"
 #include "graph/utils/graph_utils.h"
+#include "toolchain/tuning_tool/tune_api.h"
 #include <unordered_map>
 
 namespace tensorflow {
+using MsTuningFunc = MsTuneStatus (*)(ge::Graph &, std::vector<ge::Graph> &, ge::Session *,
+                                std::map<std::string, std::string> &);
 class GeOp : public AsyncOpKernel {
  public:
   explicit GeOp(OpKernelConstruction *ctx);
@@ -60,11 +63,11 @@ class GeOp : public AsyncOpKernel {
                      const FunctionDef &func_def, const std::vector<Tensor> &input_vec, GraphDef &graph_def,
                      bool &is_initialize);
 
-  // Find and change op type to SubGraph
-  void ChangeFunctionOpToSubgraph(GraphDef &graph_def, const FunctionLibraryDefinition &flib_def);
-
   // prepare input tensor
   Status BuildInputTensorInfo(OpKernelContext *ctx, std::vector<ge::InputTensorInfo> &inputs);
+
+  // prepare output tensor
+  Status BuildOutTensorInfo(OpKernelContext *ctx);
 
   // create input and output desc for NodeDef
   Status GenerateDesc(Node *&node);
@@ -74,7 +77,7 @@ class GeOp : public AsyncOpKernel {
  private:
   void AddNodeAttrs(Node *node, bool &is_initialize);
 
-  int InitRebuildFlag();
+  int InitRebuildFlag(uint32_t cache_graph_id);
 
   bool IncrementGraphIdCount(std::string &tf_session, uint32_t &graph_id);
 
@@ -82,7 +85,8 @@ class GeOp : public AsyncOpKernel {
 
   void ClearGraphIdCount(std::string &tf_session);
 
-  void CacheShapeChangeGraphs();
+  void GetExecGraphId(OpKernelContext *ctx, uint32_t &cache_graph_id,
+                      std::vector<std::string> input_shapes);
 
  private:
   static const std::string INPUT_DESC;
@@ -96,7 +100,6 @@ class GeOp : public AsyncOpKernel {
 
   bool init_flag_;
   bool build_flag_;
-  bool shape_flag_;
   bool add_graph_flag_;
   bool sess_init_flag_;
   bool compute_graph_empty_;
@@ -104,17 +107,24 @@ class GeOp : public AsyncOpKernel {
   NameAttrList function_;
   std::string data_format_;
   uint32_t graph_id_;
-  uint32_t cache_graph_id_;
   bool is_initialized_graph_;
   bool need_iteration_;
   std::string tf_session_;
   ge::Session *ge_session_;
   std::string job_type_;
-  std::vector<std::string> inputs_shape_string_;
   std::map<std::vector<std::string>, uint32_t> cache_graphs_;
   std::vector<std::pair<std::vector<std::string>, uint32_t>> graph_counts_;
   std::map<std::string, std::string> sess_options_;
   static std::unordered_map<std::string, uint32_t> session_and_graph_id_map_;
+  uint32_t iteration_per_loop_;
+  bool is_host_graph_;
+  std::map<std::string, std::string> graph_options_;
+  string work_path_;
+  string mstune_mode_;
+  std::map<int, TensorShape> outputs_shape_;
+  bool is_train_graph_;
+  void *handle_;
+  MsTuningFunc tuning_api_;
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_KERNELS_GEOP_NPU_H_
