@@ -25,42 +25,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ==============================================================================*/
 
-#ifndef TENSORFLOW_GENERATE_REPORT_H_
-#define TENSORFLOW_GENERATE_REPORT_H_
+#include "tensorflow/core/framework/op.h"
+#include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/op_kernel.h"
 
-#include "tensorflow/core/graph/graph.h"
-// Op will be written to json if it can not sink to device during one excute.
-namespace tensorflow {
-class GenerateReport {
+using namespace tensorflow;
+
+template <typename T>
+class AscendDequantOp : public OpKernel {
 public:
-  struct Details {
-    int code;
-    std::string message;
-  };
-  enum ReasonCode { TypeNoDefine = 1, TypeGray = 2, ScenarioProblems = 3, NotSupport = 4 };
+    explicit AscendDequantOp(OpKernelConstruction* context) : OpKernel(context){}
 
-  static GenerateReport *GetInstance();
+    ~AscendDequantOp(){}
 
-  Status AddUnSupportedInfo(const std::string &name, const std::string &type, Details &infos);
-
-  Status AddUnSupportedInfo(Node *node, Details &infos);
-
-  Status DeleteUnSupportedInfo(Node *node);
-
-  Status SaveUnsupportedInfo();
-
-  ~GenerateReport();
-
-private:
-  GenerateReport();
-  struct UnSupportedInfo {
-    std::string name;
-    std::string type;
-    bool is_support = 0;
-    Details info_details;
-  };
-  std::map<std::string, UnSupportedInfo> check_info_map_;
+    void Compute(OpKernelContext* context) override{}
 };
-}  // namespace tensorflow
 
-#endif
+REGISTER_KERNEL_BUILDER(
+    Name("AscendDequant").Device(tensorflow::DEVICE_CPU).TypeConstraint<float>("T"),
+    AscendDequantOp<float>);

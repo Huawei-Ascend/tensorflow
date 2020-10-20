@@ -63,7 +63,7 @@ class UniqueParallelOp : public OpKernel {
     unique_map_vec.resize(cpu_nums);
     std::function<void(int64, int)> shards = [&](int64 total, int cur) {
       for (TIndex i = 0; i < total; i++){
-        if ((input_vec(i) & (cpu_nums-1)) == cur) {
+        if ((input_vec(i) & 15) == cur) {
           if (unique_map_vec[cur].find(input_vec(i)) == unique_map_vec[cur].end()) {
             unique_map_vec[cur][input_vec(i)] = count_num++;
           }
@@ -88,7 +88,7 @@ class UniqueParallelOp : public OpKernel {
   }
  private:
   void ParallelFor(tensorflow::thread::ThreadPool& thread_work, 
-    int64 total, int cpu_nums, std::function<void(int64, int)>& fn) {
+    int64 total, const int cpu_nums, std::function<void(int64, int)>& fn) {
     CHECK_GE(total, 0);
     CHECK_EQ(total, (int64)(Eigen::Index)total);
     if (total <= 1 || cpu_nums == 1) {
@@ -108,28 +108,21 @@ class UniqueParallelOp : public OpKernel {
   }
 };
 
-REGISTER_KERNEL_BUILDER(Name("Unique")                     
-                       .TypeConstraint<int64>("T")                            
-                       .TypeConstraint<int32>("out_idx")                      
-                       .Device(DEVICE_CPU)                                   
-                       .Label("parallel"),                                     
-                       UniqueParallelOp<int64, int32>);                       
-REGISTER_KERNEL_BUILDER(Name("Unique")                     
-                       .TypeConstraint<int32>("T")                            
-                       .TypeConstraint<int32>("out_idx")                      
-                       .Device(DEVICE_CPU)                            
-                       .Label("parallel"), 
-                       UniqueParallelOp<int32, int32>);
-REGISTER_KERNEL_BUILDER(Name("Unique")
-                       .TypeConstraint<int32>("T")
-                       .TypeConstraint<int64>("out_idx")
-                       .Device(DEVICE_CPU)
-                       .Label("parallel"), 
-                       UniqueParallelOp<int32, int64>);
-REGISTER_KERNEL_BUILDER(Name("Unique")
-                       .TypeConstraint<int64>("T")
-                       .TypeConstraint<int64>("out_idx")
-                       .Device(DEVICE_CPU)
-                       .Label("parallel"), 
-                       UniqueParallelOp<int64, int64>);
+/*lint -e665*/
+#define REGISTER_UNIQUE_PARALLEL(type)                           \
+  REGISTER_KERNEL_BUILDER(Name("Unique")                         \
+                              .Device(DEVICE_CPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int32>("out_idx")  \
+                              .Label("parallel"),                \
+                              UniqueParallelOp<type, int32>);    \
+  REGISTER_KERNEL_BUILDER(Name("Unique")                         \
+                              .Device(DEVICE_CPU)                \
+                              .TypeConstraint<type>("T")         \
+                              .TypeConstraint<int64>("out_idx")  \
+                              .Label("parallel"),                \
+                              UniqueParallelOp<type, int64>);
+TF_CALL_INTEGRAL_TYPES(REGISTER_UNIQUE_PARALLEL);
+#undef REGISTER_UNIQUE_PARALLEL
+/*lint +e665*/
 }

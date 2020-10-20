@@ -34,7 +34,10 @@ namespace data {
 namespace {
 class GEOPDatasetOp : public DatasetOpKernel {
  public:
-  explicit GEOPDatasetOp(OpKernelConstruction *ctx) : DatasetOpKernel(ctx), f_handle_(kInvalidHandle) {
+  explicit GEOPDatasetOp(OpKernelConstruction *ctx)
+    : DatasetOpKernel(ctx),
+      f_handle_(kInvalidHandle),
+      lib_(nullptr) {
     FunctionMetadata::Params params;
     OP_REQUIRES_OK(ctx, FunctionMetadata::Create(ctx, "f", params, &func_metadata_));
   }
@@ -83,6 +86,9 @@ class GEOPDatasetOp : public DatasetOpKernel {
     }
 
     string DebugString() const override { return "GEOPDatasetOp::Dataset"; }
+
+    GEOPDatasetOp *op_kernel_;
+    std::string tf_session_;
 
    protected:
     Status AsGraphDefInternal(SerializationContext *ctx, DatasetGraphDefBuilder *b, Node **output) const override {
@@ -168,8 +174,6 @@ class GEOPDatasetOp : public DatasetOpKernel {
      private:
       mutex mu_;
     };
-    GEOPDatasetOp *op_kernel_;
-    std::string tf_session_;
   };
   std::shared_ptr<FunctionMetadata> func_metadata_ = nullptr;
   FunctionLibraryRuntime::Handle f_handle_;

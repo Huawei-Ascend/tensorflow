@@ -50,7 +50,8 @@ class InferShapeUtil {
                            const FunctionLibraryDefinition *flib_def,
                            const FunctionDef *func_def, Graph *graph);
 
-  static Status getSubGraphFromFunctionDef(const FunctionDef &func_def, Graph *graph);
+  static Status GetSubGraphFromFunctionDef(const FunctionLibraryDefinition &flib_def,
+                                           const FunctionDef &func_def, Graph *graph);
 
   static int64 GetCurrentTimestap();
   static bool IsInitializedGraph(Node *node);

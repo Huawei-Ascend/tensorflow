@@ -67,6 +67,7 @@ void SessionManager::DestroyGeSession(const std::string &tf_session) {
   if (it != ge_sessions_.end()) {
     if (it->second != nullptr) {
       LOG(INFO) << "find ge session connect with tf session " << tf_session;
+      ge_graphs_.erase(it->second);
       delete it->second;
       it->second = nullptr;
     }
@@ -118,6 +119,13 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
     sess_options.erase(ge::VARIABLE_MEMORY_MAX_SIZE);
   }
 
+  // tailing optimization
+  LOG(INFO) << "[GEOP] is_tailing_optimization : " << sess_options["ge.exec.isTailingOptimization"];
+
+  LOG(INFO) << "[GEOP] op_select_implmode : " << sess_options[ge::OP_SELECT_IMPL_MODE];
+
+  LOG(INFO) << "[GEOP] optypelist_for_implmode : " << sess_options[ge::OPTYPELIST_FOR_IMPLMODE];
+
   // reuse memory env
   const char *disable_reuse_memory = std::getenv("DISABLE_REUSE_MEMORY");
   if (disable_reuse_memory == nullptr) {
@@ -132,6 +140,34 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
             << ", dump_path :" << sess_options[ge::OPTION_EXEC_DUMP_PATH]
             << ", dump_step :" << (dump_step.empty() ? "NA" : dump_step)
             << ", dump_mode :" << sess_options[ge::OPTION_EXEC_DUMP_MODE]
-            << ", enable_dump_enable :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP_DEBUG]
+            << ", enable_dump_debug :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP_DEBUG]
             << ", dump_debug_mode :" << sess_options[ge::OPTION_EXEC_DUMP_DEBUG_MODE];
+
+  // dynamic input config
+  LOG(INFO) << "[GEOP] input_shape :" << sess_options["ge.inputShape"]
+            << ", dynamic_dims :" << sess_options["ge.dynamicDims"];
+}
+
+bool SessionManager::CacheGeGraphs(ge::Session *ge_session, ge::Graph &ge_graph) {
+  if (ge_session == nullptr) {
+    LOG(ERROR) << "ge session is null ptr.";
+    return false;
+  }
+  ge_graphs_[ge_session].push_back(ge_graph);
+  return true;
+}
+
+bool SessionManager::GetGeGraphs(ge::Session *ge_session, std::vector<ge::Graph> &ge_graphs) {
+  if (ge_session == nullptr) {
+    LOG(ERROR) << "ge session is null ptr.";
+    return false;
+  }
+  auto it = ge_graphs_.find(ge_session);
+  if (it != ge_graphs_.end()) {
+    ge_graphs = it->second;
+    LOG(INFO) << " get ge session nontraining graphs success.";
+    return true;
+  }
+  LOG(ERROR) << "ge session get nontraining graphs failed.";
+  return false;
 }
