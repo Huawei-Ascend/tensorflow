@@ -52,7 +52,7 @@ def real_config_path(file):
 
 def setup_python():
   """Get python install path."""
-  default_python_bin_path = which('python3.7')
+  default_python_bin_path = which('python3')
   custom_python_bin_path = ''
   ask_python_bin_path = ''
   if default_python_bin_path:
