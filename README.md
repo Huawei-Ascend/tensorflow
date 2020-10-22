@@ -39,8 +39,8 @@ cd tensorflow
 脚本执行成功后，会在output目录生成tfadapter.tar压缩文件
 
 #### 安装插件包
-解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl
-使用 pip 安装 TF_Adapter 插件。
+解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl,
+然后使用 pip 安装 TF_Adapter 插件。
 ```
 pip install npu_bridge-1.15.0-py3-none-any.whl
 ```
