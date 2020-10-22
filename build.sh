@@ -69,6 +69,7 @@ mk_dir() {
 # create build path
 build_tfadapter() {
   logging "Create build directory and build tfadapter"
+  cd "${BASE_PATH}" && ./configure
   CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH"
   if [[ "$GCC_PREFIX" != "" ]]; then
     CMAKE_ARGS="$CMAKE_ARGS -DGCC_PREFIX=$GCC_PREFIX"
