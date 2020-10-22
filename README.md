@@ -15,15 +15,13 @@ Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器
 > TF_Adapter 插件与 Tensorflow 有严格的匹配关系，从源码构建前，您需要确保已经正确安装了 [Tensorflow v1.15.0
 >版本](https://www.tensorflow.org/install) 。
 
-同时系统满足以下要求：
+
+tfadapter也支持由源码编译，进行源码编译前，首先确保你有昇腾910 AI处理器的环境，同时系统满足以下要求：
 - Linux OS
 - GCC >= 7.3.0
 - CMake >= 3.14.0
-- [SWIG](http://www.swig.org/download.html)
-- 配置昇腾处理器开发套件安装路径的环境变量D_LINK_PATH
-  export D_LINK_PATH=安装路径（例如：/usr/local/Ascend）
+- [SWIG](http://www.swig.org/download.html) 
   
-
 #### 下载源码
 
 ```
