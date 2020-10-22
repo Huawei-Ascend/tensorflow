@@ -20,6 +20,9 @@ Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器
 - GCC >= 7.3.0
 - CMake >= 3.14.0
 - [SWIG](http://www.swig.org/download.html)
+- 配置昇腾处理器开发套件安装路径的环境变量D_LINK_PATH
+  export D_LINK_PATH=安装路径（例如：/usr/local/Ascend）
+  
 
 #### 下载源码
 
@@ -28,63 +31,18 @@ git clone https://gitee.com/ascend/tensorflow.git
 cd tensorflow
 ```
 
-#### 配置安装环境
-```BASH
-./configure
+#### 执行脚本生成安装包
 ```
-默认情况下，执行上述命会弹出如下的交互式会话窗口
-> 您的会话可能有所不同。
-```BASH
-Please specify the location of python with available tensorflow v1.15.0 installed. [Default is /usr/bin/python]
-(You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]):
+./build.sh
 ```
-此时，要求您输入安装了 Tensorflow v1.15.0 版本的python解释器路径，如果默认路径是正确的，直接回车，否则请输入正确的 python
-解释器路径。
-> 你可以通过设置 ASCEND_TARGET_PYTHON_BIN_PATH
->的环境变量，来抑制交互式窗口弹出，但是要确保路径是有效的，否则，仍然会要求您输入正确的 python 解释器路径。
 
-键入后，会耗费几秒钟以确保您的输入是有效的，接着，会弹出下面的交互式窗口
-```
-Please specify the location of ascend. [Default is /usr/local/Ascend]
-(You can make this quiet by set env [ASCEND_INSTALL_PATH]):
-```
-此时，要求您输入昇腾处理器开发套件的安装路径，如果默认路径是正确的，直接回车，否则请输入正确的昇腾处理器开发套件安装路径。
+脚本执行成功后，会在output目录生成tfadapter.tar压缩文件
 
-> 你可以通过设置ASCEND_INSTALL_PATH
->的环境变量，来抑制交互式窗口弹出，但是要确保路径是有效的，否则，仍然会要求您输入正确的昇腾处理器开发套件安装路径。
-
-键入后，会接着弹出下面的交互式窗口
+#### 安装插件包
+解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl
+使用 pip 安装 TF_Adapter 插件。
 ```
-Please specify the location of swig. [Default is /usr/local/bin/swig]
-(You can make this quiet by set env [SWIG_INSTALL_PATH]):
-```
-此时，要求您输入SWIG可执行文件路径，如果默认路径是正确的，直接回车，否则请输入正确的SWIG可执行文件路径。
-
-> 你可以通过设置SWIG_INSTALL_PATH
->的环境变量，来抑制交互式窗口弹出，但是要确保路径是有效的，否则，仍然会要求您输入正确的SWIG可执行文件路径。
-
-
-键入后，等待配置完成。
-#### 配置cmake
-> 根据您的网络状况，可能需要数分钟来下载TF_Adapter的依赖项目以完成配置。
-```
-mkdir build
-cd build
-cmake ..
-```
-#### 执行编译
-> 您应当根据实际编译环境，设置合适的并发编译数以提升编译速度。
-```BASH
-make -j8
-```
-编译结束后，安装包会生成在
-```
-./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
-```
-#### 安装
-您可以使用 pip 安装 TF_Adapter 插件。
-```
-pip install ./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
+pip install npu_bridge-1.15.0-py3-none-any.whl
 ```
 需要注意的是， 您应当保证安装路径与您编译时指定的 python
  解释器搜索路径是一致的。
