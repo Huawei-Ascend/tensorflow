@@ -15,7 +15,7 @@ You can build the TF_Adapter software package from the source code and install i
 > The TF_Adapter plug-in has a strict matching relationship with Tensorflow. Before building from source code, you need to ensure that it has been installed correctly [Tensorflow v1.15.0
 >版本](https://www.tensorflow.org/install) 。
 
-At the same time, the system meets the following requirements
+You may also build GraphEngine from source. To build GraphEngine, please make sure that you have access to an Ascend 910 environment as compiling environment, and make sure that following software requirements are fulfilled.
 - Linux OS
 - GCC >= 7.3.0
 - CMake >= 3.14.0
