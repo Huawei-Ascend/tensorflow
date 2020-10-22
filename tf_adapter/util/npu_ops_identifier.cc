@@ -104,14 +104,7 @@ bool NpuOpsIdentifier::IsNpuSupported(const std::string &op_name, const std::str
     tensorflow::GenerateReport::GetInstance()->AddUnSupportedInfo(node_name, op_name, infos);
     return false;
   }
-  if (is_mix_ && ops_info_[op_name][kGray].is_boolean()) {
-    tensorflow::GenerateReport::Details infos;
-    static const std::string message = "This op will not be excuted on npu in mix_compile_mode.";
-    infos.code = tensorflow::GenerateReport::TypeGray;
-    infos.message = message;
-    tensorflow::GenerateReport::GetInstance()->AddUnSupportedInfo(node_name, op_name, infos);
-    return !ops_info_[op_name][kGray];
-  }
+  if (is_mix_ && ops_info_[op_name][kGray].is_boolean()) { return !ops_info_[op_name][kGray]; }
   return true;
 }
 // Determine if the node is performance-sensitive on NPU, this should

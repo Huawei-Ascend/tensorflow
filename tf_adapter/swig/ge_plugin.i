@@ -17,6 +17,9 @@ extern const char* const OPTION_EXEC_PROFILING_MODE;
 extern const char* const OPTION_EXEC_PROFILING_OPTIONS;
 extern const char* const OPTION_GRAPH_RUN_MODE;
 extern const char* const OPTION_EXEC_HCCL_FLAG;
+extern const char* const OPTION_EXEC_PROFILING_FPPONIT_OPTIONS;
+extern const char* const OPTION_EXEC_PROFILING_BPPONIT_OPTIONS;
+
 
 extern void PluginInit(std::map<std::string, std::string>& init_options);
 

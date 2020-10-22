@@ -1,17 +1,3 @@
-# Copyright 2019-2020 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -566,6 +552,12 @@ class NPUEstimator(estimator_lib.Estimator):
                 # check profiling ,and get valid options
                 profiling_options = self.__check_profiling_options(config._profiling_config._enable_options)
                 custom_op.parameter_map["profiling_options"].s = tf.compat.as_bytes(profiling_options)
+                if "task_trace" in profiling_options or  "training_trace" in profiling_options:
+                    if config._profiling_config._fp_point is None or config._profiling_config._bp_point is None:
+                        logging.warning("profiling training_trace option should use with bp_point and fp_point")
+                    else:
+                        custom_op.parameter_map["bp_point"].s = tf.compat.as_bytes(config._profiling_config._bp_point)
+                        custom_op.parameter_map["fp_point"].s = tf.compat.as_bytes(config._profiling_config._fp_point)
             else:
                 # User disable profiling,
                 custom_op.parameter_map["profiling_mode"].b = False
@@ -580,6 +572,12 @@ class NPUEstimator(estimator_lib.Estimator):
         """
         if config._precision_mode is not None:
             custom_op.parameter_map["precision_mode"].s = tf.compat.as_bytes(config._precision_mode)
+        else:
+            if config.graph_run_mode:
+                custom_op.parameter_map["precision_mode"].s = tf.compat.as_bytes("allow_fp32_to_fp16")
+            else:
+                custom_op.parameter_map["precision_mode"].s = tf.compat.as_bytes("force_fp16")
+
         custom_op.parameter_map["enable_reduce_precision"].b = config._enable_reduce_precision
 
     def __load__variable_format_optimize(self, config, custom_op):
@@ -656,6 +654,18 @@ class NPUEstimator(estimator_lib.Estimator):
             custom_op.parameter_map["job"].s = tf.compat.as_bytes('localhost')
             custom_op.parameter_map["task_index"].i = 0
 
+    def _load_op_performance_config(self, config, custom_op):
+        """Load _load_op_performance_config ,and add to custom_optimizers
+        Args:
+            config: NPURunConfig.
+            custom_op: Customer optimizers.
+        """
+        if config._op_select_implmode is not None:
+            custom_op.parameter_map["op_select_implmode"].s = tf.compat.as_bytes(config._op_select_implmode)
+        if config._optypelist_for_implmode is not None:
+            custom_op.parameter_map["optypelist_for_implmode"].s = tf.compat.as_bytes(config._optypelist_for_implmode)
+
+
     def __load_graph_optimizers(self, config):
         """Change the session config and load the graph optimizers:
         GradFusionOptimizer and OMPartitionSubgraphsPass."""
@@ -691,6 +701,7 @@ class NPUEstimator(estimator_lib.Estimator):
         custom_op.parameter_map["op_debug_level"].i = config.op_debug_level
         if config.enable_scope_fusion_passes is not None:
             custom_op.parameter_map["enable_scope_fusion_passes"].s = tf.compat.as_bytes(config.enable_scope_fusion_passes)
+        custom_op.parameter_map["enable_exception_dump"].i = config.enable_exception_dump
 
         # add profiling options to custom_op
         self.__load_profiling_options(config, custom_op)
@@ -711,6 +722,8 @@ class NPUEstimator(estimator_lib.Estimator):
         self.__load_stream_max_config(config, custom_op)
 
         self.__load_ps_mode_config(config, custom_op)
+
+        self._load_op_performance_config(config, custom_op)
 
         return config
 

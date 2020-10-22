@@ -1,17 +1,3 @@
-# Copyright 2019-2020 Huawei Technologies Co., Ltd
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-# http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-# ============================================================================
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -21,6 +7,7 @@ from tensorflow.python.platform import gfile
 import os
 import re
 import json
+from enum import Enum
 from npu_bridge.estimator.npu import util
 from tensorflow.python.estimator import run_config as run_config_lib
 from tensorflow.distribute.experimental import ParameterServerStrategy
@@ -57,10 +44,13 @@ class NPURunConfig(run_config_lib.RunConfig):
                  dump_config=None,
                  stream_max_parallel_num=None,
                  is_tailing_optimization=False,
-                 horovod_mode = False,
-                 graph_run_mode = 1,
-                 op_debug_level = 0,
-                 enable_scope_fusion_passes = None
+                 horovod_mode=False,
+                 graph_run_mode=1,
+                 op_debug_level=0,
+                 enable_scope_fusion_passes=None,
+                 enable_exception_dump=0,
+                 op_select_implmode=None,
+                 optypelist_for_implmode=None
                  ):
         """
         Constructs a NPUConfig.
@@ -95,7 +85,7 @@ class NPURunConfig(run_config_lib.RunConfig):
         log_step_count_steps: The frequency, in number of global steps, that the
             global step/sec and the loss will be logged during training.
         enabel_data_pre_proc: This is the switch of data preprocess.
-        precision_mode: enable or disable mix precision.
+        precision_mode: if train, default is: allow_fp32_to_fp16; if inference, default is: force_fp16.
         variable_format_optimize: enable or disable variable format optimize while graph
             engineer optimize process.
         mix_compile_mode: This is the swith of mix_compile_mode. When the value is
@@ -109,6 +99,9 @@ class NPURunConfig(run_config_lib.RunConfig):
         dump_config: The dump configuration.
         stream_max_parallel_num: Specify the degree of parallelism of the AICPU / AICORE engine
                                  to achieve parallel execution between AICPU / AICORE operators.
+        op_select_implmode: Selecting whether the operator is implemented with high precision
+                            or high performance.
+        optypelist_for_implmode: Operator list.
         """
 
         # Check iterations_per_loop.
@@ -164,6 +157,10 @@ class NPURunConfig(run_config_lib.RunConfig):
         experimental_distribute = None
         if tmp_cluster_spec and isinstance(distribute, ParameterServerStrategy):
             experimental_distribute = DistributeConfig(distribute, distribute, None)
+        util.check_nonnegative_integer(enable_exception_dump, "enable_exception_dump")
+        self.enable_exception_dump = enable_exception_dump
+        self._op_select_implmode = op_select_implmode
+        self._optypelist_for_implmode = optypelist_for_implmode
 
         super(NPURunConfig, self).__init__(
             model_dir=model_dir,
@@ -182,18 +179,23 @@ class ProfilingConfig():
 
     def __init__(self,
                  enable_profiling=False,
-                 enable_options=[]):
+                 enable_options=[],
+                 fp_point=None,
+                 bp_point=None):
         """
         Constructs a ProfilingConfig.
         Args:
             enable_profiling: Enable profiling, default is False.
             enable_options: Profiling options, list of `training_trace` or `task_trace`
                 or `op_trace`.
+            fp_point: Forward propagation first node name.
+            bp_point: back propagation last node name.
         """
 
         self._enable_profiling = enable_profiling
         self._enable_options = enable_options
-
+        self._fp_point = fp_point
+        self._bp_point = bp_point
 
 class DumpConfig():
     """Dump Config with NPU support."""
@@ -221,3 +223,12 @@ class DumpConfig():
         self._dump_mode = dump_mode
         self._enable_dump_debug = enable_dump_debug
         self._dump_debug_mode = dump_debug_mode
+
+class NpuExecutePlacement(Enum):
+    """npu execute place option. """
+    ALL = "all"
+    CUBE = "cube"
+    VECTOR = "vector"
+    TAISHAN = "taishan"
+    DVPP = "dvpp"
+    HOST = "host"

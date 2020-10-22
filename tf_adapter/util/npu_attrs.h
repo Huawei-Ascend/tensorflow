@@ -39,6 +39,7 @@ limitations under the License.
 
 // single load all npu mode
 namespace tensorflow {
+Status GetEnvDeviceID(uint32_t &device_id);
 class NpuAttrs {
  public:
   // This method returns instance Pointers

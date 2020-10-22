@@ -47,7 +47,6 @@ limitations under the License.
 #include "tensorflow/core/lib/gtl/map_util.h"
 #include "tensorflow/core/public/session_options.h"
 #include "tf_adapter/common/common.h"
-#include "tf_adapter/util/generate_report.h"
 #include "tf_adapter/util/infershape_util.h"
 #include "tf_adapter/util/npu_attrs.h"
 #include "tf_adapter/util/npu_ops_identifier.h"
@@ -220,15 +219,10 @@ bool IsWhiteListSupport(const string &op_name, bool mix_compile_mode, const stri
 
   auto identifier = NpuOpsIdentifier::GetInstance(mix_compile_mode);
 
-  bool ans = (identifier->IsNpuSupported(op_name, node_name)) && !EndsWith(op_name, suffix_op)
-      && !EndsWith(op_name, suffix_op_v2) && !(op_name == "Const") && !(op_name == "_Arg") && !(op_name == "_Retval")
-      && !(op_name == "StringJoin");
+  bool ans = (identifier->IsNpuSupported(op_name, node_name)) && !EndsWith(op_name, suffix_op) &&
+             !EndsWith(op_name, suffix_op_v2) && !(op_name == "Const") && !(op_name == "_Arg") &&
+             !(op_name == "_Retval") && !(op_name == "StringJoin");
   if (!ans) {
-    GenerateReport::Details infos;
-    static const std::string message = "This op can only excute on host";
-    infos.code = GenerateReport::NotSupport;
-    infos.message = message;
-    GenerateReport::GetInstance()->AddUnSupportedInfo(node_name, op_name, infos);
     auto ret = not_support_nodes.insert(op_name);
     if (ret.second) {
       LOG(INFO) << "node: " << op_name << " is not in white list, "
@@ -265,25 +259,20 @@ Status SetIteratorShardName(Node *node) {
   return Status::OK();
 }
 
-bool IsWithoutNpuScope(Node *node) {
-  if (!compile_mode) { return false; }
-  bool is_npu_compile = false;
-  Status status = GetNodeAttr(node->attrs(), ATTR_VALUE_SCOPE_NAME, &is_npu_compile);
-  if (status.ok() && is_npu_compile) { return true; }
-  return false;
-}
-
-bool IsWithoutNpuScope(NodeDef &node_def) {
+bool IsWithoutNpuScope(const NodeDef &node_def) {
   if (!compile_mode) { return false; }
   if (node_def.attr().count(ATTR_VALUE_SCOPE_NAME)) { return node_def.attr().at(ATTR_VALUE_SCOPE_NAME).b(); }
   return false;
+}
+
+bool IsWithoutNpuScope(Node *node) {
+  return IsWithoutNpuScope(node->def());
 }
 
 // Make sure we don't recurse infinitely on recursive functions.
 const int kMaxRecursionDepth = 10;
 
 bool IsNpuSupportingFunc(const string &func_name, FunctionLibraryDefinition *func_lib, int depth) {
-  LOG(INFO) << "function name is " << func_name << ", depth is " << depth;
   if (func_lib == nullptr) {
     LOG(ERROR) << "func lib is nullptr, function name is " << func_name;
     return false;
@@ -294,13 +283,12 @@ bool IsNpuSupportingFunc(const string &func_name, FunctionLibraryDefinition *fun
   }
   const FunctionDef *func_def = func_lib->Find(func_name);
   if (func_def == nullptr) {
-    LOG(ERROR) << "func def is nullptr, function name is " << func_name;
     return false;
   }
   for (NodeDef node_def : func_def->node_def()) {
     if (node_def.op() == "Const") {
       LOG(INFO) << "Const in func can dump";
-    } else if (!IsWhiteListSupport(node_def.op(), compile_mode, node_def.name()) || IsWithoutNpuScope(node_def)) {
+    } else if (!IsNpuSupportingNode(node_def, compile_mode, func_lib)) {
       return false;
     }
     for (const auto &item : node_def.attr()) {
@@ -320,6 +308,17 @@ bool IsNpuSupportingFunc(Node *node, FunctionLibraryDefinition *func_lib, int de
     }
   }
   return true;
+}
+
+bool IsNpuSupportingNode(const NodeDef &node_def, bool mix_compile_mode, FunctionLibraryDefinition *func_lib) {
+  if (IsWithoutNpuScope(node_def)) { return false; }
+  if (IsWhiteListSupport(node_def.op(), mix_compile_mode, node_def.name())) { return true; }
+  if (IsNpuSupportingFunc(node_def.op(), func_lib, 0)) { return true; }
+  return false;
+}
+
+bool IsNpuSupportingNode(Node *node, bool mix_compile_mode, FunctionLibraryDefinition *func_lib) {
+  return IsNpuSupportingNode(node->def(), mix_compile_mode, func_lib);
 }
 
 Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, FunctionLibraryDefinition *func_lib,
@@ -364,53 +363,26 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
   OrderedNodeSet outSet;
   for (Node *node : sortedNodes) {
     // 0 is function depth
-    if (!IsNpuSupportingFunc(node, func_lib, 0)) {
-      GenerateReport::Details infos;
-      static const std::string message = "This function node is not supported in npu.";
-      infos.code = GenerateReport::NotSupport;
-      infos.message = message;
-      GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
-      continue;
-    }
+    if (!IsNpuSupportingFunc(node, func_lib, 0)) { continue; }
     if (!node->IsOp()) {  // Ship Sink/Source nodes.
-      GenerateReport::Details infos;
-      static const std::string message = "Sink/Source is not compute node.";
-      infos.code = GenerateReport::NotSupport;
-      infos.message = message;
-      GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
       continue;
     }
     if (enableDP
         && (node->type_string() == "Iterator" || node->type_string() == "IteratorV2"
             || node->type_string() == "IteratorGetNext")) {
-      bool is_sink = false;
       if (node->type_string() == "IteratorGetNext") {
         for (Node *n : node->in_nodes()) {
           REQUIRES_NOT_NULL(n);
           LOG(INFO) << node->name() << " has in nodes " << n->name();
-          if (n->type_string() == "Iterator" || n->type_string() == "IteratorV2") {
-            is_sink = true;
-            candidates->insert(node);
-          }
+          if (n->type_string() == "Iterator" || n->type_string() == "IteratorV2") { candidates->insert(node); }
         }
       }
       if (node->type_string() == "Iterator" || node->type_string() == "IteratorV2") {
         for (Node *n : node->out_nodes()) {
           REQUIRES_NOT_NULL(n);
           LOG(INFO) << node->name() << " has in nodes " << n->name();
-          if (n->type_string() == "IteratorGetNext") {
-            is_sink = true;
-            candidates->insert(node);
-          }
+          if (n->type_string() == "IteratorGetNext") { candidates->insert(node); }
         }
-      }
-      if (!is_sink) {
-        GenerateReport::Details infos;
-        static const std::string message =
-            "Only if Iterator/IteratorV2 connect to IteratorGetNext, will them be excuted on npu.";
-        infos.code = GenerateReport::ScenarioProblems;
-        infos.message = message;
-        GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
       }
     } else {
       // Const down when it need down
@@ -419,31 +391,20 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
         for (auto edge : node->in_edges()) {
           REQUIRES_NOT_NULL(edge);
           REQUIRES_NOT_NULL(edge->src());
-          if (edge->IsControlEdge() && edge->src()->name() != "_SOURCE"
-              && IsWhiteListSupport(edge->src()->type_string(), mix_compile_mode, edge->src()->name())
-              && !IsWithoutNpuScope(edge->src())) {
+          if (edge->IsControlEdge() && edge->src()->name() != "_SOURCE" &&
+              IsNpuSupportingNode(edge->src(), compile_mode, func_lib)) {
             candidates->insert(node);
             ctrlEdgeNum++;
             break;
           }
         }
-        GenerateReport::Details infos;
-        static const std::string message = "This node is not satisfy the needs of Const excuted on npu.";
-        infos.code = GenerateReport::ScenarioProblems;
-        infos.message = message;
-        GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
         if (ctrlEdgeNum >= 1) { continue; }
       }
       // normal needed down op
-      if (IsWhiteListSupport(node->type_string(), mix_compile_mode, node->name()) && !IsWithoutNpuScope(node)) {
+      if (IsNpuSupportingNode(node, compile_mode, func_lib)) {
         candidates->insert(node);
       } else {
         outSet.insert(node);
-        GenerateReport::Details infos;
-        static const std::string message = "This node is not supported on npu";
-        infos.code = GenerateReport::NotSupport;
-        infos.message = message;
-        GenerateReport::GetInstance()->AddUnSupportedInfo(node, infos);
       }
     }
   }
@@ -465,11 +426,6 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
       if (unsupportedFrames.find(cfInfo.frame_name) != unsupportedFrames.end()) {
         outSet.insert(*it);
         it = candidates->erase(it);
-        GenerateReport::Details infos;
-        static const std::string message = "This node is will not be excuted on npu in mix_compile_mode";
-        infos.code = GenerateReport::ScenarioProblems;
-        infos.message = message;
-        GenerateReport::GetInstance()->AddUnSupportedInfo(*it, infos);
       } else {
         ++it;
       }
@@ -482,10 +438,7 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
     auto node = *iter;
     if (mix_compile_mode && (node->type_string() == "Where")) {
       bool isInitializedGraph = InferShapeUtil::IsInitializedGraph(node);
-      if (isInitializedGraph) {
-        candidates->insert(node);
-        GenerateReport::GetInstance()->DeleteUnSupportedInfo(node);
-      }
+      if (isInitializedGraph) { candidates->insert(node); }
     }
 
     outSet.erase(iter);
@@ -497,11 +450,6 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
         if (IsRefType(dtypeDst) && candidates->count(edge->dst()) > 0) {
           candidates->erase(edge->dst());
           outSet.insert(edge->dst());
-          GenerateReport::Details infos;
-          static const std::string message = "This node is will not be excuted on npu because of REF input";
-          infos.code = GenerateReport::ScenarioProblems;
-          infos.message = message;
-          GenerateReport::GetInstance()->AddUnSupportedInfo(edge->dst(), infos);
           LOG(INFO) << "Remove node : " << edge->dst()->name() << " from candidates, because of node : " << node->name()
                     << " REF input.";
           continue;
@@ -509,14 +457,7 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
         if (dtypeDst == DT_STRING || dtypeDst == DT_RESOURCE) {
           if (edge->dst()->type_string() == "Assert") { continue; }
           if (node->type_string() == "Const") { continue; }
-          if (candidates->erase(edge->dst()) > 0) {
-            outSet.insert(edge->dst());
-            GenerateReport::Details infos;
-            static const std::string message = "An unsinked node link to this node by DT_STRING/DT_RESOURCE edge";
-            infos.code = GenerateReport::ScenarioProblems;
-            infos.message = message;
-            GenerateReport::GetInstance()->AddUnSupportedInfo(edge->dst(), infos);
-          }
+          if (candidates->erase(edge->dst()) > 0) { outSet.insert(edge->dst()); }
         }
       }
     }
@@ -529,24 +470,12 @@ Status FindNpuSupportCandidates(const Graph &graph, OrderedNodeSet *candidates, 
         if (IsRefType(dtypeDst) && candidates->count(edge->src()) > 0) {
           candidates->erase(edge->src());
           outSet.insert(edge->src());
-          GenerateReport::Details infos;
-          static const std::string message = "This node is will not be excuted on npu because of REF output";
-          infos.code = GenerateReport::ScenarioProblems;
-          infos.message = message;
-          GenerateReport::GetInstance()->AddUnSupportedInfo(edge->dst(), infos);
           LOG(INFO) << "Remove node : " << edge->dst()->name() << " from candidates, because of node : " << node->name()
                     << " REF Output.";
           continue;
         }
         if (dtypeDst == DT_STRING || dtypeDst == DT_RESOURCE) {
-          if (candidates->erase(edge->src()) > 0) {
-            outSet.insert(edge->src());
-            GenerateReport::Details infos;
-            static const std::string message = "This node link to an unsinked node by DT_STRING/DT_RESOURCE edge";
-            infos.code = GenerateReport::ScenarioProblems;
-            infos.message = message;
-            GenerateReport::GetInstance()->AddUnSupportedInfo(edge->dst(), infos);
-          }
+          if (candidates->erase(edge->src()) > 0) { outSet.insert(edge->src()); }
         }
       }
     }
@@ -1135,6 +1064,11 @@ class OMSplitter {
     Status SetOptions(std::map<std::string, std::string> npu_optimizer_options,
                       std::map<std::string, std::string> pass_options);
 
+    // GEOp node(s) in the output graph. Not owned.
+    // both point to the function call node.
+    Node *GEOpNodeInputs_;
+    Node *GEOpNodeOutputs_;
+
    private:
     // The subgraph extracted from the input graph, suitable for being turned
     // into a FunctionDef. Inputs are fed by _Arg nodes, and outputs are
@@ -1149,11 +1083,6 @@ class OMSplitter {
 
     // Name that is used for the GEOp node.
     string functionDefName_;
-
-    // GEOp node(s) in the output graph. Not owned.
-    // both point to the function call node.
-    Node *GEOpNodeInputs_;
-    Node *GEOpNodeOutputs_;
 
     // Maps from source (producer node/slot) and destination
     // (consumer node/slot) tensors in the input graph to _Arg numbers in
@@ -1830,6 +1759,8 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
   } else {
     return Status::OK();
   }
+
+  LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << " begin.";
   LOG(INFO) << "mix_compile_mode is " << (mix_compile_mode ? "True" : "False");
   LOG(INFO) << "iterations_per_loop is " << iterations_per_loop;
 
@@ -2009,7 +1940,7 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
   }
   TF_RETURN_IF_ERROR(OMSplitter::OMPartitionSubgraphsInFunctions(
       OMSplitter::PARTITION_SUB_GRAPH_ATTR, graph, graph_format_value, func_lib, all_options, pass_options));
-  LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << "SubgraphsInFunctions success.";
+  LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << " SubgraphsInFunctions success.";
   FixupSourceAndSinkEdges(graph->get());
 
   if (need_print != nullptr && strcmp("1", need_print) == 0) {

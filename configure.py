@@ -26,9 +26,10 @@ except ImportError:
   from distutils.spawn import find_executable as which
 
 _COMPAT_TENSORFLOW_VERSION = "1.15.0"
-_PYTHON_BIN_PATH_ENV = "ASCEND_TARGET_PYTHON_BIN_PATH"
-_ASCEND_INSTALL_PATH_ENV = "ASCEND_INSTALL_PATH"
-_SWIG_INSTALL_PATH_ENV = "SWIG_INSTALL_PATH"
+_COMPAT_PYTHON_VERSION = "Python 3.7"
+_COMPAT_SWIG_VERSION = "SWIG Version "
+_ASCEND_INSTALL_PATH_ENV = "D_LINK_PATH"
+
 
 
 def run_command(cmd):
@@ -49,13 +50,26 @@ def get_input(question):
 def real_config_path(file):
   return os.path.join("tools", file)
 
-def setup_python(env_path):
+def setup_python():
   """Get python install path."""
-  default_python_bin_path = sys.executable
-  ask_python_bin_path = ('Please specify the location of python with valid '
-                         'tensorflow 1.15.0 site-packages installed. [Default '
-                         'is %s]\n(You can make this quiet by set env [ASCEND_TARGET_PYTHON_BIN_PATH]): ') % default_python_bin_path
-  custom_python_bin_path = env_path
+  default_python_bin_path = which('python3')
+  custom_python_bin_path = ''
+  ask_python_bin_path = ''
+  if default_python_bin_path:
+    custom_python_bin_path = default_python_bin_path
+    compile_args = run_command([
+      custom_python_bin_path, '--version'])
+    if not _COMPAT_PYTHON_VERSION in compile_args:
+      print('Invalid default python version: %s, only support Python 3.7.' % compile_args)
+      ask_python_bin_path = ('Please specify the location of python with valid '
+                             'tensorflow 1.15.0 site-packages installed. [Default '
+                             'is %s]\n(Please enter the correct python path: ') % default_python_bin_path
+      custom_python_bin_path = ''
+  else:
+    ask_python_bin_path = ('Please specify the location of python with valid '
+                           'tensorflow 1.15.0 site-packages installed. [Default '
+                           'is %s]\n(Please enter the correct python path: ') % default_python_bin_path
+
   while True:
     if not custom_python_bin_path:
       python_bin_path = get_input(ask_python_bin_path)
@@ -107,7 +121,7 @@ def setup_ascend(env_path):
   """Get ascend install path."""
   default_ascend_path = "/usr/local/Ascend"
   ask_ascend_path = ('Please specify the location of ascend. [Default is '
-                     '%s]\n(You can make this quiet by set env [ASCEND_INSTALL_PATH]): ') % default_ascend_path
+                     '%s]\n(You can make this quiet by set env [D_LINK_PATH]): ') % default_ascend_path
   custom_ascend_path = env_path
   while True:
     if not custom_ascend_path:
@@ -130,12 +144,24 @@ def setup_ascend(env_path):
     f.write(os.path.join(ascend_path, "driver", "lib64", "driver", "libtsdclient.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libc_sec.so\n"))
 
-def setup_swig(env_path):
+def setup_swig():
   """Get swig install path."""
-  default_swig_path = which('swig') or "/usr/bin/swig"
-  ask_swig_path = ('Please specify the location of swig. [Default is '
-                     '%s]\n(You can make this quiet by set env [SWIG_INSTALL_PATH]): ') % default_swig_path
-  custom_swig_path = env_path
+  default_swig_path = which('swig')
+  custom_swig_path = ''
+  ask_swig_path = ''
+  if default_swig_path:
+    custom_swig_path = default_swig_path
+    compile_args = run_command([
+      custom_swig_path, '-version'])
+    if not _COMPAT_SWIG_VERSION in compile_args:
+      print('Invalid default python version: %s.' % compile_args)
+      ask_swig_path = ('Please specify the location of swig. [Default is '
+                       '%s]\n(Please enter the correct swig path: ') % default_swig_path
+      custom_swig_path = ''
+  else:
+    ask_swig_path = ('Please specify the location of swig. [Default is '
+                     '%s]\n(Please enter the correct swig path: ') % default_swig_path
+
   while True:
     if not custom_swig_path:
       swig_path = get_input(ask_swig_path)
@@ -159,9 +185,9 @@ def setup_swig(env_path):
 
 def main():
   env_snapshot = dict(os.environ)
-  setup_python(env_snapshot.get(_PYTHON_BIN_PATH_ENV))
+  setup_python()
   setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
-  setup_swig(env_snapshot.get(_SWIG_INSTALL_PATH_ENV))
+  setup_swig()
 
 
 if __name__ == '__main__':

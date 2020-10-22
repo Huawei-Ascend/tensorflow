@@ -45,9 +45,11 @@
 namespace ge {
 class Operator;
 class OperatorImpl;
+class NodeUtils;
 class NamedAttrs;
 class Graph;
 class AttrValue;
+class Node;
 
 using SubgraphBuilder = std::function<Graph()>;
 using OperatorImplPtr = std::shared_ptr<OperatorImpl>;
@@ -65,8 +67,8 @@ using std::string;
 class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
  public:
   friend class OperatorImpl;
-
   friend class GraphBuilderImpl;
+  friend class NodeUtils;
 
   using OpInt = int64_t;
   using OpFloat = float;
@@ -279,6 +281,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   OperatorImplPtr operator_impl_{nullptr};
 
   graphStatus GetInputConstDataOut(const string &dst_name, Tensor &data) const;
+
+  std::shared_ptr<const Node> GetNode() const;
 };
 /*lint +e148*/
 }  // namespace ge
