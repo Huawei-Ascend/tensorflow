@@ -37,8 +37,8 @@ cd tensorflow
 After the script is successfully executed, a compressed file of tfadapter.tar will be generated in the output directory
 
 #### Install
-Unzip the tfadapter.tar file to generate npu_bridge-1.15.0-py3-none-any.whl
-You can install the TF_Adapter plug-in using pip.
+Unzip the tfadapter.tar file to generate npu_bridge-1.15.0-py3-none-any.whl,
+After you can install the TF_Adapter plug-in using pip.
 ```
 pip install ./dist/python/dist/npu_bridge-1.15.0-py3-none-any.whl
 ```
