@@ -13,7 +13,7 @@ Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器
 
 您可以从源代码构建 TF_Adapter 软件包并将其安装在昇腾AI处理器环境上。
 > TF_Adapter 插件与 Tensorflow 有严格的匹配关系，从源码构建前，您需要确保已经正确安装了 [Tensorflow v1.15.0
->版本](https://www.tensorflow.org/install) 。
+>版本](https://www.tensorflow.org/install/pip) 。
 
 
 tfadapter也支持由源码编译，进行源码编译前，首先确保你有昇腾910 AI处理器的环境，同时系统满足以下要求：
