@@ -1,0 +1,24 @@
+# source file:python/npu_bridge/estimator/npu/npu_config.py
+
+class NPURunConfig(run_config_lib.RunConfig):
+    def __init__(self, iterations_per_loop=1, profiling_config=None, model_dir=None, tf_random_seed=None,
+                save_summary_steps=0, save_checkpoints_steps=None, save_checkpoints_secs=None, session_config=None,
+                keep_checkpoint_max=5, keep_checkpoint_every_n_hours=10000, log_step_count_steps=100, distribute=None,
+                enable_data_pre_proc=True, precision_mode=None, enable_reduce_precision=False,
+                variable_format_optimize=True, mix_compile_mode=False, hcom_parallel=False,
+                graph_memory_max_size=None, variable_memory_max_size=None, auto_tune_mode=None,
+                dump_config=None, stream_max_parallel_num=None, is_tailing_optimization=False,
+                horovod_mode=False, graph_run_mode=1, op_debug_level=0, enable_scope_fusion_passes=None,
+                enable_exception_dump=0, op_select_implmode=None, optypelist_for_implmode=None, dynamic_input_config=None,
+                mstune_mode=None, work_path=None, buffer_optimize=None, enable_small_channel=0, fusion_switch_file=None,
+                enable_compress_weight=False, compress_weight_conf=None):
+
+class ProfilingConfig():
+    def __init__(self, enable_profiling=False, enable_options=[], fp_point=None, bp_point=None):
+
+class DumpConfig():
+    def __init__(self, enable_dump=False, dump_path=None, dump_step=None,
+                dump_mode="output", enable_dump_debug=False, dump_debug_mode="all"):
+
+class DynamicInputConfig():
+    def __init__(self, input_shape, dynamic_dims):

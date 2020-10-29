@@ -727,6 +727,14 @@ class NPUEstimator(estimator_lib.Estimator):
         if config.enable_scope_fusion_passes is not None:
             custom_op.parameter_map["enable_scope_fusion_passes"].s = tf.compat.as_bytes(config.enable_scope_fusion_passes)
         custom_op.parameter_map["enable_exception_dump"].i = config.enable_exception_dump
+        if config._buffer_optimize is not None:
+            custom_op.parameter_map["buffer_optimize"].s = tf.compat.as_bytes(config._buffer_optimize)
+        custom_op.parameter_map["enable_small_channel"].i = config._enable_small_channel
+        if config._fusion_switch_file is not None:
+            custom_op.parameter_map["fusion_switch_file"].s = tf.compat.as_bytes(config._fusion_switch_file)
+        custom_op.parameter_map["enable_compress_weight"].b = config._enable_compress_weight
+        if config._compress_weight_conf is not None:
+            custom_op.parameter_map["compress_weight_conf"].s = tf.compat.as_bytes(config._compress_weight_conf)
 
         # add profiling options to custom_op
         self.__load_profiling_options(config, custom_op)

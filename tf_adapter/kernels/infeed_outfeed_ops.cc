@@ -67,7 +67,7 @@ Status ConvertDataItem2Tensor(const std::vector<tdt::DataItem> &items, std::vect
       LOG(INFO) << "End of processing.";
       return Status::OK();
     }
-    DataType type;
+    DataType type = DT_FLOAT;
     DataTypeFromString(item.tensorType_, &type);
     if (type == DT_STRING) {
       Tensor result_tensor(tensorflow::DT_STRING, TensorShape({}));

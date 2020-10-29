@@ -104,8 +104,8 @@ Status BuildOutputTensorInfo(OpKernelContext *ctx, std::vector<ge::OutputTensorI
                                      ", while GE return:", outputs[i].length);
     }
     LOG(INFO) << "BuildOutputTensorInfo, output index:" << i << ", total_bytes:" << total_bytes
-              << ", shape:" << dim_string << ", tensor_ptr:" << (int64_t) tensor_ptr << ", output"
-              << (int64_t) output.data.get();
+              << ", shape:" << dim_string << ", tensor_ptr:" << reinterpret_cast<uintptr_t>(tensor_ptr) << ", output"
+              << reinterpret_cast<uintptr_t>(output.data.get());
     if (total_bytes == 0) {
       LOG(INFO) << "BuildOutputTensorInfo, output index:" << i << ", total_bytes is 0, continue do next. ";
       continue;
@@ -168,7 +168,7 @@ GeOp::GeOp(OpKernelConstruction *ctx)
     : AsyncOpKernel(ctx), init_flag_(false), build_flag_(false), add_graph_flag_(false),
       sess_init_flag_(false), compute_graph_empty_(false), data_format_(""), graph_id_(0),
       is_initialized_graph_(false), need_iteration_(false), tf_session_(""), ge_session_(nullptr),
-      job_type_(""), is_host_graph_(false), is_train_graph_(false) {
+      job_type_(""), is_host_graph_(false), is_train_graph_(false), handle_(nullptr), tuning_api_(nullptr) {
   Initialize(ctx);
 }
 
@@ -196,24 +196,27 @@ void GeOp::Initialize(OpKernelConstruction *ctx) {
   // global environment Initialize, invoke once for each process
   string sess_config = "";
   OP_REQUIRES_OK(ctx, ctx->GetAttr("_NpuOptimizer", &sess_config));
-  std::map<std::string, std::string> init_options = NpuAttrs::GetInitOptions(ctx);
   std::map<std::string, std::string> pass_options = NpuAttrs::GetPassOptions(ctx);
   iteration_per_loop_ = std::atoi(pass_options["iterations_per_loop"].c_str());
   job_type_ = pass_options["job"];
-  mstune_mode_ = init_options["ge.buildMode"];
-  work_path_ = init_options["ge.tuningPath"];
+  if (GePlugin::GetInstance()->IsGlobal()) {
+    LOG(INFO) << "[GEOP] GePlugin global, skip GePlugin init";
+    std::map<std::string, std::string> global_init_options = GePlugin::GetInstance()->GetInitOptions();
+    GetMsTuneConfig(global_init_options);
+  } else {
+    std::map<std::string, std::string> init_options = NpuAttrs::GetInitOptions(ctx);
+    GetMsTuneConfig(init_options);
+    GePlugin::GetInstance()->Init(init_options_);
+    LOG(INFO) << "[GEOP] GePlugin init success";
+  }
+
   if (!mstune_mode_.empty() && !work_path_.empty()) {
     handle_ = mmDlopen("libmstune_train.so", MMPA_RTLD_NOW);
     OP_REQUIRES(ctx, handle_ != nullptr, errors::InvalidArgument("libmstune_train.so dlopen failed, ", mmDlerror()));
-    tuning_api_ = (MsTuningFunc)mmDlsym(handle_, const_cast<char*>("MsGradientTuning"));
+    tuning_api_ = (MsTuningFunc)mmDlsym(handle_, const_cast<char*>("MsTrainTuning"));
     OP_REQUIRES(ctx, tuning_api_ != nullptr, errors::InvalidArgument("dlsym MsGradientTuning API failed, ", mmDlerror()));
   }
-  if (GePlugin::GetInstance()->IsGlobal()) {
-    LOG(INFO) << "[GEOP] GePlugin global, skip GePlugin init";
-  } else {
-    GePlugin::GetInstance()->Init(init_options);
-    LOG(INFO) << "[GEOP] GePlugin init success";
-  }
+
   sess_options_ = NpuAttrs::GetSessOptions(ctx);
 
   init_flag_ = true;
@@ -250,7 +253,7 @@ void GeOp::Finalize() {
         if (!GenerateReport::GetInstance()->SaveUnsupportedInfo().ok()) {
           LOG(WARNING) << "[GEOP] Save check report failed.";
         }
-        if (!mstune_mode_.empty() && !work_path_.empty()) {
+        if (handle_ != nullptr) {
           (void)mmDlclose(handle_);
         }
       }
@@ -259,6 +262,16 @@ void GeOp::Finalize() {
   init_flag_ = false;
   LOG(INFO) << "[GEOP] GeOp Finalize success, tf session: " << tf_session_ << ", graph_id_: " << graph_id_;
   return;
+}
+
+void GeOp::GetMsTuneConfig(std::map<std::string, std::string> init_options) {
+  mstune_mode_ = init_options["ge.buildMode"];
+  work_path_ = init_options["ge.tuningPath"];
+  auto_tune_mode_ = init_options[ge::AUTO_TUNE_MODE];
+  if (!mstune_mode_.empty() && !work_path_.empty()) {
+    init_options[ge::AUTO_TUNE_MODE] = "";
+  }
+  init_options_ = init_options;
 }
 
 int GeOp::InitRebuildFlag(uint32_t cache_graph_id) {
@@ -573,13 +586,20 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
         LOG(INFO) << "[GEOP] in tune mode, training graph handled by tools.";
         uint32_t device_id = 0;
         OP_REQUIRES_OK_ASYNC(ctx, GetEnvDeviceID(device_id), done);
+        LOG(INFO) << "[GEOP] in tuning func, mstune_mode_:" << mstune_mode_
+                  << " auto_tune_mode_:" << auto_tune_mode_;
         std::map<string, string> tune_options = {{"work_path", work_path_},
                                                  {"job_type", mstune_mode_},
-                                                 {"devices", std::to_string(device_id)}};
+                                                 {"devices", std::to_string(device_id)},
+                                                 {"auto_tune_mode", auto_tune_mode_}};
+        std::map<std::string, std::map<std::string, std::string>> options;
+        options["mstune"] = tune_options;
+        options["initialize"] = init_options_;
+        options["session"] = sess_options_;
         std::vector<ge::Graph> ge_graphs;
         OP_REQUIRES_ASYNC(ctx, SessionManager::GetInstance().GetGeGraphs(ge_session_, ge_graphs),
           errors::Internal("[GEOP] ge ge session nontraining graphs failed."), done);
-        MsTuneStatus tune_ret = (*tuning_api_)(ge_graph, ge_graphs, ge_session_, tune_options);
+        MsTuneStatus tune_ret = (*tuning_api_)(ge_graph, ge_graphs, ge_session_, options);
         OP_REQUIRES_ASYNC(ctx, tune_ret == MSTUNE_SUCCESS, errors::Internal("[GEOP] exec msTuning func failed."), done);
         LOG(INFO) << "[GEOP] msTuning success.";
         build_flag_ = true;

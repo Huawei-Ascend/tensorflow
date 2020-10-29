@@ -201,6 +201,11 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
   std::string optypelist_for_implmode;
   string input_shape;
   string dynamic_dims;
+  std::string buffer_optimize;
+  std::string enable_small_channel = "0";
+  std::string fusion_switch_file;
+  std::string enable_compress_weight = std::to_string(false);
+  std::string compress_weight_conf;
 
   if (ctx != nullptr && ctx->GetAttr("_NpuOptimizer", &npuOptimizer) == Status::OK()) {
     ctx->GetAttr("_variable_format_optimize", &variable_format_optimize);
@@ -234,6 +239,11 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
     ctx->GetAttr("_optypelist_for_implmode", &optypelist_for_implmode);
     ctx->GetAttr("_input_shape", &input_shape);
     ctx->GetAttr("_dynamic_dims", &dynamic_dims);
+    ctx->GetAttr("_buffer_optimize", &buffer_optimize);
+    ctx->GetAttr("_enable_small_channel", &enable_small_channel);
+    ctx->GetAttr("_fusion_switch_file", &fusion_switch_file);
+    ctx->GetAttr("_enable_compress_weight", &enable_compress_weight);
+    ctx->GetAttr("_compress_weight_conf", &compress_weight_conf);
   }
 
   // session options
@@ -253,6 +263,11 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
   sess_options[ge::OPTYPELIST_FOR_IMPLMODE] = optypelist_for_implmode;
   sess_options["ge.inputShape"] = input_shape;
   sess_options["ge.dynamicDims"] = dynamic_dims;
+  sess_options["ge.bufferOptimize"] = buffer_optimize;
+  sess_options["ge.enableSmallChannel"] = enable_small_channel;
+  sess_options["ge.fusionSwitchFile"] = fusion_switch_file;
+  sess_options["ge.enableCompressWeight"] = enable_compress_weight;
+  sess_options["compress_weight_conf"] = compress_weight_conf;
 
   return sess_options;
 }
@@ -490,6 +505,11 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   string dynamic_dims;
   string mstune_mode;
   string work_path;
+  std::string buffer_optimize;
+  std::string enable_small_channel = "0";
+  std::string fusion_switch_file;
+  std::string enable_compress_weight = std::to_string(false);
+  std::string compress_weight_conf;
 
   if (attrs.Find("_NpuOptimizer") != nullptr) {
     do_npu_optimizer = std::to_string(true);
@@ -578,6 +598,19 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
     if (attrs.Find("_dynamic_dims") != nullptr) { dynamic_dims = attrs.Find("_dynamic_dims")->s(); }
     if (attrs.Find("_mstune_mode") != nullptr) { mstune_mode = attrs.Find("_mstune_mode")->s(); }
     if (attrs.Find("_work_path") != nullptr) { work_path = attrs.Find("_work_path")->s(); }
+    if (attrs.Find("_buffer_optimize") != nullptr) { buffer_optimize = attrs.Find("_buffer_optimize")->s(); }
+    if (attrs.Find("_enable_small_channel") != nullptr) {
+      enable_small_channel = attrs.Find("_enable_small_channel")->s();
+    }
+    if (attrs.Find("_fusion_switch_file") != nullptr) {
+      fusion_switch_file = attrs.Find("_fusion_switch_file")->s();
+    }
+    if (attrs.Find("_enable_compress_weight") != nullptr) {
+      enable_compress_weight = attrs.Find("_enable_compress_weight")->s();
+    }
+    if (attrs.Find("_compress_weight_conf") != nullptr) {
+      compress_weight_conf = attrs.Find("_compress_weight_conf")->s();
+    }
   }
 
   all_options["variable_format_optimize"] = variable_format_optimize;
@@ -622,6 +655,11 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   all_options["dynamic_dims"] = dynamic_dims;
   all_options["mstune_mode"] = mstune_mode;
   all_options["work_path"] = work_path;
+  all_options["buffer_optimize"] = buffer_optimize;
+  all_options["enable_small_channel"] = enable_small_channel;
+  all_options["fusion_switch_file"] = fusion_switch_file;
+  all_options["enable_compress_weight"] = enable_compress_weight;
+  all_options["compress_weight_conf"] = compress_weight_conf;
 
   return all_options;
 }
@@ -681,6 +719,11 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   string dynamic_dims;
   string mstune_mode;
   string work_path;
+  std::string buffer_optimize;
+  int enable_small_channel = 0;
+  std::string fusion_switch_file;
+  bool enable_compress_weight = false;
+  std::string compress_weight_conf;
 
   const RewriterConfig &rewrite_options = options.session_options->config.graph_options().rewrite_options();
   for (const auto &custom_optimizer : rewrite_options.custom_optimizers()) {
@@ -806,6 +849,19 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
                  (!params.count("input_shape") && params.count("dynamic_dims"))) {
         LOG(FATAL) << "input_shape and dynamic_dims should be paired.";
       }
+      if (params.count("buffer_optimize")) {
+        buffer_optimize = params.at("buffer_optimize").s();
+        if (buffer_optimize != "l2_optimize" && buffer_optimize != "off_optimize") {
+          LOG(FATAL) << "buffer_optimize is valid, should be one of [l2_optimize, off_optimize]";
+        }
+      }
+      if (params.count("enable_small_channel")) { enable_small_channel = params.at("enable_small_channel").i(); }
+      if (params.count("fusion_switch_file")) { fusion_switch_file = params.at("fusion_switch_file").s(); }
+      if (params.count("enable_compress_weight") && params.count("compress_weight_conf")) {
+        LOG(FATAL) << "enable_compress_weight can not use with compress_weight_conf.";
+      }
+      if (params.count("enable_compress_weight")) { enable_compress_weight = params.at("enable_compress_weight").b(); }
+      if (params.count("compress_weight_conf")) { compress_weight_conf = params.at("compress_weight_conf").s(); }
     }
   }
 
@@ -827,6 +883,11 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   sess_options["optypelist_for_implmode"] = optypelist_for_implmode;
   sess_options["input_shape"] = input_shape;
   sess_options["dynamic_dims"] = dynamic_dims;
+  sess_options["buffer_optimize"] = buffer_optimize;
+  sess_options["enable_small_channel"] = std::to_string(enable_small_channel);
+  sess_options["fusion_switch_file"] = fusion_switch_file;
+  sess_options["enable_compress_weight"] = std::to_string(enable_compress_weight);
+  sess_options["compress_weight_conf"] = compress_weight_conf;
 
   init_options["precision_mode"] = precision_mode;
   init_options["profiling_mode"] = std::to_string(profiling_mode);

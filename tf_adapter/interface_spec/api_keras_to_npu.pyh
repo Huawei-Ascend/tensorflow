@@ -1,0 +1,4 @@
+# source file:python/npu_bridge/estimator/npu/keras_to_npu.py
+
+def model_to_npu_estimator(keras_model=None,keras_model_path=None,custom_objects=None,model_dir=None,
+                            checkpoint_format='saver',config=None,job_start_file=''):

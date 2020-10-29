@@ -70,7 +70,7 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
     LOG(INFO) << "[GePlugin] Ge has already initialized";
     return;
   }
-
+  init_options_ = init_options;
   const char *tf_config = std::getenv("TF_CONFIG");
   int exec_hccl_flag = 1;
   if (tf_config != nullptr) {
@@ -149,6 +149,9 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] precision_mode : " << init_options[ge::PRECISION_MODE];
 
   // auto tune configuration
+  if (!init_options["ge.buildMode"].empty() && !init_options["ge.tuningPath"].empty()) {
+    init_options[ge::AUTO_TUNE_MODE] = "";
+  }
   LOG(INFO) << "[GePlugin] auto_tune_mode : " << init_options[ge::AUTO_TUNE_MODE];
 
   // debug configuration
@@ -163,7 +166,7 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] job_id : " << init_options[ge::OPTION_EXEC_JOB_ID];
 
   // mstune mode and work path
-  if (init_options["ge.buildMode"] == "4") {
+  if (!init_options["ge.buildMode"].empty()) {
     init_options["ge.buildMode"] = "tuning";
   }
   LOG(INFO) << "[GePlugin] mstune mode : " << init_options["ge.buildMode"]
@@ -176,7 +179,7 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GePlugin] Tdt host init failed, tdt error code : " << ret;
   }
- 
+
   // ge Initialize
   ge::Status status = ge::GEInitialize(init_options);
   if (status != ge::SUCCESS) {
@@ -195,6 +198,10 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] Initialize parser success.";
   isInit_ = true;
   isGlobal_ = is_global;
+}
+
+std::map<std::string, std::string> GePlugin::GetInitOptions() {
+  return init_options_;
 }
 
 void GePlugin::Finalize() {

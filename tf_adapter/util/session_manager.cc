@@ -126,14 +126,6 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
 
   LOG(INFO) << "[GEOP] optypelist_for_implmode : " << sess_options[ge::OPTYPELIST_FOR_IMPLMODE];
 
-  // reuse memory env
-  const char *disable_reuse_memory = std::getenv("DISABLE_REUSE_MEMORY");
-  if (disable_reuse_memory == nullptr) {
-    disable_reuse_memory = "0";
-    LOG(WARNING) << "[GEOP] can not get DISABLE_REUSE_MEMORY in env, set to default 0";
-  }
-  sess_options["ge.exec.disableReuseMemory"] = disable_reuse_memory;
-
   // dump configuration
   string dump_step = sess_options[ge::OPTION_EXEC_DUMP_STEP];
   LOG(INFO) << "[GEOP] enable_dump :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP]
@@ -146,6 +138,16 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
   // dynamic input config
   LOG(INFO) << "[GEOP] input_shape :" << sess_options["ge.inputShape"]
             << ", dynamic_dims :" << sess_options["ge.dynamicDims"];
+
+  LOG(INFO) << "[GEOP] buffer_optimize :" << sess_options["ge.bufferOptimize"];
+
+  LOG(INFO) << "[GEOP] enable_small_channel :" << sess_options["ge.enableSmallChannel"];
+
+  LOG(INFO) << "[GEOP] fusion_switch_file :" << sess_options["ge.fusionSwitchFile"];
+
+  LOG(INFO) << "[GEOP] enable_compress_weight :" << sess_options["ge.enableCompressWeight"];
+
+  LOG(INFO) << "[GEOP] compress_weight_conf :" << sess_options["compress_weight_conf"];
 }
 
 bool SessionManager::CacheGeGraphs(ge::Session *ge_session, ge::Graph &ge_graph) {

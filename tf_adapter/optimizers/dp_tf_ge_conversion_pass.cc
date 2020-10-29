@@ -426,6 +426,7 @@ Status DpTfToGEConversionPassImpl::RemoveNotSupportDataset(Graph *g, const std::
   Node *node = nullptr;
   Node *topo_end = nullptr;
   for (Node *n : g->op_nodes()) {
+    REQUIRES_NOT_NULL(n);
     if (n->type_string() == "DeviceQueueDataset" && n->name() == device_queue_dataset) {
       LOG(INFO) << "device queue dataset node is " << n->name();
       node = n;
@@ -435,6 +436,7 @@ Status DpTfToGEConversionPassImpl::RemoveNotSupportDataset(Graph *g, const std::
       topo_end = n;
     }
   }
+  REQUIRES_NOT_NULL(node);
   Node *end_dataset = node;
   std::vector<Node *> delete_nodes;
   while (!IsMakeIteratorNode(node)) {
@@ -592,6 +594,10 @@ bool DpTfToGEConversionPassImpl::RunPass(std::unique_ptr<Graph> *g, FunctionLibr
         LOG(INFO) << "Node [" << node->name() << "] has func:";
         for (const auto &func : node_funcs) {
           FunctionDef *fdef = fdeflib.add_function();
+          if (flib->Find(func) == nullptr) {
+            LOG(ERROR) << "function def is nullptr";
+            return false;
+          }
           *fdef = *(flib->Find(func));
         }
       }

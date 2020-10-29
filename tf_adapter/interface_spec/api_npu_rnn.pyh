@@ -1,0 +1,3 @@
+# source file:python/npu_bridge/estimator/npu/npu_rnn.py
+
+def npu_dynamic_rnn(cell, inputs, initial_state=None, dtype=None, sequence_length=None, scope=None):

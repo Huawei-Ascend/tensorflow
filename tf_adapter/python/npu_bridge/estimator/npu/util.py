@@ -128,7 +128,6 @@ def check_mstune_mode(mstune_mode):
   mstune_modes = ['1', '2', '3', '4']
   if mstune_mode not in mstune_modes:
     raise ValueError("mstune_mode is valid, should be in ['1', '2', '3', '4']")
-  return mstune_mode
 
 def register_func(var_name):
   ops.register_proto_function(
