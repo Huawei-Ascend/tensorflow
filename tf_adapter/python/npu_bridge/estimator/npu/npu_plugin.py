@@ -71,9 +71,7 @@ def npu_resource_init(graph_run_mode = 1,
     init["ge.exec.enable_exception_dump"] = str(enable_exception_dump)
     rank_size = os.getenv('RANK_SIZE')
     if int(rank_size) > 1 and mstune_mode is not None:
-      mstune_mode = util.check_mstune_mode(mstune_mode)
-      if mstune_mode == "4":
-        mstune_mode = "tuning"
+      util.check_mstune_mode(mstune_mode)
       init["ge.buildMode"] = str(mstune_mode)
       if work_path is not None:
         init["ge.tuningPath"] = str(util.check_path(work_path))

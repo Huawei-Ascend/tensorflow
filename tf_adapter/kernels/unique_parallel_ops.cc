@@ -51,43 +51,40 @@ class UniqueParallelOp : public OpKernel {
       errors::InvalidArgument("input tensor should be int32 or int64, but got ",
         DataTypeString(input_tensor.dtype())));
     auto input_vec = input_tensor.vec<T>();
-
+    int64 total = static_cast<int64>(input_vec.size());
     Tensor* index_tensor = nullptr;
-    OP_REQUIRES_OK(context, context->allocate_output(1, 
+    OP_REQUIRES_OK(context, context->allocate_output(1,
       TensorShape({input_vec.size()}), &index_tensor));
-    auto index_vec = index_tensor->template vec<TIndex>();
+    auto index_vec = index_tensor->vec<TIndex>();
 
-    const int cpu_nums = 16;
+    const int64 CPU_NUMS = 16;
     std::atomic<TIndex> count_num(0);
-    std::vector<std::unordered_map<T, TIndex> > unique_map_vec;
-    unique_map_vec.resize(cpu_nums);
+    Tensor output_temp(input_tensor.dtype(), TensorShape({total}));
+    auto output_temp_flat = output_temp.flat<T>();
+    tensorflow::thread::ThreadPool thread_work(context->env(), "unique_parallel", CPU_NUMS);
     std::function<void(int64, int)> shards = [&](int64 total, int cur) {
-      for (TIndex i = 0; i < total; i++){
-        if ((input_vec(i) & 15) == cur) {
-          if (unique_map_vec[cur].find(input_vec(i)) == unique_map_vec[cur].end()) {
-            unique_map_vec[cur][input_vec(i)] = count_num++;
+      std::unordered_map<T, TIndex> unique_map;
+      for (TIndex i = 0, j = 0; i < total; i++) {
+        unsigned long long temp_input = input_vec(i);
+        unsigned long long temp_cpu = CPU_NUMS - 1;
+        if ((temp_input & temp_cpu) == cur) {
+          if (unique_map.find(input_vec(i)) == unique_map.end()) {
+            j = count_num++;
+            unique_map[input_vec(i)] = j;
+            output_temp_flat(j) = input_vec(i);
           }
-          index_vec(i) = unique_map_vec[cur][input_vec(i)];
+          index_vec(i) = unique_map[input_vec(i)];
         }
       }
     };
-    tensorflow::thread::ThreadPool thread_work(context->env(), "unique_parallel", cpu_nums);
-    ParallelFor(thread_work, (int64)(input_vec.size()), cpu_nums, shards);
-    
-    Tensor* output_tensor = nullptr;
+    ParallelFor(thread_work, total, CPU_NUMS, shards);
+    Tensor *output_tensor = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0,
       TensorShape({count_num}), &output_tensor));
-    auto output_vec = output_tensor->template vec<T>();
-    int index = 0;
-    for (size_t i = 0; i < unique_map_vec.size(); i++) {
-      for (auto it : unique_map_vec[i]) {
-        output_vec(index) = it.first;
-        index++;
-      }    
-    }
+    *output_tensor = output_temp.Slice(0, count_num);
   }
  private:
-  void ParallelFor(tensorflow::thread::ThreadPool& thread_work, 
+  void ParallelFor(tensorflow::thread::ThreadPool& thread_work,
     int64 total, const int cpu_nums, std::function<void(int64, int)>& fn) {
     CHECK_GE(total, 0);
     CHECK_EQ(total, (int64)(Eigen::Index)total);

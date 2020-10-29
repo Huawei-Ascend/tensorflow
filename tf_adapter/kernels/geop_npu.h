@@ -43,7 +43,7 @@ limitations under the License.
 
 namespace tensorflow {
 using MsTuningFunc = MsTuneStatus (*)(ge::Graph &, std::vector<ge::Graph> &, ge::Session *,
-                                std::map<std::string, std::string> &);
+                      const std::map<std::string, std::map<std::string, std::string>> &);
 class GeOp : public AsyncOpKernel {
  public:
   explicit GeOp(OpKernelConstruction *ctx);
@@ -88,6 +88,8 @@ class GeOp : public AsyncOpKernel {
   void GetExecGraphId(OpKernelContext *ctx, uint32_t &cache_graph_id,
                       std::vector<std::string> input_shapes);
 
+  void GetMsTuneConfig(std::map<std::string, std::string> init_options);
+
  private:
   static const std::string INPUT_DESC;
   static const std::string OUTPUT_DESC;
@@ -115,6 +117,7 @@ class GeOp : public AsyncOpKernel {
   std::map<std::vector<std::string>, uint32_t> cache_graphs_;
   std::vector<std::pair<std::vector<std::string>, uint32_t>> graph_counts_;
   std::map<std::string, std::string> sess_options_;
+  std::map<std::string, std::string> init_options_;
   static std::unordered_map<std::string, uint32_t> session_and_graph_id_map_;
   uint32_t iteration_per_loop_;
   bool is_host_graph_;
@@ -125,6 +128,7 @@ class GeOp : public AsyncOpKernel {
   bool is_train_graph_;
   void *handle_;
   MsTuningFunc tuning_api_;
+  string auto_tune_mode_;
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_KERNELS_GEOP_NPU_H_

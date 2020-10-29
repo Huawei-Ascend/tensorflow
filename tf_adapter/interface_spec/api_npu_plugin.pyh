@@ -1,0 +1,9 @@
+# source file:python/npu_bridge/estimator/npu/npu_plugin.py
+
+def npu_resource_init(graph_run_mode = 1,op_debug_level = 0,enable_profiling = False,
+                      enable_options = ["training_trace"],auto_tune_mode = None,
+                      precision_mode = None,enable_scope_fusion_passes = None,
+                      enable_exception_dump = 0, fp_point = None, bp_point = None,
+                      mstune_mode = None, work_path = None):
+
+def npu_resource_shutdown():

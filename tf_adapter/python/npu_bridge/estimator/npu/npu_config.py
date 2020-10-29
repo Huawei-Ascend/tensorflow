@@ -53,7 +53,12 @@ class NPURunConfig(run_config_lib.RunConfig):
                  optypelist_for_implmode=None,
                  dynamic_input_config=None,
                  mstune_mode=None,
-                 work_path=None
+                 work_path=None,
+                 buffer_optimize=None,
+                 enable_small_channel=0,
+                 fusion_switch_file=None,
+                 enable_compress_weight=False,
+                 compress_weight_conf=None
                  ):
         """
         Constructs a NPUConfig.
@@ -109,6 +114,11 @@ class NPURunConfig(run_config_lib.RunConfig):
         mstune_mode: Optimization Task Type."1": model tune; "2": optune;
                      "3": model tune & optune; "4": gradient split tune.
         work_path: Stores temporary files generated during optimization.
+        buffer_optimize: Whether to enable buffer optimization.
+        enable_small_channel: Whether to enable small channel optimization.
+        fusion_switch_file: Fusion switch configuration file path.
+        enable_compress_weight: Whether to enable global weight compression.
+        compress_weight_conf:Path and file name of the node list configuration file to be compressed.
         """
 
         # Check iterations_per_loop.
@@ -173,6 +183,11 @@ class NPURunConfig(run_config_lib.RunConfig):
         self._dynamic_input_config = dynamic_input_config
         self._mstune_mode = mstune_mode
         self._work_path = work_path
+        self._buffer_optimize = buffer_optimize
+        self._enable_small_channel = enable_small_channel
+        self._fusion_switch_file = fusion_switch_file
+        self._enable_compress_weight = enable_compress_weight
+        self._compress_weight_conf = compress_weight_conf
 
         super(NPURunConfig, self).__init__(
             model_dir=model_dir,

@@ -1302,6 +1302,7 @@ Status OMSplitter::Subgraph::BuildFunctionDef(const string &name, FunctionLibrar
         LOG(INFO) << func;
         FunctionDef *fdef = func_def_lib->add_function();
         REQUIRES_NOT_NULL(fdef);
+        REQUIRES_NOT_NULL(library->Find(func));
         *fdef = *(library->Find(func));
       }
       string funcdefStr;
