@@ -40,7 +40,7 @@ if [[ -z "${PYTHON_INCLUDE_PATH}" ]]; then
 fi
 
 cd "$(dirname "${BASH_SOURCE[0]}")/../"
-TOP_DIR="$(cd ../../../../../ && pwd)"
+TOP_DIR="$(cd ../ && pwd)"
 INSTALL_DIR="${TOP_DIR}/out/${PRODUCT}/host"
 OUTPUT_DIR="${INSTALL_DIR}/obj/tf_adapter"
 SOFT_DP_DIR="${INSTALL_DIR}/obj/lib"
@@ -49,7 +49,7 @@ mkdir -p "${OUTPUT_DIR}/wheel"
 
 TF_INSTALL_LIB_PATH=$("${PYTHON_BIN_PATH}" -c 'import tensorflow as tf; print(tf.sysconfig.get_lib())')
 echo "Found installed tensorflow ${TF_INSTALL_LIB_PATH}"
-TF_PACKAGE_PATH="$(cd ../../../compile_deps/tf-1.15.0 && pwd)"
+TF_PACKAGE_PATH="$(cd ../third_party/tensorflow/compile_deps/tf-1.15.0 && pwd)"
 
 cp workspace.bzl.tpl workspace.bzl
 sed -i "s|{TF_INSTALL_LIB_PATH}|"${TF_INSTALL_LIB_PATH}"|g" workspace.bzl

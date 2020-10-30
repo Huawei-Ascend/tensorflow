@@ -2,7 +2,7 @@ workspace(name = "tf_adapter")
 
 local_repository(
     name="org_tensorflow",
-    path="../../../tensorflow-1.15.0/",
+    path="../third_party/tensorflow/tensorflow-1.15.0/",
 )
 
 # TensorFlow depends on "io_bazel_rules_closure" so we need this here.

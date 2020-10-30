@@ -6,7 +6,7 @@ TF_ADPTER_OUTPUT_BASE := $(PWD)/out/$(product)/host/obj/tf_adapter
 TF_ADPTER_GEN_PATH := $(TF_ADPTER_OUTPUT_BASE)/genfiles
 TF_ADPTER_EXEC_PATH := $(TF_ADPTER_GEN_PATH)/execroot/tf_adapter
 TF_ADPTER_REL_BUILD_PATH := $(TF_ADPTER_OUTPUT_BASE)/genfiles/execroot/tf_adapter
-TF_ADPTER_WORKSPACE_BASE := third_party/tensorflow/huawei_patch/tf-1.15.0/tf_plugin
+TF_ADPTER_WORKSPACE_BASE := tensorflow
 TF_ADPTER_REL_WORKSPACE_BASE := $(PWD)/$(TF_ADPTER_WORKSPACE_BASE)
 TF_ADPTER_LOG_PATH := $(TF_ADPTER_OUTPUT_BASE)/tf_adapter_log
 define do_libtf_adapter_coverity_check
@@ -63,7 +63,7 @@ else
 	@swig -c++ -python -threads $(TF_ADPTER_REL_WORKSPACE_BASE)/tf_adapter/swig/ge_plugin.i
 	@mv $(TF_ADPTER_REL_WORKSPACE_BASE)/tf_adapter/swig/ge_plugin_wrap.cxx $(TF_ADPTER_REL_WORKSPACE_BASE)/tf_adapter/util/
 	@mv $(TF_ADPTER_REL_WORKSPACE_BASE)/tf_adapter/swig/tf_adapter.py $(TF_ADPTER_REL_WORKSPACE_BASE)/tf_adapter/python/npu_bridge/
-	@bash $(PWD)/third_party/tensorflow/huawei_patch/tf-1.15.0/tf_plugin/tools/build_wheel.sh $(PWD)/$@ $(product)
+	@bash $(PWD)/tensorflow/tools/build_wheel.sh $(PWD)/$@ $(product)
 endif
 
 LOCAL_MODULE := hw_npu_bridge_1.15.0
