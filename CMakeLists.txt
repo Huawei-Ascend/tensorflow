@@ -14,6 +14,11 @@ if (ENABLE_OPEN_SRC)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/external)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/soft_dp)
+    # build external prjects
+    if(DEFINED ENV{D_PKG_SERVER})
+        set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
+        message("Download packages from PKG server")
+    endif()
 
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tools/COMPILE_FLAGS OR NOT EXISTS
             ${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS OR NOT EXISTS
