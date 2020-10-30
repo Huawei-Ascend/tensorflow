@@ -1,6 +1,6 @@
 # Build tf_adapter workspace(Calling by tf_adapter)
 def extend_base():
-    return "../../../../../"
+    return "../"
 
 def tf_adapter_workspace():
     native.new_local_repository(
