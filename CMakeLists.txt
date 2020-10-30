@@ -6,7 +6,11 @@ if (ENABLE_OPEN_SRC)
     set(CMAKE_CXX_STANDARD 17)
     set(CMAKE_C_FLAGS "-O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
     set(CMAKE_CXX_FLAGS "-std=c++17 -O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
-
+    # build external prjects
+    if(DEFINED ENV{D_PKG_SERVER})
+        set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
+        message("Download packages from PKG server")
+    endif()
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/nlohmann_json.cmake)
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/secure_c.cmake)
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/tensorflow.cmake)
