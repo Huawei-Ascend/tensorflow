@@ -22,8 +22,6 @@ You may also build GraphEngine from source. To build GraphEngine, please make su
 - [SWIG](http://www.swig.org/download.html)
 
 #### Download
-chmod +x build.sh
-./build.sh
 ```
 git clone https://gitee.com/ascend/tensorflow.git
 cd tensorflow
@@ -31,6 +29,7 @@ cd tensorflow
 
 #### Execute script to generate installation package
 ```
+chmod +x build.sh
 ./build.sh
 ```
 
