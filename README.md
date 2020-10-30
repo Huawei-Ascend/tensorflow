@@ -31,6 +31,7 @@ cd tensorflow
 
 #### 执行脚本生成安装包
 ```
+chmod +x build.sh
 ./build.sh
 ```
 
