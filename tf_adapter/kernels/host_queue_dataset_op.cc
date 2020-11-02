@@ -185,7 +185,7 @@ class HostQueueDatasetOp : public DatasetOpKernel {
             mutex_lock lck(mu_);
             for (auto &tensor : args) {
               if (tensor.TotalBytes() > UINT64_MAX - total_bytes_) {
-                LOG(ERROR) << "the size of tensor is too big";
+                LOG(ERROR) << "the size of tensor is too big
                 buffer_element.host_thread_finished = true;
                 buffer_.push_back(std::move(buffer_element));
                 cond_var_.notify_all();
