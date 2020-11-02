@@ -122,7 +122,7 @@ else()
     add_custom_command(
         OUTPUT ${BASE_DIR}/tf_adapter/util/ge_plugin_wrap.cxx
         COMMAND echo "before generate swig files"
-        && swig -c++ -python ${BASE_DIR}/tf_adapter/swig/ge_plugin.i
+        && swig -c++ -threads -python ${BASE_DIR}/tf_adapter/swig/ge_plugin.i
         && mv ${BASE_DIR}/tf_adapter/swig/ge_plugin_wrap.cxx ${BASE_DIR}/tf_adapter/util/
         && mv ${BASE_DIR}/tf_adapter/swig/tf_adapter.py ${BASE_DIR}/tf_adapter/python/npu_bridge/
         && echo "end generate swig files"
