@@ -32,7 +32,7 @@ limitations under the License.
 // Op will be written to json if it can not sink to device during one excute.
 namespace tensorflow {
 class GenerateReport {
- public:
+public:
   struct Details {
     int code;
     std::string message;
@@ -40,12 +40,18 @@ class GenerateReport {
   enum ReasonCode { TypeNoDefine = 1, TypeGray = 2, ScenarioProblems = 3, NotSupport = 4 };
 
   static GenerateReport *GetInstance();
+
   Status AddUnSupportedInfo(const std::string &name, const std::string &type, Details &infos);
+
   Status AddUnSupportedInfo(Node *node, Details &infos);
+
   Status DeleteUnSupportedInfo(Node *node);
+
   Status SaveUnsupportedInfo();
 
- private:
+  ~GenerateReport();
+
+private:
   GenerateReport();
   struct UnSupportedInfo {
     std::string name;
@@ -54,7 +60,6 @@ class GenerateReport {
     Details info_details;
   };
   std::map<std::string, UnSupportedInfo> check_info_map_;
-  bool save_report_ = false;
 };
 }  // namespace tensorflow
 

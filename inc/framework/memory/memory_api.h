@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@
 #include "runtime/mem.h"
 
 namespace ge {
-enum MemStorageType{
+enum MemStorageType {
   HBM = 0,
   RDMA_HBM,
   HOST_DDR,

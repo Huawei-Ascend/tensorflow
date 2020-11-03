@@ -156,6 +156,6 @@ bool GetAttrDefListValue(const std::string &key, int idx, int32_t *value, const 
 bool GetAttrDefListValue(const std::string &key, int idx, uint32_t *value, const AttrDefMap &attr);
 bool GetAttrDefListValue(const std::string &key, int idx, float *value, const AttrDefMap &attr);
 bool GetAttrDefListValue(const std::string &key, int idx, double *value, const AttrDefMap &attr);
-}
+}  // namespace ge
 
 #endif  // INC_FRAMEWORK_COMMON_OP_ATTR_VALUE_UTIL_H_

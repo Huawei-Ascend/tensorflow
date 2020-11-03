@@ -61,7 +61,7 @@ group: all devices of the group participating in this reduction.
 REGISTER_OP("HcomAllGather")
     .Input("input: T")
     .Output("output: T")
-    .Attr("T: {int8, int16, int32, float16, float32}")
+    .Attr("T: {int8, int16, int32, float16, float32, int64, uint64}")
     .Attr("group: string")
     .Attr("rank_size: int")
     .SetIsStateful()

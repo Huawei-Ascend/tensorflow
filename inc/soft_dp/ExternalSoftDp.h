@@ -1,18 +1,12 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+* @file ExternalSoftDp.h
+*
+* Copyright (c) Huawei Technologies Co., Ltd. 2012-2018. All rights reserved.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+*/
 
 #ifndef EXTERNALSOFTDP_H
 #define EXTERNALSOFTDP_H
@@ -30,7 +24,7 @@ struct SoftDpProcsessInfo {
     uint32_t outputWidth;
     uint32_t outputHeight;
 
-    bool isVBeforeU; // uv : true, uv : false
+    uint32_t reserved;
 };
 
 struct DpCropInfo {
@@ -41,18 +35,18 @@ struct DpCropInfo {
 };
 
 /*
- * @brief 解码、缩放接口
- * @param [in] SoftDpProcsessInfo& inMsg: 软实现结构体
+ * @brief decode and resize interface
+ * @param [in] SoftDpProcsessInfo& softDpProcsessInfo : soft dp struct
  * @return success: return 0, fail: return error number
  */
-uint32_t DecodeAndResizeJpeg(SoftDpProcsessInfo& inMsg);
+uint32_t DecodeAndResizeJpeg(SoftDpProcsessInfo& softDpProcsessInfo);
 
 /*
- * @brief 解码、裁剪、缩放接口
- * @param [in] SoftDpProcsessInfo& inMsg: 软实现结构体
- * @param [in] const DpCropInfo& cropInfo: 裁剪结构体
+ * @brief decode crop and resize interface
+ * @param [in] SoftDpProcsessInfo& softDpProcsessInfo : soft dp struct
+ * @param [in] const DpCropInfo& cropInfo: crop struct
  * @return success: return 0, fail: return error number
  */
-uint32_t DecodeAndCropAndResizeJpeg(SoftDpProcsessInfo& inMsg, const DpCropInfo& cropInfo);
+uint32_t DecodeAndCropAndResizeJpeg(SoftDpProcsessInfo& softDpProcsessInfo, const DpCropInfo& cropInfo);
 }
 #endif // EXTERNALSOFTDP_H

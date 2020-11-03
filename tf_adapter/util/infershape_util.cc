@@ -79,18 +79,26 @@ Status InferShapeUtil::setArgShapeFromTensorShape(std::vector<Tensor> vecTensor,
   return Status::OK();
 }
 
-Status InferShapeUtil::getSubGraphFromFunctionDef(const FunctionDef &func_def, Graph *graph) {
+Status InferShapeUtil::GetSubGraphFromFunctionDef(const FunctionLibraryDefinition &flib_def,
+                                                  const FunctionDef &func_def, Graph *graph) {
   LOG(INFO) << "The signature name of FunctionDef is " << func_def.signature().name() << ".";
   InstantiationResult result;
   AttrSlice attrs(&func_def.attr());
   TF_RETURN_IF_ERROR(InstantiateFunction(
-      func_def, attrs, [](const string &op, const OpDef **sig) { return OpRegistry::Global()->LookUpOpDef(op, sig); },
-      &result));
+      func_def, attrs, [&flib_def](const string &op, const OpDef **sig) {
+        Status s = OpRegistry::Global()->LookUpOpDef(op, sig);
+        if (!s.ok()) {
+          return flib_def.LookUpOpDef(op, sig);
+        }
+        return s;
+      }, &result));
 
+  LOG(INFO) << "InstantiateFunction " << func_def.signature().name() << " success.";
   GraphConstructorOptions opts;
   opts.allow_internal_ops = true;
   opts.expect_device_spec = false;
   TF_RETURN_IF_ERROR(ConvertNodeDefsToGraph(opts, result.nodes, graph));
+  LOG(INFO) << "ConvertNodeDefsToGraph " << func_def.signature().name() << " success.";
   return Status::OK();
 }
 
@@ -343,7 +351,7 @@ Status InferShapeUtil::InferShape(const std::vector<Tensor> &vecTensor, const Fu
     return errors::Internal("Input tensor num ", iTensorNums, " is less than arg num ", iInputArgNums, ".");
   }
 
-  TF_RETURN_IF_ERROR(getSubGraphFromFunctionDef(*func_def, graph));
+  TF_RETURN_IF_ERROR(GetSubGraphFromFunctionDef(*flib_def, *func_def, graph));
 
   // Control flow loops in the graph; we have to break them.
   std::vector<EdgeInfo> NextIterationEdges;

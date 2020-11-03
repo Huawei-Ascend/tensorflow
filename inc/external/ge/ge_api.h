@@ -57,7 +57,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Session {
   /// @param [in] options graph options
   /// @return Status result of function
   ///
-  Status AddGraph(uint32_t graphId, const Graph& graph, const std::map<std::string, std::string>& options);
+  Status AddGraph(uint32_t graphId, const Graph &graph, const std::map<std::string, std::string> &options);
 
   ///
   /// @ingroup ge_graph
@@ -100,6 +100,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Session {
 
   ///
   /// @ingroup ge_graph
+  /// @brief get variables in the session with specific session id
+  /// @param [in] var_names: variable names
+  /// @param [out] var_values: variable values
+  /// @return Status result of function
+  ///
+  Status GetVariables(const std::vector<std::string> &var_names, std::vector<Tensor> &var_values);
+
+  ///
+  /// @ingroup ge_graph
   /// @brief register callback func with specific summary or checkpoint by users
   /// @param [in] key: func key
   /// @param [in] callback: callback  specific summary or checkpoint.
@@ -110,8 +119,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Session {
   Status RegisterCallBackFunc(const std::string &key, const pCallBackFunc &callback);
 
   bool IsGraphNeedRebuild(uint32_t graphId);
-
-  std::map<string, Tensor> GetAllVariable();
 
  private:
   uint64_t sessionId_;

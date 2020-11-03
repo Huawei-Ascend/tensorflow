@@ -26,11 +26,25 @@
 #include "register/register_types.h"
 #include "graph/operator.h"
 
+#define CHECK_INNER_NODE_CONDITION(cond, fusion_rlt)  \
+  do {                                                \
+    if (!(cond)) {                                    \
+      if ((fusion_rlt) != nullptr) {                  \
+        (fusion_rlt)->SetType(ge::kScopeInvalidType); \
+      }                                               \
+      return;                                         \
+    }                                                 \
+  } while (0)
+
 namespace domi {
 class TensorFlowModelParser;
 }  // namespace domi
 namespace ge {
 const int32_t kFusionDisableIndex = 99999;
+const char *const kScopeToMultiNodes = "ScopeToMultiNodes";
+const char *const kScopeInvalidType = "ScopeInvalidType";
+const char *const kInputFromFusionScope = "InputFromFusionScope";
+const char *const kOutputToFusionScope = "OutputToFusionScope";
 class ScopePattern;
 using ScopeFusionPatterns = std::vector<std::vector<ScopePattern *>>;
 
@@ -71,12 +85,47 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY FusionScopesResult {
   void InsertInputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map);
   void InsertOutputs(const std::string &inner_op_name, const std::vector<int32_t> &index_map);
 
+  class InnerNodeInfo {
+   public:
+    explicit InnerNodeInfo(const std::string &fusion_node_name);
+    InnerNodeInfo(const std::string &fusion_node_name, const std::string &name, const std::string &type);
+    InnerNodeInfo(InnerNodeInfo &&other) noexcept;
+    InnerNodeInfo &operator=(InnerNodeInfo &&other) noexcept;
+    InnerNodeInfo(const InnerNodeInfo &) = delete;
+    InnerNodeInfo &operator=(const InnerNodeInfo &) = delete;
+    ~InnerNodeInfo();
+    InnerNodeInfo &SetName(const std::string &name);
+    InnerNodeInfo &SetType(const std::string &type);
+    InnerNodeInfo &InsertInput(const std::string &input_node, int32_t peer_out_idx);
+    InnerNodeInfo &InsertOutput(const std::string &output_node, int32_t peer_in_idx);
+    ge::graphStatus BuildInnerNode();
+    ge::graphStatus SetInputFormat(const std::string &input_name, const std::string &format);
+    ge::graphStatus SetOutputFormat(const std::string &output_name, const std::string &format);
+    ge::graphStatus SetDynamicInputFormat(const std::string &input_name, uint32_t index, const std::string &format);
+    ge::graphStatus SetDynamicOutputFormat(const std::string &output_name, uint32_t index, const std::string &format);
+    ge::Operator *MutableOperator();
+
+    std::string GetName() const;
+    std::string GetType() const;
+    std::vector<std::pair<std::string, int32_t>> GetInputs() const;
+    std::vector<std::pair<std::string, int32_t>> GetOutputs() const;
+
+   private:
+    class InnerNodeInfoImpl;
+    std::unique_ptr<InnerNodeInfoImpl> impl_;
+  };
+
+  InnerNodeInfo *AddInnerNode(const std::string &name, const std::string &type);
+  InnerNodeInfo *MutableRecentInnerNode();
+  InnerNodeInfo *MutableInnerNode(uint32_t index);
+  ge::graphStatus CheckInnerNodesInfo();
+
  private:
   class FusionScopesResultImpl;
   std::unique_ptr<FusionScopesResultImpl> impl_;
   friend class ScopeGraph;
   friend class ScopeBasePass;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeTree {
@@ -112,7 +161,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeGraph {
   std::unique_ptr<ScopeGraphImpl> impl_;
   friend class ScopePassManager;
   friend class ScopeBasePass;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeAttrValue {
@@ -251,7 +300,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistry {
   class ScopeFusionPassRegistryImpl;
   /*lint -e148*/
   std::unique_ptr<ScopeFusionPassRegistryImpl> impl_;
-  friend class domi::TensorFlowModelParser;
+  friend class TensorFlowModelParser;
 };
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeUtil {

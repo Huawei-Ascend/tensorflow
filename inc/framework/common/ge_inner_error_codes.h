@@ -97,6 +97,7 @@ GE_ERRORNO_COMMON(INTERNAL_ERROR, 4, "Internal errors");              // 1343225
 GE_ERRORNO_COMMON(CSEC_ERROR, 5, "Failed to call libc_sec API!");     // 1343225861
 GE_ERRORNO_COMMON(TEE_ERROR, 6, "Failed to call tee API!");           // 1343225862
 GE_ERRORNO_COMMON(END_OF_SEQUENCE, 7, "End of sequence!");            // 1343225863
+GE_ERRORNO_COMMON(PATH_INVALID, 8, "Path is invalid!");               // 1343225864
 
 // Error code for plugin manager
 GE_ERRORNO_COMMON(GE_PLGMGR_PATH_INVALID, 30, "Path is invalid!");                   // 1343225886
@@ -124,9 +125,13 @@ GE_ERRORNO_CLIENT(GE_CLI_GE_ALREADY_INITIALIZED, 10, "GE is already initialized.
 GE_ERRORNO_CLIENT(GE_CLI_GE_NOT_INITIALIZED, 11, "GE is not yet initialized or is finalized.");  // 1343229963
 
 // Init module error code definition
-GE_ERRORNO_INIT(GE_MULTI_INIT, 0, "Multiple initializations are not supported.");            // 1343234048
-GE_ERRORNO_INIT(GE_FINALIZE_NOT_INIT, 1, "Finalize is not allowed before initialization.");  // 1343234049
-GE_ERRORNO_INIT(GE_MULTI_FINALIZE, 2, "Multiple finalizations are not supported.");          // 1343234050
+GE_ERRORNO_INIT(GE_MULTI_INIT, 0, "Multiple initializations are not supported.");                 // 1343234048
+GE_ERRORNO_INIT(GE_FINALIZE_NOT_INIT, 1, "Finalize is not allowed before initialization.");       // 1343234049
+GE_ERRORNO_INIT(GE_MULTI_FINALIZE, 2, "Multiple finalizations are not supported.");               // 1343234050
+GE_ERRORNO_INIT(GE_PROF_MULTI_INIT, 3, "Multiple profiling initializations are not supported.");  // 1343234051
+GE_ERRORNO_INIT(GE_PROF_NOT_INIT, 4, "Profing initializations have not been done.");              // 1343234052
+GE_ERRORNO_INIT(GE_PROF_MODE_CONFLICT, 5,
+                "Profiling command mode which is preferred is running, the api mode will not work.");  // 1343234053
 
 // Session module error code definition
 GE_ERRORNO_SESSION(GE_SESS_INIT_FAILED, 0, "Failed to initialize session.");                          // 1343238144
@@ -211,8 +216,8 @@ GE_ERRORNO_ENGINE(GE_ENG_FINALIZE_FAILED, 1, "Engine finalize failed.");        
 GE_ERRORNO_ENGINE(GE_ENG_MEMTYPE_ERROR, 2, "Memory type HBM is necessary when engine is in device");  // 1343246338
 
 // Optimize errocode
-GE_ERRORNO_GRAPH(TO_BE_DELETED, 63, "The node of the graph to be deleted.");          // 1343242303
-GE_ERRORNO_GRAPH(NOT_CHANGED, 64, "The node of the graph no changed.");               // 1343242304
+GE_ERRORNO_GRAPH(TO_BE_DELETED, 63, "The node of the graph to be deleted.");  // 1343242303
+GE_ERRORNO_GRAPH(NOT_CHANGED, 64, "The node of the graph no changed.");       // 1343242304
 
 // Ops module error code definition
 GE_ERRORNO_OPS(GE_OPS_KERNEL_STORE_INIT_FAILED, 0, "Failed to initialize OpsKernelInfoStore.");  // 1343250432

@@ -118,6 +118,10 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
     sess_options.erase(ge::VARIABLE_MEMORY_MAX_SIZE);
   }
 
+  LOG(INFO) << "[GEOP] op_select_implmode : " << sess_options[ge::OP_SELECT_IMPL_MODE];
+
+  LOG(INFO) << "[GEOP] optypelist_for_implmode : " << sess_options[ge::OPTYPELIST_FOR_IMPLMODE];
+
   // reuse memory env
   const char *disable_reuse_memory = std::getenv("DISABLE_REUSE_MEMORY");
   if (disable_reuse_memory == nullptr) {
@@ -132,6 +136,6 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
             << ", dump_path :" << sess_options[ge::OPTION_EXEC_DUMP_PATH]
             << ", dump_step :" << (dump_step.empty() ? "NA" : dump_step)
             << ", dump_mode :" << sess_options[ge::OPTION_EXEC_DUMP_MODE]
-            << ", enable_dump_enable :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP_DEBUG]
+            << ", enable_dump_debug :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP_DEBUG]
             << ", dump_debug_mode :" << sess_options[ge::OPTION_EXEC_DUMP_DEBUG_MODE];
 }

@@ -27,18 +27,17 @@ limitations under the License.
 
 #include "framework/common/ge_inner_error_codes.h"
 #include "framework/common/types.h"
-#include "framework/omg/parser/model_parser.h"
 #include "framework/omg/parser/parser_api.h"
-#include "framework/omg/parser/parser_factory.h"
 #include "ge/ge_api.h"
 #include "ge/ge_api_types.h"
 #include "tdt/tdt_host_interface.h"
-#include "tdt/tsd_client.h"
 #include "tensorflow/core/util/env_var.h"
 #include "tf_adapter/common/common.h"
 #include "tf_adapter/util/npu_attrs.h"
 #include "tf_adapter/util/npu_plugin.h"
 #include <thread>
+#include "nlohmann/json.hpp"
+using json = nlohmann::json;
 
 using namespace tensorflow;
 using namespace tdt;
@@ -71,15 +70,33 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
     return;
   }
 
-  LOG(INFO) << "[GePlugin] graph run mode : " << init_options[ge::OPTION_GRAPH_RUN_MODE];
-  // prepare options for ge Initialize
-
-  const int64 kMaxDeviceID = 7;
-  (void) ReadInt64FromEnvVar("DEVICE_ID", 0, &device_id_);
-  if (device_id_ < 0 || device_id_ > kMaxDeviceID) {
-    LOG(WARNING) << "[GePlugin] device_id should in [0, 7]. use default device id : 0.";
+  const char *tf_config = std::getenv("TF_CONFIG");
+  int exec_hccl_flag = 1;
+  if (tf_config != nullptr) {
+    json config_info;
+    try {
+        config_info = json::parse(tf_config);
+    } catch (json::exception &e) {
+        LOG(WARNING) << "[GePlugin] Failed to convert TF_CONFIG info from string to json ,reason: " << e.what();
+    }
+    if (config_info.is_object()) {
+      if (config_info["task"]["type"] == "ps") {
+        LOG(INFO) << "The ps process does not need to be initialized";
+        return;
+      }
+      if (config_info["task"]["type"] == "evaluator") {
+        exec_hccl_flag = 0;
+      }
+    }
   }
+  init_options[OPTION_EXEC_HCCL_FLAG] = std::to_string(exec_hccl_flag);
+
+  LOG(INFO) << "[GePlugin] graph run mode : " << init_options[ge::OPTION_GRAPH_RUN_MODE];
+
+  Status s = GetEnvDeviceID(device_id_);
+  if (!s.ok()) { LOG(FATAL) << s.error_message(); }
   init_options[ge::OPTION_EXEC_DEVICE_ID] = std::to_string(device_id_);
+  LOG(INFO) << "[GePlugin] device id : " << init_options[ge::OPTION_EXEC_DEVICE_ID];
 
   const char *env_job_id = std::getenv("JOB_ID");
   if (env_job_id != nullptr) {
@@ -97,22 +114,24 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
 
   bool is_use_hcom = false;
   bool deploy_mode = false;
-  char *env_rank_id = std::getenv("RANK_ID");
-  char *env_pod_name = std::getenv("POD_NAME");
   char *env_rank_table_file = std::getenv("RANK_TABLE_FILE");
   if ((env_rank_table_file != nullptr) && (rankSizeNum > 0)) {
     LOG(INFO) << "[GePlugin] env RANK_TABLE_FILE:" << env_rank_table_file;
     is_use_hcom = true;
     init_options[ge::OPTION_EXEC_RANK_TABLE_FILE] = env_rank_table_file;
+    char *env_pod_name = std::getenv("POD_NAME");
     if (env_pod_name != nullptr) {
       deploy_mode = true;
       init_options[ge::OPTION_EXEC_POD_NAME] = env_pod_name;
-    } else if (env_rank_id != nullptr) {
-      LOG(INFO) << "[GePlugin] env RANK_ID:" << env_rank_id;
-      deploy_mode = false;
-      init_options[ge::OPTION_EXEC_RANK_ID] = env_rank_id;
     } else {
-      LOG(ERROR) << "[GePlugin] Can't find rank_id or pod_name in env.";
+      char *env_rank_id = std::getenv("RANK_ID");
+      if (env_rank_id != nullptr) {
+        LOG(INFO) << "[GePlugin] env RANK_ID:" << env_rank_id;
+        deploy_mode = false;
+        init_options[ge::OPTION_EXEC_RANK_ID] = env_rank_id;
+      } else {
+        LOG(ERROR) << "[GePlugin] Can't find rank_id or pod_name in env.";
+      }
     }
   }
 
@@ -124,7 +143,9 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
 
   // profiling configuration
   LOG(INFO) << "[GePlugin] profiling_mode : " << init_options[ge::OPTION_EXEC_PROFILING_MODE]
-            << ", profiling_options:" << init_options[ge::OPTION_EXEC_PROFILING_OPTIONS];
+            << ", profiling_options:" << init_options[ge::OPTION_EXEC_PROFILING_OPTIONS]
+            << ", fp_point: " << init_options[ge::OPTION_EXEC_PROFILING_FPPONIT_OPTIONS]
+            << ", bp_point: " << init_options[ge::OPTION_EXEC_PROFILING_BPPONIT_OPTIONS];
 
   // mix precision configuration
   LOG(INFO) << "[GePlugin] precision_mode : " << init_options[ge::PRECISION_MODE];
@@ -138,21 +159,17 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   // scope fusion configuration
   LOG(INFO) << "[GePlugin] enable_scope_fusion_passes : " << init_options[ge::OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES];
 
+  // exception dump configuration
+   LOG(INFO) << "[GePlugin] enable_exception_dump : " << init_options["ge.exec.enable_exception_dump"];
+
   // Open TsdClient first, then call GEInitialize
-  LOG(INFO) << "[GePlugin] Open TsdClient and Init tdt host.";
+  LOG(INFO) << "[GePlugin] Start Init tdt host.";
   int32_t ret = tdt::TdtHostInit(static_cast<uint32_t>(device_id_));
   if (ret != 0) {
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GePlugin] Tdt host init failed, tdt error code : " << ret;
   }
-  TDT_StatusT tdt_status = TsdOpen(static_cast<uint32_t>(device_id_), static_cast<uint32_t>(rankSizeNum));
-  if (tdt_status != TDT_OK) {
-    std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
-    LOG(FATAL) << "[GePlugin] Open TsdClient failed, tdt error code : " << tdt_status
-               << ", error message : " << TDT_GET_ERROR_STR(tdt_status);
-  }
-  LOG(INFO) << "[GePlugin] Open TsdClient success and tdt host init success.";
-
+  LOG(INFO) << "[GePlugin] Tdt host init succeed.";
   // ge Initialize
   ge::Status status = ge::GEInitialize(init_options);
   if (status != ge::SUCCESS) {
@@ -187,15 +204,14 @@ void GePlugin::Finalize() {
   ge::Status status_parser = ge::ParserFinalize();
   if (status_parser != ge::SUCCESS) { LOG(ERROR) << "[GePlugin] Parser finalize failed, ret : " << ToString(status); }
 
-  LOG(INFO) << "[GePlugin] Close TsdClient and destroy tdt.";
+  LOG(INFO) << "[GePlugin] Start destroy tdt host.";
   int32_t ret = tdt::TdtHostDestroy();
-  if (ret != 0) { LOG(ERROR) << "[GePlugin] Close tdt failed, tdt_ret : " << ret; }
-  TDT_StatusT tdt_status = TsdClose(device_id_);
-  if (tdt_status != TDT_OK) {
-    LOG(ERROR) << "[GePlugin] Close TsdClient failed, tdt_ret : " << tdt_status;
+  if (ret != 0) {
+    LOG(ERROR) << "[GePlugin] Tdt host destroy failed, ret : " << ret;
   } else {
-    LOG(INFO) << "[GePlugin] Close TsdClient success.";
+    LOG(INFO) << "[GePlugin] Tdt host destroy succeed.";
   }
+
   isInit_ = false;
 }
 
