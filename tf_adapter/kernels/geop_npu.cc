@@ -356,7 +356,7 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
   if (!sess_init_flag_) {
     if (job_type_ != "localhost") {  // in ps mode : ctx->session_handle() is empty
       tf_session_ = "ps_worker_session";
-      LOG(INFO) << "[GEOP] get tf session " << tf_session_ << " when in ps mode.";
+      LOG(INFO) << "[GEOP] Get tf session " << tf_session_ << " when in ps mode.";
     }
 
     if (tf_session_.empty()) {
