@@ -7,7 +7,7 @@ project(TFAdapter)
     # build external prjects
     if(DEFINED ENV{D_PKG_SERVER})
         set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
-        message("Download packages from PKG server")
+        message("Download packages from PKG server.")
     endif()
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/nlohmann_json.cmake)
     include(${CMAKE_CURRENT_LIST_DIR}/cmake/secure_c.cmake)
