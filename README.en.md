@@ -5,7 +5,7 @@
 TF_Adapter is committed to providing the outstanding computing power of Shengteng AI processor to developers who use the Tensorflow framework.
 Developers only need to install the TF_Adapter plug-in and add a small amount of configuration to the existing Tensorflow script to accelerate their training tasks on the Shengteng AI processor.
 
-![framework](docs/framework.jpg)
+![tfadapter](https://images.gitee.com/uploads/images/2020/1027/094640_8f305b88_8175427.jpeg "framework.jpg")
 
 You can read [TF_Adapter Interface](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) for more details。
 ## Installation Guide
@@ -13,7 +13,7 @@ You can read [TF_Adapter Interface](https://support.huaweicloud.com/mprtg-A800_9
 
 You can build the TF_Adapter software package from the source code and install it on the Shengteng AI processor environment.
 > The TF_Adapter plug-in has a strict matching relationship with Tensorflow. Before building from source code, you need to ensure that it has been installed correctly [Tensorflow v1.15.0
->版本](https://www.tensorflow.org/install) 。
+>版本](https://www.tensorflow.org/install/pip) 。
 
 You may also build GraphEngine from source. To build GraphEngine, please make sure that you have access to an Ascend 910 environment as compiling environment, and make sure that following software requirements are fulfilled.
 - Linux OS
@@ -22,7 +22,6 @@ You may also build GraphEngine from source. To build GraphEngine, please make su
 - [SWIG](http://www.swig.org/download.html)
 
 #### Download
-./build.sh
 ```
 git clone https://gitee.com/ascend/tensorflow.git
 cd tensorflow
@@ -30,6 +29,7 @@ cd tensorflow
 
 #### Execute script to generate installation package
 ```
+chmod +x build.sh
 ./build.sh
 ```
 

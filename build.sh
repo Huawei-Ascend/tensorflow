@@ -70,7 +70,7 @@ mk_dir() {
 build_tfadapter() {
   logging "Create build directory and build tfadapter"
   cd "${BASE_PATH}" && ./configure
-  CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH"
+  CMAKE_ARGS="-DENABLE_OPEN_SRC=True -DBUILD_PATH=$BUILD_PATH"
   if [[ "$GCC_PREFIX" != "" ]]; then
     CMAKE_ARGS="$CMAKE_ARGS -DGCC_PREFIX=$GCC_PREFIX"
   fi
@@ -86,7 +86,7 @@ release_tfadapter() {
   logging "Create output directory"
   mk_dir "${RELEASE_PATH}"
   RELEASE_TARGET="tfadapter.tar"
-  cd ${CMAKE_PATH}/dist/python/dist && tar cfz "${RELEASE_TARGET}" * && mv "${RELEASE_TARGET}" "${RELEASE_PATH}"
+  cd ${CMAKE_PATH}/dist/python/dist && mkdir -p tfplugin/bin && mv npu_bridge-*.whl tfplugin/bin && tar cfz "${RELEASE_TARGET}" * && mv "${RELEASE_TARGET}" "${RELEASE_PATH}"
 }
 
 main() {
