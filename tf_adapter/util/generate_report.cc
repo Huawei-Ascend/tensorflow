@@ -51,10 +51,9 @@ GenerateReport::GenerateReport() {
   if (getcwd(current_path, PATH_MAX) != nullptr){
     string path = current_path;
     path = path + "/" + kUnsupportedInfoPath;
-    if (remove(path.c_str()) == -1){
-      LOG(WARNING) << "[GenerateReport] Remove check report failed. path:" << path;
-    } else {
-      LOG(INFO) << "[GenerateReport] Remove check report success. path:" << path;
+    LOG(INFO) << "[GenerateReport] Remove check report path:" << path;
+    if (remove(path.c_str()) == 0){
+      LOG(INFO) << "[GenerateReport] Succeed remove check report path:" << path;
     }
   }
 }
