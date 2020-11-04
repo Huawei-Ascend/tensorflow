@@ -456,7 +456,7 @@ Status DpTfToGEConversionPassImpl::RemoveNotSupportDataset(Graph *g, const std::
     node = edge->dst();
   }
   if (delete_nodes.empty()) {
-    LOG(INFO) << "not found unsupported dataset.";
+    LOG(INFO) << "all sink datasets are supported.";
     return Status::OK();
   }
   for (Node *n : delete_nodes) {
