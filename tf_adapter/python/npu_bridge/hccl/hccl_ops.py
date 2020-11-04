@@ -116,6 +116,17 @@ def remote_read(tensorRemote, data_type):
         dtype=data_type)
     return result
 
+##提供remote ref read功能
+#  @param tensorRemote 远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
+#  @param cache 本端接收内存基地址
+#  @param offset 进行跳读的步长
+def remote_ref_read(tensorRemote, cache, offset):
+    result=gen_hccl_ops.hcom_remote_ref_read(
+        remote=tensorRemote,
+        cache_var=cache,
+        local_offset=offset)
+    return result
+
 ## 提供remote write功能
 #  @param remote 写入远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
 #  @param local 本端发送内存
@@ -123,4 +134,15 @@ def remote_write(tensorRemote, tensorLocal, data_type):
     result = gen_hccl_ops.hcom_remote_write(
         remote=tensorRemote,
         local=tensorLocal)
+    return result
+
+##提供remote scatter write功能
+#  @param tensorRemote 写入远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
+#  @param tensorLocal 本端发送内存基地址
+#  @param offset 进行跳写的步长
+def remote_scatter_write(tensorRemote, tensorLocal, offset):
+    result = gen_hccl_ops.hcom_remote_write(
+        remote=tensorRemote,
+        local=tensorLocal,
+        local_offset=offset)
     return result
