@@ -96,6 +96,8 @@ REGISTER_OP("HcomBroadcast")
     .Input("input: T")
     .Output("output: T")
     .Attr("T: list(type) >= 0")
+    .Attr("fusion: int")
+    .Attr("fusion_id: int")
     .Attr("group: string")
     .Attr("root_rank: int")
     .SetIsStateful()
@@ -184,7 +186,7 @@ REGISTER_OP("HcomRemoteRead")
     .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
     .SetIsStateful()
     .SetShapeFn([](shape_inference::InferenceContext* c) {
-        c->set_output(0, c->UnknownShape()); // 第一维shape确定，第二维unknown
+        c->set_output(0, c->UnknownShape()); // 一维shape确诙维unknown
         return Status::OK();
     })
     .Doc(R"doc(
