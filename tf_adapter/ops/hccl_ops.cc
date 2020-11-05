@@ -96,6 +96,8 @@ REGISTER_OP("HcomBroadcast")
     .Input("input: T")
     .Output("output: T")
     .Attr("T: list(type) >= 0")
+    .Attr("fusion: int")
+    .Attr("fusion_id: int")
     .Attr("group: string")
     .Attr("root_rank: int")
     .SetIsStateful()
@@ -184,7 +186,23 @@ REGISTER_OP("HcomRemoteRead")
     .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
     .SetIsStateful()
     .SetShapeFn([](shape_inference::InferenceContext* c) {
-        c->set_output(0, c->UnknownShape()); // 第一维shape确定，第二维unknown
+        c->set_output(0, c->UnknownShape()); // 一维shape确诙维unknown
+        return Status::OK();
+    })
+    .Doc(R"doc(
+
+)doc");
+
+REGISTER_OP("HcomRemoteRefRead")
+    .Input("remote: T")
+    .Input("cache_var: Ref(dtype)")
+    .Input("local_offset: T")
+    .Output("cache_var1:Ref(dtype)")
+    .Attr("T: {uint64}")
+    .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext* c) {
+        c->set_output(0, c->input(1));
         return Status::OK();
     })
     .Doc(R"doc(
@@ -202,4 +220,15 @@ REGISTER_OP("HcomRemoteWrite")
 
 )doc");
 
+REGISTER_OP("HcomRemoteScatterWrite")
+    .Input("remote: T")
+    .Input("local: dtype")
+    .Input("local_offset: T")
+    .Attr("T: {int64, uint64}")
+    .Attr("dtype: {int8, int16, int32, float16, float32, int64, uint64}")
+    .SetIsStateful()
+    .SetShapeFn(shape_inference::NoOutputs)
+    .Doc(R"doc(
+
+)doc");
 }  // namespace tensorflow

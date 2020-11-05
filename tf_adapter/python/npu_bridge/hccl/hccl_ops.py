@@ -48,11 +48,15 @@ def allgather(tensor, rank_size, group="hccl_world_group"):
 ## 提供group内的集合通信broadcast功能
 #  @param tensor tensorflow的tensor类型，broadcast操作的输入；
 #  @param root_rank int类型，作为root节点的rank_id，该id是group内的rank id;
+#  @param fusion int类型，算子融合标识。0: 不融合；1:按照相同fusion_id融合;其他值非法。
+#  @param fusion_id int类型，算子融合索引标识，相同fusion_id的算子将会融合。
 #  @param group string类型，group名称，可以为用户自定义group或者"hccl_world_group";
 #  @return 对输入tensor执行完broadcast操作之后的结果tensor
-def broadcast(tensor, root_rank, group="hccl_world_group"):
+def broadcast(tensor, root_rank, fusion=0, fusion_id=-1, group="hccl_world_group"):
     result = gen_hccl_ops.hcom_broadcast(
         input=tensor,
+        fusion=fusion,
+        fusion_id=fusion_id,
         group=group,
         root_rank=root_rank)
     return result
@@ -112,6 +116,17 @@ def remote_read(tensorRemote, data_type):
         dtype=data_type)
     return result
 
+##提供remote ref read功能
+#  @param tensorRemote 远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
+#  @param cache 本端接收内存基地址
+#  @param offset 进行跳读的步长
+def remote_ref_read(tensorRemote, cache, offset):
+    result=gen_hccl_ops.hcom_remote_ref_read(
+        remote=tensorRemote,
+        cache_var=cache,
+        local_offset=offset)
+    return result
+
 ## 提供remote write功能
 #  @param remote 写入远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
 #  @param local 本端发送内存
@@ -119,4 +134,15 @@ def remote_write(tensorRemote, tensorLocal, data_type):
     result = gen_hccl_ops.hcom_remote_write(
         remote=tensorRemote,
         local=tensorLocal)
+    return result
+
+##提供remote scatter write功能
+#  @param tensorRemote 写入远端内存信息，shape(index_num, 3)：[u64 remoteId, u64 remoteAddr, u64 dataLength]
+#  @param tensorLocal 本端发送内存基地址
+#  @param offset 进行跳写的步长
+def remote_scatter_write(tensorRemote, tensorLocal, offset):
+    result = gen_hccl_ops.hcom_remote_write(
+        remote=tensorRemote,
+        local=tensorLocal,
+        local_offset=offset)
     return result
