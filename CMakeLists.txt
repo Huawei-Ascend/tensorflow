@@ -4,8 +4,8 @@ if (ENABLE_OPEN_SRC)
     project(TFAdapter)
 
     set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_C_FLAGS "-O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
     # build external prjects
     if(DEFINED ENV{D_PKG_SERVER})
         set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
