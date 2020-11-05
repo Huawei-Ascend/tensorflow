@@ -7,7 +7,7 @@ Developers only need to install the TF_Adapter plug-in and add a small amount of
 
 ![tfadapter](https://images.gitee.com/uploads/images/2020/1027/094640_8f305b88_8175427.jpeg "framework.jpg")
 
-You can read [TF_Adapter Interface](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0048.html) for more details。
+You can read [TF_Adapter Interface](https://support.huaweicloud.com/intl/en-us/ug-tf-training-tensorflow/atlasadapi_13_0004.html) for more details。
 ## Installation Guide
 ### Building from source
 
