@@ -28,6 +28,18 @@ def tf_adapter_workspace():
     )
 
     native.new_local_repository(
+        name = "graphengine_extend_hdrs",
+        path = extend_base() + "graphengine/inc",
+        build_file = "@tf_adapter//tf_adapter:module.BUILD",
+    )
+
+    native.new_local_repository(
+        name = "metadef_extend_hdrs",
+        path = extend_base() + "metadef/inc",
+        build_file = "@tf_adapter//tf_adapter:module.BUILD",
+    )
+
+    native.new_local_repository(
         name="installed_tensorflow",
         path=extend_base() + "third_party/tensorflow/compile_deps/tf-1.15.0",
         build_file = "@tf_adapter//tf_adapter:module.BUILD",

@@ -82,6 +82,10 @@ else()
         ${TOP_DIR}/inc/common/
         ${TOP_DIR}/inc/soft_dp/
         ${TOP_DIR}/soft_dp/
+        ${TOP_DIR}/graphengine/inc/
+        ${TOP_DIR}/graphengine/inc/external/
+        ${TOP_DIR}/metadef/inc/
+        ${TOP_DIR}/metadef/inc/external/
         ${TOP_DIR}/libc_sec/include/
         ${TOP_DIR}/third_party/json/include/
         ${TOP_DIR}/third_party/tensorflow/tensorflow-1.15.0/
