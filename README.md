@@ -50,6 +50,8 @@ pip install npu_bridge-1.15.0-py3-none-any.whl
 
 欢迎参与贡献。
 
+## 社区版本计划（https://gitee.com/ascend/tensorflow/wikis/Home?sort_id=3076366）
+
 ## Release Notes
 
 Release Notes请参考[RELEASE](RELEASE.md).
