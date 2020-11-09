@@ -29,7 +29,7 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/framework/shape_inference.h"
-#include "tensorflow/configure/framework/resource_op_kernel.h"
+#include "tensorflow/core/framework/resource_op_kernel.h"
 #include "tf_adapter/util/cache_interface.h"
 
 namespace tensorflow {
