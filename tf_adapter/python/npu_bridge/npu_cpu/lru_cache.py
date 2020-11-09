@@ -7,7 +7,7 @@ from npu_bridge.helper import helper
 gen_npu_cpu_ops = helper.get_gen_ops()
 
 class LruCache(object):
-  def __init(self, cache_size=100000, load_factor=1):
+  def __init__(self, cache_size=100000, load_factor=1):
     self._cache_size=cache_size
     self._load_factor=load_factor
     self._cache=gen_npu_cpu_ops.lru_cache(
