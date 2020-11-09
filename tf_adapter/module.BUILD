@@ -13,13 +13,27 @@ cc_library(
 cc_library(
     name = "tf_adapter_extend_hdrs",
     srcs = glob([
-        "framework/**/*.h", "framework/**/*.hpp",
-        "graph/**/*.h", "graph/**/*.hpp",
         "hccl/**/*.h", "hccl/**/*.hpp",
         "tdt/**/*.h", "tdt/**/*.hpp",
         "runtime/**/*.h", "runtime/**/*.hpp",
         "external/**/*.h", "soft_dp/**/*.h",
         "mmpa/**/*.h", "toolchain/**/*.h"
+    ]),
+)
+
+cc_library(
+    name = "graphengine_extend_hdrs",
+    srcs = glob([
+        "framework/**/*.h", "framework/**/*.hpp",
+        "external/**/*.h"
+    ]),
+)
+
+cc_library(
+    name = "metadef_extend_hdrs",
+    srcs = glob([
+        "graph/**/*.h", "graph/**/*.hpp",
+        "external/**/*.h"
     ]),
 )
 

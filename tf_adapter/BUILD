@@ -16,6 +16,10 @@ cc_binary(
             # so that can ensure the protobuf version is consistent with the installed tensorflow
             "-Iexternal/installed_tensorflow/include",
             "-Iexternal/org_tensorflow",
+            "-Iexternal/graphengine_extend_hdrs",
+            "-Iexternal/graphengine_extend_hdrs/external",
+            "-Iexternal/metadef_extend_hdrs",
+            "-Iexternal/metadef_extend_hdrs/external",
             "-Iexternal/tf_adapter_extend_hdrs",
             "-Iexternal/tf_adapter_extend_hdrs/external",
             "-Iexternal/local_nlohmann_json_lib/",
@@ -58,9 +62,11 @@ cc_binary(
         #
         "@installed_tensorflow_libs//:installed_tensorflow_libs",
         "@local_nlohmann_json_lib//:local_nlohmann_json_lib",
-        "@tf_adapter_extend_hdrs//:tf_adapter_extend_hdrs",
         "@sec_lib//:sec_lib",
         "@python_include//:python_include",
+	"@graphengine_extend_hdrs//:graphengine_extend_hdrs",
+        "@metadef_extend_hdrs//:metadef_extend_hdrs",
+        "@tf_adapter_extend_hdrs//:tf_adapter_extend_hdrs",
     ],
 )
 
