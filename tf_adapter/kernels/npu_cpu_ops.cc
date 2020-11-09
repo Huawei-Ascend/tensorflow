@@ -29,6 +29,8 @@ limitations under the License.
 #include "tensorflow/core/framework/op_kernel.h"
 #include "tensorflow/core/framework/register_types.h"
 #include "tensorflow/core/framework/shape_inference.h"
+#include "tensorflow/core/framework/resource_op_kernel.h"
+#include "tf_adapter/util/cache_interface.h"
 
 namespace tensorflow {
 class EmbeddingRankIdOpKernel : public OpKernel {
@@ -37,5 +39,32 @@ class EmbeddingRankIdOpKernel : public OpKernel {
   ~EmbeddingRankIdOpKernel() {}
   void Compute(OpKernelContext *context) override { LOG(INFO) << "EmbeddingRankIdOp Compute."; }
 };
+
+class LruCacheOp : public ResourceOpKernel<CacheInterface> {
+ public:
+  explicit LruCacheOp(OpKernelConstruction* context) : ResourceOpKernel(context) {}
+  void Compute(OpKernelContext* context) override { LOG(INFO) << "LruCacheOp Compute"; }
+ private:
+  Status CreateResource(CacheInterface *context) override
+                        EXCLUSIVE_LOCKS_REQUIRED(mu_) {
+    return Status::OK();
+  }
+};
+
+class CacheAddOp : public OpKernel {
+ public:
+  explicit CacheAddOp(OpKernelConstruction *context) : OpKernel(context) {}
+  void Compute(OpKernelContext *context) override { LOG(INFO) << "CacheAddOp Compute"; }
+};
+
+class CacheRemoteIndexToLocalOp : public OpKernel {
+ public:
+  explicit CacheRemoteIndexToLocalOp(OpKernelConstruction *context) : OpKernel(context) {}
+  void Compute(OpKernelContext *context) override { LOG(INFO) << "CacheRemoteIndexToLocalOp Compute"; }
+};
+
 REGISTER_KERNEL_BUILDER(Name("EmbeddingRankId").Device(DEVICE_CPU), EmbeddingRankIdOpKernel);
+REGISTER_KERNEL_BUILDER(Name("LruCache").Device(DEVICE_CPU), LruCacheOp);
+REGISTER_KERNEL_BUILDER(Name("CacheAdd").Device(DEVICE_CPU), CacheAddOp);
+REGISTER_KERNEL_BUILDER(Name("CacheRemoteIndexToLocal").Device(DEVICE_CPU), CacheRemoteIndexToLocalOp);
 }  // namespace tensorflow
