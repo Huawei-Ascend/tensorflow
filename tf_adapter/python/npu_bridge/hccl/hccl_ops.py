@@ -141,7 +141,7 @@ def remote_write(tensorRemote, tensorLocal, data_type):
 #  @param tensorLocal 本端发送内存基地址
 #  @param offset 进行跳写的步长
 def remote_scatter_write(tensorRemote, tensorLocal, offset):
-    result = gen_hccl_ops.hcom_remote_write(
+    result = gen_hccl_ops.hcom_remote_scatter_write(
         remote=tensorRemote,
         local=tensorLocal,
         local_offset=offset)
