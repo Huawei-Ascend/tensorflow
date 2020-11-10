@@ -111,9 +111,7 @@ def setup_python():
       for flag in compile_args[2:-1]:
         f.write(flag + '\n')
       f.write("-I" + compile_args[-1] + '\n')
-    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb1')
     with open(real_config_path('LINK_FLAGS'), 'w') as f:
-      print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb2')
       f.write(os.path.join(compile_args[1], 'libtensorflow_framework.so.1\n'))
       f.write(os.path.join(compile_args[1], 'python', '_pywrap_tensorflow_internal.so\n'))
     break
@@ -133,16 +131,12 @@ def setup_ascend(env_path):
       break
     elif not os.path.exists(ascend_path):
       print('Invalid ascend path: %s cannot be found.' % ascend_path)
-  print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa1: %s' % ascend_path)
   with open(real_config_path('LINK_FLAGS'), 'w') as f:
-    print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa2: %s.' % ascend_path)
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libge_runner.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libfmk_parser.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libdatatransfer.so\n"))
-    f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libindextransform.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "driver", "libtsdclient.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libc_sec.so\n"))
-    f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libmmpa.so\n"))
 
 def setup_swig():
   """Get swig install path."""
@@ -185,8 +179,8 @@ def setup_swig():
 
 def main():
   env_snapshot = dict(os.environ)
-  setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
   setup_python()
+  setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
   setup_swig()
 
 
