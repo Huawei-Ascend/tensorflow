@@ -254,7 +254,7 @@ void GeOp::Finalize() {
           LOG(WARNING) << "[GEOP] Save check report failed.";
         }
         if (handle_ != nullptr) {
-          // (void)mmDlclose(handle_);
+          (void)mmDlclose(handle_);
         }
       }
     }
