@@ -47,7 +47,7 @@ if (ENABLE_OPEN_SRC)
     foreach (LINK_FLAG ${LINK_FLAGS})
         target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
     endforeach (LINK_FLAG)
-
+"""
     target_link_libraries(tf_adapter PUBLIC
         $<BUILD_INTERFACE:intf_pub>
         -Wl,--no-as-needed
@@ -60,6 +60,7 @@ if (ENABLE_OPEN_SRC)
         ${ASCEND_CUSTOM_PATH}/driver/lib64/common/libmmpa.so
         -Wl,--as-needed
     )
+"""
 
     set_target_properties(_tf_adapter PROPERTIES PREFIX "")
 
