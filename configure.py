@@ -131,7 +131,7 @@ def setup_ascend(env_path):
       break
     elif not os.path.exists(ascend_path):
       print('Invalid ascend path: %s cannot be found.' % ascend_path)
-
+"""
   with open(real_config_path('LINK_FLAGS'), 'w') as f:
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libge_runner.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libfmk_parser.so\n"))
@@ -140,7 +140,7 @@ def setup_ascend(env_path):
     f.write(os.path.join(ascend_path, "driver", "lib64", "driver", "libtsdclient.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libc_sec.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libmmpa.so\n"))
-
+"""
 def setup_swig():
   """Get swig install path."""
   default_swig_path = which('swig')
