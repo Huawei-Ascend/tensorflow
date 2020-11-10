@@ -11,13 +11,13 @@ if (ENABLE_OPEN_SRC)
         set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
         message("Download packages from PKG server")
     endif()
-    include(${CMAKE_CURRENT_LIST_DIR}/cmake/nlohmann_json.cmake)
-    include(${CMAKE_CURRENT_LIST_DIR}/cmake/secure_c.cmake)
-    include(${CMAKE_CURRENT_LIST_DIR}/cmake/tensorflow.cmake)
     include_directories(${CMAKE_CURRENT_LIST_DIR})
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/external)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/soft_dp)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/nlohmann_json.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/secure_c.cmake)
+    include(${CMAKE_CURRENT_LIST_DIR}/cmake/tensorflow.cmake)
 
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tools/COMPILE_FLAGS OR NOT EXISTS
             ${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS OR NOT EXISTS
