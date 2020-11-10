@@ -181,8 +181,8 @@ def setup_swig():
 
 def main():
   env_snapshot = dict(os.environ)
-  setup_python()
-  setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
+  #setup_python()
+  #setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
   setup_swig()
 
 
