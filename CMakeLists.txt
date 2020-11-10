@@ -57,7 +57,7 @@ if (ENABLE_OPEN_SRC)
         /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libfmk_parser.so
         /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libindextransform.so
         /usr/local/python/python375/lib/python3.7/site-packages/tensorflow_core/libtensorflow_framework.so.1
-        /usr/local/python/python375/lib/python3.7/site-packages/tensorflow_core/_pywrap_tensorflow_internal.so
+        /usr/local/python/python375/lib/python3.7/site-packages/tensorflow_core/python/_pywrap_tensorflow_internal.so
         -Wl,--as-needed
     )
 
