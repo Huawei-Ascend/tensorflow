@@ -111,6 +111,7 @@ def setup_python():
       for flag in compile_args[2:-1]:
         f.write(flag + '\n')
       f.write("-I" + compile_args[-1] + '\n')
+    print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb.' % compile_args[1])
     with open(real_config_path('LINK_FLAGS'), 'w') as f:
       f.write(os.path.join(compile_args[1], 'libtensorflow_framework.so.1\n'))
       f.write(os.path.join(compile_args[1], 'python', '_pywrap_tensorflow_internal.so\n'))
@@ -131,6 +132,7 @@ def setup_ascend(env_path):
       break
     elif not os.path.exists(ascend_path):
       print('Invalid ascend path: %s cannot be found.' % ascend_path)
+  print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.' % ascend_path)
   with open(real_config_path('LINK_FLAGS'), 'a') as f:
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libge_runner.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libfmk_parser.so\n"))
