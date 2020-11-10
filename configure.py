@@ -139,6 +139,7 @@ def setup_ascend(env_path):
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libindextransform.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "driver", "libtsdclient.so\n"))
     f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libc_sec.so\n"))
+    f.write(os.path.join(ascend_path, "driver", "lib64", "common", "libmmpa.so\n"))
 
 def setup_swig():
   """Get swig install path."""
