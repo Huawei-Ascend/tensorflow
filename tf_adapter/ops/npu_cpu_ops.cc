@@ -80,7 +80,7 @@ REGISTER_OP("CacheAdd")
     return Status::OK();
   });
 //regist cache remote index to local op
-RGISTER_OP("CacheRemoteIndexToLocal")
+REGISTER_OP("CacheRemoteIndexToLocal")
   .Input("cache: resource")
   .Input("ids: T")
   .Output("local_idx: int64")

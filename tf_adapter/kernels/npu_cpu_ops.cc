@@ -45,7 +45,7 @@ class LruCacheOp : public ResourceOpKernel<CacheInterface> {
   explicit LruCacheOp(OpKernelConstruction* context) : ResourceOpKernel(context) {}
   void Compute(OpKernelContext* context) override { LOG(INFO) << "LruCacheOp Compute"; }
  private:
-  Status CreateResource(CacheInterface *context) override
+  Status CreateResource(CacheInterface** context) override
                         EXCLUSIVE_LOCKS_REQUIRED(mu_) {
     return Status::OK();
   }

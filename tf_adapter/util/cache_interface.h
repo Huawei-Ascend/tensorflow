@@ -50,7 +50,7 @@ class CacheInterface : public ResourceBase {
   //Return the num of elements in cache
   virtual int64 size() const = 0;
   //Return a debug string for *this
-  string DebugString() const override { return strings::StrCat("A Cache of size: ", size()) }
+  string DebugString() const override { return strings::StrCat("A Cache of size: ", size()); }
  protected:
   virtual ~CacheInterface() {}
 };
