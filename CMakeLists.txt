@@ -59,7 +59,6 @@ if (ENABLE_OPEN_SRC)
     )
     
     target_link_libraries(_tf_adapter PUBLIC
-        $<BUILD_INTERFACE:intf_pub>
         -Wl,--no-as-needed
         /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/driver/lib64/common/libc_sec.so
         /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libge_runner.so
