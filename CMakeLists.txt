@@ -47,20 +47,6 @@ if (ENABLE_OPEN_SRC)
     foreach (LINK_FLAG ${LINK_FLAGS})
         target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
     endforeach (LINK_FLAG)
-"""
-    target_link_libraries(tf_adapter PUBLIC
-        $<BUILD_INTERFACE:intf_pub>
-        -Wl,--no-as-needed
-        ${ASCEND_CUSTOM_PATH}/fwkacllib/lib64/libge_runner.so
-        ${ASCEND_CUSTOM_PATH}/fwkacllib/lib64/libfmk_parser.so
-        ${ASCEND_CUSTOM_PATH}/fwkacllib/lib64/libdatatransfer.so
-        ${ASCEND_CUSTOM_PATH}/fwkacllib/lib64/libindextransform.so
-        ${ASCEND_CUSTOM_PATH}/fwkacllib/lib64/libtsdclient.so
-        ${ASCEND_CUSTOM_PATH}/driver/lib64/common/libc_sec.so
-        ${ASCEND_CUSTOM_PATH}/driver/lib64/common/libmmpa.so
-        -Wl,--as-needed
-    )
-"""
 
     set_target_properties(_tf_adapter PROPERTIES PREFIX "")
 
