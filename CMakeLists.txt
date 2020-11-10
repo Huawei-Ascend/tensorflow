@@ -47,6 +47,16 @@ if (ENABLE_OPEN_SRC)
     foreach (LINK_FLAG ${LINK_FLAGS})
         target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
     endforeach (LINK_FLAG)
+
+    target_compile_options(_tf_adapter PUBLIC
+        $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>
+        -O2
+        -DNDEBUG
+        -ftrapv
+    )
+    target_compile_definitions(_tf_adapter PUBLIC
+        _FORTIFY_SOURCE=2
+    )
     
     target_link_libraries(_tf_adapter PUBLIC
         $<BUILD_INTERFACE:intf_pub>
