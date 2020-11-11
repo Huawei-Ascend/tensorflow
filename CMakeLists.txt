@@ -4,8 +4,8 @@ if (ENABLE_OPEN_SRC)
     project(TFAdapter)
 
     set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_C_FLAGS "-O2 -Wall -fPIC -ftrapv -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -Wall -fPIC -ftrapv -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
     # build external prjects
     if(DEFINED ENV{D_PKG_SERVER})
         set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
@@ -47,28 +47,6 @@ if (ENABLE_OPEN_SRC)
     foreach (LINK_FLAG ${LINK_FLAGS})
         target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
     endforeach (LINK_FLAG)
-
-    target_compile_options(_tf_adapter PUBLIC
-        $<$<COMPILE_LANGUAGE:CXX>:-std=c++11>
-        -O2
-        -DNDEBUG
-        -ftrapv
-    )
-    target_compile_definitions(_tf_adapter PUBLIC
-        _FORTIFY_SOURCE=2
-    )
-    
-    target_link_libraries(_tf_adapter PUBLIC
-        -Wl,--no-as-needed
-        /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/driver/lib64/common/libc_sec.so
-        /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libge_runner.so
-        /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libdatatransfer.so
-        /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libfmk_parser.so
-        /home/jenkins/share-data/libs_yellow/20201109/ascend910/euleros_x86_gcc7.3.0/fwkacllib/lib64/libindextransform.so
-        /usr/local/python/python375/lib/python3.7/site-packages/tensorflow_core/libtensorflow_framework.so.1
-        /usr/local/python/python375/lib/python3.7/site-packages/tensorflow_core/python/_pywrap_tensorflow_internal.so
-        -Wl,--as-needed
-    )
 
     set_target_properties(_tf_adapter PROPERTIES PREFIX "")
 
