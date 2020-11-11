@@ -1,4 +1,4 @@
-# Release 0.1.0-alpha test
+# Release 0.1.0-alpha
 
 This is the initial release of TF_Adapter which was designed by the researchers
  and
