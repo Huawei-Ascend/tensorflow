@@ -305,7 +305,7 @@ class HcclTaskInfo : public TaskInfo {
   int64_t root_id() const { return root_id_; }
   int64_t op_type() const { return op_type_; }
   int64_t data_type() const { return data_type_; }
-  const std::string &group() const { return group_; }
+  const std::string group() const { return group_; }
   std::function<bool(void *, void *)> hcom_bind_model() const { return hcom_bind_model_; }
   std::function<bool(void *)> hcom_unbind_model() const { return hcom_unbind_model_; }
   std::function<bool(std::shared_ptr<HcclTaskInfo>, void *)> hcom_distribute_task() const {
