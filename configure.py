@@ -112,7 +112,7 @@ def setup_python():
         f.write(flag + '\n')
       f.write("-I" + compile_args[-1] + '\n')
     print('bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb: %s.' % compile_args[1])
-    with open(real_config_path('LINK_FLAGS'), 'w') as f:
+    with open(real_config_path('LINK_FLAGS'), 'a') as f:
       f.write(os.path.join(compile_args[1], 'libtensorflow_framework.so.1\n'))
       f.write(os.path.join(compile_args[1], 'python', '_pywrap_tensorflow_internal.so\n'))
     break
@@ -133,7 +133,7 @@ def setup_ascend(env_path):
     elif not os.path.exists(ascend_path):
       print('Invalid ascend path: %s cannot be found.' % ascend_path)
   print('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa: %s.' % ascend_path)
-  with open(real_config_path('LINK_FLAGS'), 'a') as f:
+  with open(real_config_path('LINK_FLAGS'), 'w') as f:
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libge_runner.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libfmk_parser.so\n"))
     f.write(os.path.join(ascend_path, "fwkacllib", "lib64", "libdatatransfer.so\n"))
@@ -181,8 +181,8 @@ def setup_swig():
 
 def main():
   env_snapshot = dict(os.environ)
-  setup_python()
   setup_ascend(env_snapshot.get(_ASCEND_INSTALL_PATH_ENV))
+  setup_python()
   setup_swig()
 
 
