@@ -58,7 +58,10 @@ class NPURunConfig(run_config_lib.RunConfig):
                  enable_small_channel=0,
                  fusion_switch_file=None,
                  enable_compress_weight=False,
-                 compress_weight_conf=None
+                 compress_weight_conf=None,
+                 op_compiler_cache_mode=None,
+                 op_compiler_cache_dir=None,
+                 debug_dir=None
                  ):
         """
         Constructs a NPUConfig.
@@ -188,6 +191,9 @@ class NPURunConfig(run_config_lib.RunConfig):
         self._fusion_switch_file = fusion_switch_file
         self._enable_compress_weight = enable_compress_weight
         self._compress_weight_conf = compress_weight_conf
+        self._op_compiler_cache_mode=op_compiler_cache_mode
+        self._op_compiler_cache_dir=op_compiler_cache_dir
+        self._debug_dir=debug_dir
 
         super(NPURunConfig, self).__init__(
             model_dir=model_dir,

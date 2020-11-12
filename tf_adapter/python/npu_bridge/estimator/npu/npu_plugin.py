@@ -27,7 +27,10 @@ def npu_resource_init(graph_run_mode = 1,
                       fp_point = None,
                       bp_point = None,
                       mstune_mode = None,
-                      work_path = None):
+                      work_path = None,
+                      op_compiler_cache_mode=None,
+                      op_compiler_cache_dir=None,
+                      debug_dir=None):
 
     util.check_nonnegative_integer(graph_run_mode, "graph_run_mode")
     if graph_run_mode > 1:
@@ -77,6 +80,13 @@ def npu_resource_init(graph_run_mode = 1,
         init["ge.tuningPath"] = str(util.check_path(work_path))
       else:
         raise ValueError('work_path must be set when use mstune_mode')
+
+    if op_compiler_cache_mode is not None:
+        init["ge.op_compiler_cache_mode"] = op_compiler_cache_mode
+    if op_compiler_cache_dir is not None:
+        init["ge.op_compiler_cache_dir"] = op_compiler_cache_dir
+    if debug_dir is not None:
+        init["ge.debugDir"] = debug_dir
 
     init_options=tf_adapter.map_string_string(init)
     tf_adapter.PluginInit(init_options)
