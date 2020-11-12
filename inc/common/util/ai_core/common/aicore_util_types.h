@@ -109,6 +109,10 @@ enum OpImplType {
   EN_RESERVED                        // reserved value
 };
 
+// Dont change the order, only add new mode in the end
+enum L2Mode { EN_L2_CLOSE = 0, EN_L2_BUFFER_OPTIMIZE, EN_L2_CACHE_NORMAL, EN_L2_CACHE_RC };
+enum BufferFusionMode { EN_OPTIMIZE_DISABLE = 0, EN_L2_BUFFER, EN_L2_FUSION};
+
 static const std::map<ge::DataType, uint32_t> DATATYPE_SIZE_MAP{
     {ge::DT_FLOAT, sizeof(float)},
     {ge::DT_FLOAT16, sizeof(int16_t)},

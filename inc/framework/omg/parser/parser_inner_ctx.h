@@ -49,6 +49,8 @@ struct ParserContext {
   std::vector<std::string> user_out_nodes_top_vec;
   // net out nodes (where user_out_nodes or leaf nodes)
   std::vector<std::string> net_out_nodes;
+  // net data nodes top names(only caffe has top)
+  std::vector<std::string> data_top_names;
   // net out nodes top names(only caffe has top)
   std::vector<std::string> out_top_names;
   // Whether to use dynamic batch size or dynamic image size
