@@ -49,7 +49,7 @@ typedef enum {
     HOROVOD_REDUCE_RESERVED     /**< reserved */
 } HorovodReduceOp;
 
-const u32 HCCL_MAX_SEGMENT_NUM = 8;   // The max number of gradient segments.
+const u32 HCCL_MAX_SEGMENT_NUM = 32;   // The max number of gradient segments.
 
 /**
  * @brief the feature of the model
