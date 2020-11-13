@@ -54,6 +54,7 @@ limitations under the License.
 #include "tensorflow/core/framework/node_def_util.h"
 #include "tensorflow/core/framework/tensor_shape.h"
 #include "tensorflow/core/graph/graph.h"
+#include "tensorflow/core/graph/node_builder.h"
 #include "tensorflow/core/lib/strings/str_util.h"
 
 #include "framework/common/ge_inner_error_codes.h"
@@ -141,11 +142,19 @@ Status BuildOutputTensorInfo(OpKernelContext *ctx, std::vector<ge::OutputTensorI
   }
   return Status::OK();
 }
-}  // namespace
 
 bool CmpValue(const std::pair<std::vector<string>, uint32_t> &p1, const std::pair<std::vector<string>, uint32_t> &p2) {
   return p1.second < p2.second;
 }
+
+bool CmpVecValue(Node *node1, Node *node2) {
+  if (node1 == nullptr || node2 == nullptr) {
+    LOG(ERROR) << "node1 or node2 is nullptr.";
+    return false;
+  }
+  return node1->name() < node2->name();
+}
+}  // namespace
 
 std::string CurrentTimeInStr() {
   std::time_t now = std::time(nullptr);
@@ -723,6 +732,10 @@ void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const Function
   Graph graph(OpRegistry::Global());
   OP_REQUIRES_OK_ASYNC(ctx, InferShapeUtil::InferShape(input_vec, &flib_def, &func_def, &graph), done);
 
+  bool is_set_dynamic_config = !sess_options_["ge.inputShape"].empty() && !sess_options_["ge.dynamicDims"].empty() &&
+                               !sess_options_["ge.dynamicNodeType"].empty();
+  if (is_set_dynamic_config) { BuildShapeNodeAndCacheArgNodes(graph); }
+
   bool is_tuning = !mstune_mode_.empty() && !work_path_.empty();
   for (Node *node : graph.nodes()) {
     AddNodeAttrs(node, is_initialize);
@@ -749,8 +762,106 @@ void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const Function
       }
     }
   }
-
+  // set input_shape to dynamic nodes shape desc
+  if (is_set_dynamic_config) { ChangeInputsShapeDesc(ctx, done); }
   graph.ToGraphDef(&graph_def);
+}
+
+void GeOp::BuildShapeNodeAndCacheArgNodes(Graph &graph) {
+  std::string dynamic_node_type = sess_options_["ge.dynamicNodeType"];
+  for (Node *node : graph.nodes()) {
+    // add shape node to get getnext node real shape
+    if (dynamic_node_type == "0" && node->type_string() == "IteratorGetNext") {
+      dynamic_shape_nodes_.emplace_back(node);
+      int i = 0;
+      for (auto out_edge : node->out_edges()) {
+        if (!out_edge->IsControlEdge()) {
+          std::string shape_name = "getnext_shape_" + std::to_string(i);
+          Node *shape_node = nullptr;
+          TF_CHECK_OK(NodeBuilder(shape_name, "Shape")
+                      .Input(node, out_edge->src_output())
+                      .Device(node->def().device())
+                      .Finalize(&graph, &shape_node));
+          std::string identity_name = "shape_identity_" + std::to_string(i);
+          Node *identity_node = nullptr;
+          TF_CHECK_OK(NodeBuilder(identity_name, "Identity")
+                      .Input(shape_node, 0)
+                      .Device(shape_node->def().device())
+                      .Finalize(&graph, &identity_node));
+        }
+        i++;
+      }
+    }
+    // count data args and getnext args for dynamic dims
+    if (node->type_string() == "_Arg") {
+      if (node->name().find("IteratorGetNext_") != std::string::npos) {
+        if (dynamic_node_type == "0") { dynamic_shape_nodes_.emplace_back(node); }
+      } else {
+        if (dynamic_node_type == "1") { dynamic_shape_nodes_.emplace_back(node); }
+      }
+    }
+  }
+  // sort dynamic nodes to match input_shapes
+  std::sort(dynamic_shape_nodes_.begin(), dynamic_shape_nodes_.end(), CmpVecValue);
+}
+
+void GeOp::ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done) {
+  std::vector<std::string> result;
+  std::string input_shapes = sess_options_["ge.inputShape"];
+  Split(input_shapes, result, ";"); //e.g. result:["data:2,3", "data1:3,4"]
+
+  if (dynamic_shape_nodes_.size() == 1 && dynamic_shape_nodes_[0]->type_string() == "IteratorGetNext") {
+    LOG(INFO) << "[GEOP] change " << dynamic_shape_nodes_[0]->name() << " shape desc.";
+    NodeDef &node_def = const_cast<NodeDef &>(dynamic_shape_nodes_[0]->def());
+    AttrValue &output_tensor_descs = (*node_def.mutable_attr())[OUTPUT_DESC];
+    for (size_t i = 0; i < dynamic_shape_nodes_[0]->num_outputs(); ++i) {
+      AttrValue attr_shape_value;
+      SetShapesToOutputDesc(result, i, attr_shape_value);
+      (*output_tensor_descs.mutable_list()->mutable_func(i)->mutable_attr())[SERIALIZE_SHAPE] = attr_shape_value;
+    }
+  } else {
+    if (!dynamic_shape_nodes_.empty()) {
+      OP_REQUIRES_ASYNC(ctx, dynamic_shape_nodes_.size() == result.size(),
+                        errors::Internal("input_shape is not match inputs num in graph"), done);
+    }
+    for (size_t i = 0; i < dynamic_shape_nodes_.size(); ++i) {
+      LOG(INFO) << "[GEOP] change " << dynamic_shape_nodes_[i]->name() << " shape desc.";
+      NodeDef &node_def = const_cast<NodeDef &>(dynamic_shape_nodes_[i]->def());
+      AttrValue &output_tensor_descs = (*node_def.mutable_attr())[OUTPUT_DESC];
+      AttrValue attr_shape_value;
+      SetShapesToOutputDesc(result, i, attr_shape_value);
+      (*output_tensor_descs.mutable_list()->mutable_func(0)->mutable_attr())[SERIALIZE_SHAPE] = attr_shape_value;
+    }
+  }
+  LOG(INFO) << "[GEOP] change input shapes desc success.";
+}
+
+void GeOp::SetShapesToOutputDesc(const std::vector<std::string> &input_shapes,
+                                 const int &index, AttrValue &attr_shape_value) {
+  if (input_shapes.empty()) {
+    LOG(ERROR) << "[GEOP] input_shapes is empty.";
+    return;
+  }
+  if (index < 0) {
+    LOG(ERROR) << "[GEOP] index must more than 0.";
+    return;
+  }
+  LOG(INFO) << "[GEOP] get input: " << index << " input shape is: " << input_shapes[index];
+  std::vector<std::string> shape;
+  Split(input_shapes[index], shape, ":"); // e.g. shape:["data", "2,3,4"]
+  if (shape.empty() || shape.size() != 2) {
+    LOG(ERROR) << "[GEOP] shape is empty or shape size is not 2.";
+    return;
+  }
+  if (shape[1] == "0") {
+    // scale node has no shape.
+    return;
+  }
+  std::vector<std::string> dims;
+  Split(shape[1], dims, ","); // e.g. dims:["2", "3", "4"]
+  for (auto dim : dims) {
+    attr_shape_value.mutable_list()->add_i(std::atoi(dim.c_str()));
+  }
 }
 
 Status GeOp::BuildInputTensorInfo(OpKernelContext *ctx, std::vector<ge::InputTensorInfo> &inputs) {

@@ -65,7 +65,7 @@ Status GetEnvDeviceID(uint32_t &device_id) {
   }
   return Status::OK();
 }
-inline void split(const std::string &s, std::vector<std::string> &result, const char *delchar = " ") {
+void Split(const std::string &s, std::vector<std::string> &result, const char *delchar) {
   if (s.empty()) { return; }
   result.clear();
   char *buffer = new char[s.size() + 1];
@@ -91,7 +91,7 @@ inline bool checkProfilingOptions(string &options) {
   validOptions.insert("op_trace");
 
   std::vector<string> optionVec;
-  split(options, optionVec, ":");
+  Split(options, optionVec, ":");
   if (optionVec.empty()) { return false; }
   for (const auto &option : optionVec) {
     if (validOptions.find(option) == validOptions.end()) { return false; }
@@ -105,12 +105,12 @@ inline Status checkDumpStep(const string &dump_step) {
   std::vector<string> match_vecs;
   std::regex pattern(R"((\d{1,}-\d{1,}\||\d{1,}\|)+)");
   if (regex_match(tmp_dump_step, result, pattern)) {
-    split(result.str(), match_vecs, "|");
+    Split(result.str(), match_vecs, "|");
     // 100 is the max sets of dump steps.
     if (match_vecs.size() > 100) { return errors::InvalidArgument("dump_step only support dump <= 100 sets of data"); }
     for (const auto &match_vec : match_vecs) {
       std::vector<string> tmp_vecs;
-      split(match_vec, tmp_vecs, "-");
+      Split(match_vec, tmp_vecs, "-");
       if (tmp_vecs.size() > 1) {
         if (std::atoi(tmp_vecs[0].c_str()) >= std::atoi(tmp_vecs[1].c_str())) {
           return errors::InvalidArgument("in range steps, the first step is >= "
@@ -199,13 +199,14 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
   std::string is_tailing_optimization = std::to_string(false);
   std::string op_select_implmode;
   std::string optypelist_for_implmode;
-  string input_shape;
-  string dynamic_dims;
-  std::string buffer_optimize;
+  std::string buffer_optimize = "l2_optimize";
   std::string enable_small_channel = "0";
   std::string fusion_switch_file;
   std::string enable_compress_weight = std::to_string(false);
   std::string compress_weight_conf;
+  std::string input_shape;
+  std::string dynamic_dims;
+  std::string dynamic_node_type;
 
   if (ctx != nullptr && ctx->GetAttr("_NpuOptimizer", &npuOptimizer) == Status::OK()) {
     ctx->GetAttr("_variable_format_optimize", &variable_format_optimize);
@@ -244,6 +245,7 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
     ctx->GetAttr("_fusion_switch_file", &fusion_switch_file);
     ctx->GetAttr("_enable_compress_weight", &enable_compress_weight);
     ctx->GetAttr("_compress_weight_conf", &compress_weight_conf);
+    ctx->GetAttr("_dynamic_node_type", &dynamic_node_type);
   }
 
   // session options
@@ -268,6 +270,7 @@ std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction
   sess_options["ge.fusionSwitchFile"] = fusion_switch_file;
   sess_options["ge.enableCompressWeight"] = enable_compress_weight;
   sess_options["compress_weight_conf"] = compress_weight_conf;
+  sess_options["ge.dynamicNodeType"] = dynamic_node_type;
 
   return sess_options;
 }
@@ -510,11 +513,12 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   string fp_point;
   std::string op_select_implmode;
   std::string optypelist_for_implmode;
-  string input_shape;
-  string dynamic_dims;
+  std::string input_shape;
+  std::string dynamic_dims;
+  std::string dynamic_node_type;
   string mstune_mode;
   string work_path;
-  std::string buffer_optimize;
+  std::string buffer_optimize = "l2_optimize";
   std::string enable_small_channel = "0";
   std::string fusion_switch_file;
   std::string enable_compress_weight = std::to_string(false);
@@ -608,6 +612,9 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
     }
     if (attrs.Find("_input_shape") != nullptr) { input_shape = attrs.Find("_input_shape")->s(); }
     if (attrs.Find("_dynamic_dims") != nullptr) { dynamic_dims = attrs.Find("_dynamic_dims")->s(); }
+    if (attrs.Find("_dynamic_node_type") != nullptr) {
+      dynamic_node_type = attrs.Find("_dynamic_node_type")->s();
+    }
     if (attrs.Find("_mstune_mode") != nullptr) { mstune_mode = attrs.Find("_mstune_mode")->s(); }
     if (attrs.Find("_work_path") != nullptr) { work_path = attrs.Find("_work_path")->s(); }
     if (attrs.Find("_buffer_optimize") != nullptr) { buffer_optimize = attrs.Find("_buffer_optimize")->s(); }
@@ -674,6 +681,7 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   all_options["optypelist_for_implmode"] = optypelist_for_implmode;
   all_options["input_shape"] = input_shape;
   all_options["dynamic_dims"] = dynamic_dims;
+  all_options["dynamic_node_type"] = dynamic_node_type;
   all_options["mstune_mode"] = mstune_mode;
   all_options["work_path"] = work_path;
   all_options["buffer_optimize"] = buffer_optimize;
@@ -739,11 +747,12 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   int enable_exception_dump = 0;
   string op_select_implmode;
   string optypelist_for_implmode;
-  string input_shape;
-  string dynamic_dims;
+  std::string input_shape;
+  std::string dynamic_dims;
+  int dynamic_node_type = -1;
   string mstune_mode;
   string work_path;
-  std::string buffer_optimize;
+  std::string buffer_optimize = "l2_optimize";
   int enable_small_channel = 0;
   std::string fusion_switch_file;
   bool enable_compress_weight = false;
@@ -869,12 +878,19 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
         if (!s.ok()) { LOG(FATAL) << s.error_message(); }
         optypelist_for_implmode = params.at("optypelist_for_implmode").s();
       }
-      if (params.count("input_shape") && params.count("dynamic_dims")) {
+      if (params.count("input_shape") && params.count("dynamic_dims") &&
+          params.count("dynamic_node_type")) {
         input_shape = params.at("input_shape").s();
         dynamic_dims = params.at("dynamic_dims").s();
-      } else if ((params.count("input_shape") && !params.count("dynamic_dims")) ||
-                 (!params.count("input_shape") && params.count("dynamic_dims"))) {
-        LOG(FATAL) << "input_shape and dynamic_dims should be paired.";
+        dynamic_node_type = params.at("dynamic_node_type").i();
+        if (dynamic_node_type < 0 || dynamic_node_type > 1) {
+          LOG(FATAL) << "dynamic_node_type should be 0 or 1.";
+        }
+      } else if (!params.count("input_shape") && !params.count("dynamic_dims") &&
+                 !params.count("dynamic_node_type")) {
+        // the three parameters are not set normally.
+      } else {
+        LOG(FATAL) << "input_shape, dynamic_dims and dynamic_node_type should use together.";
       }
       if (params.count("buffer_optimize")) {
         buffer_optimize = params.at("buffer_optimize").s();
@@ -919,6 +935,7 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   sess_options["optypelist_for_implmode"] = optypelist_for_implmode;
   sess_options["input_shape"] = input_shape;
   sess_options["dynamic_dims"] = dynamic_dims;
+  sess_options["dynamic_node_type"] = std::to_string(dynamic_node_type);
   sess_options["buffer_optimize"] = buffer_optimize;
   sess_options["enable_small_channel"] = std::to_string(enable_small_channel);
   sess_options["fusion_switch_file"] = fusion_switch_file;

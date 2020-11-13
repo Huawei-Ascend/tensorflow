@@ -90,6 +90,13 @@ class GeOp : public AsyncOpKernel {
 
   void GetMsTuneConfig(std::map<std::string, std::string> init_options);
 
+  void SetShapesToOutputDesc(const std::vector<std::string> &input_shapes,
+                             const int &index, AttrValue &attr_shape_value);
+
+  void BuildShapeNodeAndCacheArgNodes(Graph &graph);
+
+  void ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done);
+
  private:
   static const std::string INPUT_DESC;
   static const std::string OUTPUT_DESC;
@@ -129,6 +136,7 @@ class GeOp : public AsyncOpKernel {
   void *handle_;
   MsTuningFunc tuning_api_;
   string auto_tune_mode_;
+  std::vector<Node*> dynamic_shape_nodes_;
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_KERNELS_GEOP_NPU_H_

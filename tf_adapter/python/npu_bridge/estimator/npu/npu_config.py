@@ -54,7 +54,7 @@ class NPURunConfig(run_config_lib.RunConfig):
                  dynamic_input_config=None,
                  mstune_mode=None,
                  work_path=None,
-                 buffer_optimize=None,
+                 buffer_optimize="l2_optimize",
                  enable_small_channel=0,
                  fusion_switch_file=None,
                  enable_compress_weight=False,
@@ -268,7 +268,7 @@ class NpuExecutePlacement(Enum):
 
 class DynamicInputConfig():
     """dynamic dims and input shape config with npu support"""
-    def __init__(self, input_shape, dynamic_dims):
+    def __init__(self, input_shape, dynamic_dims, dynamic_node_type):
         """
         Constructs a DynamicInputConfig.
 
@@ -276,6 +276,8 @@ class DynamicInputConfig():
             input_shape: the network's inputs shapes.
             dynamic_dims: This parameter corresponds to input_shape.
                           The dim value in dims corresponds to the parameter "-1" in input_shape.
+            dynamic_node_type: Dataset or placeholder is dynamic input. type: 0 or 1.
         """
         self._input_shape = input_shape
         self._dynamic_dims = dynamic_dims
+        self._dynamic_node_type = dynamic_node_type
