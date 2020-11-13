@@ -32,3 +32,14 @@ def npu_variable_scope(placement=NpuExecutePlacement.ALL):
   }
   with ops.get_default_graph()._attr_scope(attrs):
     yield
+
+@contextlib.contextmanager
+def keep_dtype_scope():
+  """
+  Specify which layers retain the original precision.
+  """
+  attrs = {
+    "_keep_dtype": attr_value_pb2.AttrValue(b=True)
+  }
+  with ops.get_default_graph()._attr_scope(attrs):
+    yield
