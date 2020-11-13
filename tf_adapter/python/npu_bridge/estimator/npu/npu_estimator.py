@@ -735,6 +735,12 @@ class NPUEstimator(estimator_lib.Estimator):
         custom_op.parameter_map["enable_compress_weight"].b = config._enable_compress_weight
         if config._compress_weight_conf is not None:
             custom_op.parameter_map["compress_weight_conf"].s = tf.compat.as_bytes(config._compress_weight_conf)
+        if config._op_compiler_cache_mode is not None:
+            custom_op.parameter_map["op_compiler_cache_mode"].s = tf.compat.as_bytes(config._op_compiler_cache_mode)
+        if config._op_compiler_cache_dir is not None:
+            custom_op.parameter_map["op_compiler_cache_dir"].s = tf.compat.as_bytes(config._op_compiler_cache_dir)
+        if config._debug_dir is not None:
+            custom_op.parameter_map["debug_dir"].s = tf.compat.as_bytes(config._debug_dir)
 
         # add profiling options to custom_op
         self.__load_profiling_options(config, custom_op)

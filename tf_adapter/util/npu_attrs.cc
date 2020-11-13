@@ -303,6 +303,9 @@ std::map<std::string, std::string> NpuAttrs::GetInitOptions(OpKernelConstruction
   string fp_point;
   string mstune_mode;
   string work_path;
+  std::string op_compiler_cache_mode;
+  std::string op_compiler_cache_dir;
+  std::string debug_dir;
 
   if (ctx != nullptr && ctx->GetAttr("_NpuOptimizer", &npuOptimizer) == Status::OK()) {
     ctx->GetAttr("_precision_mode", &precision_mode);
@@ -317,6 +320,9 @@ std::map<std::string, std::string> NpuAttrs::GetInitOptions(OpKernelConstruction
     ctx->GetAttr("_enable_exception_dump", &enable_exception_dump);
     ctx->GetAttr("_mstune_mode", &mstune_mode);
     ctx->GetAttr("_work_path", &work_path);
+    ctx->GetAttr("_op_compiler_cache_mode", &op_compiler_cache_mode);
+    ctx->GetAttr("_op_compiler_cache_dir", &op_compiler_cache_dir);
+    ctx->GetAttr("_debug_dir", &debug_dir);
   }
 
   init_options["ge.exec.precision_mode"] = precision_mode;
@@ -334,6 +340,9 @@ std::map<std::string, std::string> NpuAttrs::GetInitOptions(OpKernelConstruction
   init_options["ge.exec.enable_exception_dump"] = enable_exception_dump;
   init_options["ge.buildMode"] = mstune_mode;
   init_options["ge.tuningPath"] = work_path;
+  init_options["ge.op_compiler_cache_mode"] = op_compiler_cache_mode;
+  init_options["ge.op_compiler_cache_dir"] = op_compiler_cache_dir;
+  init_options["ge.debugDir"] = debug_dir;
 
   return init_options;
 }
@@ -510,6 +519,9 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   std::string fusion_switch_file;
   std::string enable_compress_weight = std::to_string(false);
   std::string compress_weight_conf;
+  std::string op_compiler_cache_mode;
+  std::string op_compiler_cache_dir;
+  std::string debug_dir;
 
   if (attrs.Find("_NpuOptimizer") != nullptr) {
     do_npu_optimizer = std::to_string(true);
@@ -611,6 +623,15 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
     if (attrs.Find("_compress_weight_conf") != nullptr) {
       compress_weight_conf = attrs.Find("_compress_weight_conf")->s();
     }
+    if (attrs.Find("_op_compiler_cache_mode") != nullptr) {
+      op_compiler_cache_mode = attrs.Find("_op_compiler_cache_mode")->s();
+    }
+    if (attrs.Find("_op_compiler_cache_dir") != nullptr) {
+      op_compiler_cache_dir = attrs.Find("_op_compiler_cache_dir")->s();
+    }
+    if (attrs.Find("_debug_dir") != nullptr) {
+      debug_dir = attrs.Find("_debug_dir")->s();
+    }
   }
 
   all_options["variable_format_optimize"] = variable_format_optimize;
@@ -660,6 +681,9 @@ std::map<std::string, std::string> NpuAttrs::GetAllAttrOptions(AttrSlice attrs) 
   all_options["fusion_switch_file"] = fusion_switch_file;
   all_options["enable_compress_weight"] = enable_compress_weight;
   all_options["compress_weight_conf"] = compress_weight_conf;
+  all_options["op_compiler_cache_mode"] = op_compiler_cache_mode;
+  all_options["op_compiler_cache_dir"] = op_compiler_cache_dir;
+  all_options["debug_dir"] = debug_dir;
 
   return all_options;
 }
@@ -724,6 +748,9 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   std::string fusion_switch_file;
   bool enable_compress_weight = false;
   std::string compress_weight_conf;
+  std::string op_compiler_cache_mode;
+  std::string op_compiler_cache_dir;
+  std::string debug_dir;
 
   const RewriterConfig &rewrite_options = options.session_options->config.graph_options().rewrite_options();
   for (const auto &custom_optimizer : rewrite_options.custom_optimizers()) {
@@ -862,6 +889,15 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
       }
       if (params.count("enable_compress_weight")) { enable_compress_weight = params.at("enable_compress_weight").b(); }
       if (params.count("compress_weight_conf")) { compress_weight_conf = params.at("compress_weight_conf").s(); }
+      if (params.count("op_compiler_cache_mode")) {
+        op_compiler_cache_mode = params.at("op_compiler_cache_mode").s();
+      }
+      if (params.count("op_compiler_cache_dir")) {
+        op_compiler_cache_dir = params.at("op_compiler_cache_dir").s();
+      }
+      if (params.count("debug_dir")) {
+        debug_dir = params.at("debug_dir").s();
+      }
     }
   }
 
@@ -911,6 +947,9 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
   init_options["enable_exception_dump"] = std::to_string(enable_exception_dump);
   init_options["mstune_mode"] = mstune_mode;
   init_options["work_path"] = work_path;
+  init_options["op_compiler_cache_mode"] = op_compiler_cache_mode;
+  init_options["op_compiler_cache_dir"] = op_compiler_cache_dir;
+  init_options["debug_dir"] = debug_dir;
 
   pass_options["do_npu_optimizer"] = std::to_string(do_npu_optimizer);
   pass_options["enable_data_pre_proc"] = std::to_string(enable_dp);

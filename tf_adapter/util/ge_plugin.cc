@@ -165,6 +165,12 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
 
   LOG(INFO) << "[GePlugin] job_id : " << init_options[ge::OPTION_EXEC_JOB_ID];
 
+  LOG(INFO) << "[GePlugin] op_compiler_cache_mode : " << init_options["ge.op_compiler_cache_mode"];
+
+  LOG(INFO) << "[GePlugin] op_compiler_cache_dir : " << init_options["ge.op_compiler_cache_dir"];
+
+  LOG(INFO) << "[GePlugin] debugDir : " << init_options["ge.debugDir"];
+
   // mstune mode and work path
   if (!init_options["ge.buildMode"].empty()) {
     init_options["ge.buildMode"] = "tuning";
