@@ -14,7 +14,6 @@ class LruCache(object):
         cache_size=self._cache_size,
         load_factor=self._load_factor
     )
-  
   ##提供CacheAdd功能
   # @param cache resource类型，保存lruCache资源
   # @param ids int类型，输入索引
@@ -24,7 +23,7 @@ class LruCache(object):
         cache=self._cache,
         ids=ids
     )
-  
+    return result
   ##提供CacheRemoteIndexToLocal功能
   # @param cache resource类型，保存lruCache资源
   # @param ids int类型，输入索引
@@ -34,3 +33,4 @@ class LruCache(object):
         cache=self._cache,
         ids=ids
     )
+    return result
