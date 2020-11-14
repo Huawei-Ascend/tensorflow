@@ -369,6 +369,45 @@ REGISTER_OP("AdamApplyOneAssign")
     .Attr("T: {float16, float32}")
     .SetShapeFn(shape_inference::NoOutputs);
 
+REGISTER_OP("LambApplyOptimizerAssign")
+    .Input("input0: T")
+    .Input("input1: T")
+    .Input("input2: T")
+    .Input("input3: T")
+    .Input("mul0_x: T")
+    .Input("mul1_x: T")
+    .Input("mul2_x: T")
+    .Input("mul3_x: T")
+    .Input("add2_y: T")
+    .Input("steps: T")
+    .Input("do_use_weight: T")
+    .Input("weight_decay_rate: T")
+    .Output("update: T")
+    .Output("output1: T")
+    .Output("output2: T")
+    .Attr("T: {float16, float32}")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      c->set_output(0, c->input(0));
+      c->set_output(1, c->input(1));
+      c->set_output(2, c->input(2));
+      return Status::OK();
+    });
+
+REGISTER_OP("LambApplyWeightAssign")
+    .Input("input0: T")
+    .Input("input1: T")
+    .Input("input2: T")
+    .Input("input3: T")
+    .Input("input4: T")
+    .Output("output0: T")
+    .Attr("T: {float16, float32}")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      c->set_output(0, c->input(4));
+      return Status::OK();
+    });
+
 REGISTER_OP("AdamApplyOneWithDecayAssign")
     .Input("input0: T")
     .Input("input1: T")
