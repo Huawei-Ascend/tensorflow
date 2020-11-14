@@ -10,7 +10,7 @@ class NPURunConfig(run_config_lib.RunConfig):
                 dump_config=None, stream_max_parallel_num=None, is_tailing_optimization=False,
                 horovod_mode=False, graph_run_mode=1, op_debug_level=0, enable_scope_fusion_passes=None,
                 enable_exception_dump=0, op_select_implmode=None, optypelist_for_implmode=None, dynamic_input_config=None,
-                mstune_mode=None, work_path=None, buffer_optimize=None, enable_small_channel=0, fusion_switch_file=None,
+                mstune_mode=None, work_path=None, buffer_optimize="l2_optimize", enable_small_channel=0, fusion_switch_file=None,
                 enable_compress_weight=False, compress_weight_conf=None,
                 op_compiler_cache_mode=None, op_compiler_cache_dir=None, debug_dir=None):
 
@@ -22,4 +22,4 @@ class DumpConfig():
                 dump_mode="output", enable_dump_debug=False, dump_debug_mode="all"):
 
 class DynamicInputConfig():
-    def __init__(self, input_shape, dynamic_dims):
+    def __init__(self, input_shape, dynamic_dims, dynamic_node_type):

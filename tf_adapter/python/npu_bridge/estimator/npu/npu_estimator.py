@@ -672,11 +672,13 @@ class NPUEstimator(estimator_lib.Estimator):
             custom_op: Customer optimizers.
         """
 
-        if config._dynamic_input_config is not None \
-           and config._dynamic_input_config._input_shape is not None \
-           and config._dynamic_input_config._dynamic_dims is not None:
+        if (config._dynamic_input_config is not None and
+            config._dynamic_input_config._input_shape is not None and
+            config._dynamic_input_config._dynamic_dims is not None and
+            config._dynamic_input_config._dynamic_node_type is not None):
             custom_op.parameter_map["input_shape"].s = tf.compat.as_bytes(config._dynamic_input_config._input_shape)
             custom_op.parameter_map["dynamic_dims"].s = tf.compat.as_bytes(config._dynamic_input_config._dynamic_dims)
+            custom_op.parameter_map["dynamic_node_type"].i = config._dynamic_input_config._dynamic_node_type
 
     def __load_mstune_config(self, config, custom_op):
         """Load mstune config ,and add to custom_optimizers
