@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   // AddNode with NodePtr
   NodePtr AddNode(NodePtr node);
   NodePtr AddNode(OpDescPtr op);
-  NodePtr AddNode(OpDescPtr op, int64_t id);    // for unserialize
+  NodePtr AddNode(OpDescPtr op, int64_t id);  // for unserialize
   NodePtr AddNodeFront(NodePtr node);
   NodePtr AddNodeFront(const OpDescPtr &op);
   NodePtr AddInputNode(NodePtr node);

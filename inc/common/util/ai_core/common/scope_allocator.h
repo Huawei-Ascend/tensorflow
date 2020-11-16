@@ -25,18 +25,19 @@ class ScopeAllocator {
   ScopeAllocator();
   virtual ~ScopeAllocator();
   ScopeAllocator(const ScopeAllocator& in) = delete;
-  ScopeAllocator& operator = (const ScopeAllocator& in) = delete;
+  ScopeAllocator& operator=(const ScopeAllocator& in) = delete;
 
  public:
   void Init();
   int64_t GetCurrentScopeId();
   int64_t AllocateScopeId(void);
   bool HasScopeAttr(ge::ConstOpDescPtr opdef);
-  bool GetScopeAttr(ge::ConstOpDescPtr opdef, int64_t &scopeId);
+  bool GetScopeAttr(ge::ConstOpDescPtr opdef, int64_t& scopeId);
   bool SetScopeAttr(ge::OpDescPtr opdef, int64_t scopeId);
   bool ResetScopeId(int64_t scopeId);
+
  private:
-    int64_t scopeId;
+  int64_t scopeId;
 };
 }  // namespace fe
 #endif

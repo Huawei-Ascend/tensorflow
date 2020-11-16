@@ -69,33 +69,33 @@ enum DataType {
 
 inline int GetSizeByDataType(DataType data_type) {
   static int data_type_size[DT_UNDEFINED] = {
-      4,  // DT_FLOAT = 0,            float type
-      2,  // DT_FLOAT16 = 1,          fp16 type
-      1,  // DT_INT8 = 2,             int8 type
-      4,  // DT_INT32 = 3,
-      1,  // DT_UINT8 = 4,            uint8 type
-      -1,
-      2,   // DT_INT16 = 6,      int16 type
-      2,   // DT_UINT16 = 7,       uint16 type
-      4,   // DT_UINT32 = 8,           unsigned int32
-      8,   // DT_INT64 = 9,            int64 type
-      8,   // DT_UINT64 = 10,           unsigned int64
-      8,   // DT_DOUBLE = 11,           double type
-      1,   // DT_BOOL = 12,             bool type
-      -1,  // DT_STRING = 13,           string type
-      1,   // DT_DUAL_SUB_INT8 = 14,     dual output int8 type
-      1,   // DT_DUAL_SUB_UINT8 = 15,     dual output uint8 type
-      8,   // DT_COMPLEX64 = 16,          complex64 type
-      16,  // DT_COMPLEX128 = 17,         complex128 type
-      1,   // DT_QINT8 = 18,              qint8 type
-      2,   // DT_QINT16 = 19,             qint16 type
-      4,   // DT_QINT32 = 20,             qint32 type
-      1,   // DT_QUINT8 = 21,             quint8 type
-      2,   // DT_QUINT16 = 22,            quint16 type
-      -1,  // DT_RESOURCE = 23,           resource type
-      -1,  // DT_STRING_REF = 24,        string ref type
-      5,   // DT_DUAL = 25,               dual output type (float + int8)
-           // DT_UNDEFINED    Used to indicate a DataType field has not been set.
+    4,  // DT_FLOAT = 0,            float type
+    2,  // DT_FLOAT16 = 1,          fp16 type
+    1,  // DT_INT8 = 2,             int8 type
+    4,  // DT_INT32 = 3,
+    1,  // DT_UINT8 = 4,            uint8 type
+    -1,
+    2,   // DT_INT16 = 6,      int16 type
+    2,   // DT_UINT16 = 7,       uint16 type
+    4,   // DT_UINT32 = 8,           unsigned int32
+    8,   // DT_INT64 = 9,            int64 type
+    8,   // DT_UINT64 = 10,           unsigned int64
+    8,   // DT_DOUBLE = 11,           double type
+    1,   // DT_BOOL = 12,             bool type
+    -1,  // DT_STRING = 13,           string type
+    1,   // DT_DUAL_SUB_INT8 = 14,     dual output int8 type
+    1,   // DT_DUAL_SUB_UINT8 = 15,     dual output uint8 type
+    8,   // DT_COMPLEX64 = 16,          complex64 type
+    16,  // DT_COMPLEX128 = 17,         complex128 type
+    1,   // DT_QINT8 = 18,              qint8 type
+    2,   // DT_QINT16 = 19,             qint16 type
+    4,   // DT_QINT32 = 20,             qint32 type
+    1,   // DT_QUINT8 = 21,             quint8 type
+    2,   // DT_QUINT16 = 22,            quint16 type
+    -1,  // DT_RESOURCE = 23,           resource type
+    -1,  // DT_STRING_REF = 24,        string ref type
+    5,   // DT_DUAL = 25,               dual output type (float + int8)
+         // DT_UNDEFINED    Used to indicate a DataType field has not been set.
   };
   if (data_type >= DT_UNDEFINED) {
     return -1;
@@ -141,7 +141,7 @@ enum Format {
   FORMAT_CN,
   FORMAT_NC,
   FORMAT_DHWNC,
-  FORMAT_FRACTAL_Z_3D_TRANSPOSE, // 3D filter(transpose) input tensor format
+  FORMAT_FRACTAL_Z_3D_TRANSPOSE,  // 3D filter(transpose) input tensor format
   FORMAT_FRACTAL_ZN_LSTM,
   FORMAT_FRACTAL_Z_G,
   FORMAT_RESERVED,
@@ -151,15 +151,15 @@ enum Format {
 
 // for unknown shape op type
 enum UnknowShapeOpType {
-  DEPEND_IN_SHAPE    = 1,  // op out shape get by input shape
+  DEPEND_IN_SHAPE = 1,     // op out shape get by input shape
   DEPEND_CONST_VALUE = 2,  // op out shape get by const op value
   DEPEND_SHAPE_RANGE = 3,  // op out shape get by range
-  DEPEND_COMPUTE     = 4   // op out shape get by totally computing
+  DEPEND_COMPUTE = 4       // op out shape get by totally computing
 };
 
 struct TensorDescInfo {
-  Format format_ = FORMAT_RESERVED;  // tbe op register support format
-  DataType dataType_ = DT_UNDEFINED; // tbe op register support datatype
+  Format format_ = FORMAT_RESERVED;   // tbe op register support format
+  DataType dataType_ = DT_UNDEFINED;  // tbe op register support datatype
 };
 
 enum DeviceType {

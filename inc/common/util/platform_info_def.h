@@ -22,8 +22,8 @@
 #include <vector>
 
 using std::map;
-using std::vector;
 using std::string;
+using std::vector;
 
 namespace fe {
 enum MemoryType { DDR = 0, HBM };

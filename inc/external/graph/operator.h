@@ -259,8 +259,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Operator {
   graphStatus VerifyAll();  // lint !e148
 
   // Only has one output index = 0
-  Operator &SetInput(const string &dst_name, uint32_t dst_index,
-                     const Operator &src_oprt);
+  Operator &SetInput(const string &dst_name, uint32_t dst_index, const Operator &src_oprt);
 
   Operator &SetInput(const string &dst_name, uint32_t dst_index, const Operator &src_oprt,
                      const string &name);  // lint !e148

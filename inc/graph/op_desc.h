@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,11 +51,7 @@ class GeAttrValue;
 
 using ConstOpDesc = const OpDesc;
 
-enum SubgraphType {
-  kStatic,
-  kDynamic,
-  kSubgraphTypeEnd
-};
+enum SubgraphType { kStatic, kDynamic, kSubgraphTypeEnd };
 
 class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
  public:

@@ -28,7 +28,6 @@ class AICoreParamCalculator {
   ~AICoreParamCalculator();
 
   Status CalcOpRunningParam(ge::Node &node);
-
 };
 }  // namespace fe
 #endif  // AICORE_PARAM_CALCULATOR

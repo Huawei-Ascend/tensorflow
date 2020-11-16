@@ -1,18 +1,18 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
-
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
-
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
-
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
-*/
+ */
 
 #ifndef INC_COMMON_OPTIMIZER_GRAPH_OPTIMIZER_H_
 #define INC_COMMON_OPTIMIZER_GRAPH_OPTIMIZER_H_
@@ -40,22 +40,16 @@ class GraphOptimizer {
   virtual Status Finalize() = 0;
 
   // optimize original graph for FE quant optimize
-  virtual Status OptimizeGraphPrepare(ComputeGraph& graph) {
-    return SUCCESS;
-  }
+  virtual Status OptimizeGraphPrepare(ComputeGraph &graph) { return SUCCESS; }
 
   // optimize graph before build for RTS
-  virtual Status OptimizeGraphBeforeBuild(ComputeGraph& graph) {
-    return SUCCESS;
-  }
+  virtual Status OptimizeGraphBeforeBuild(ComputeGraph &graph) { return SUCCESS; }
 
   // optimize original graph, using in graph preparation stage
   virtual Status OptimizeOriginalGraph(ComputeGraph &graph) = 0;
 
   // optimize original graph, using for conversion operator insert in graph preparation stage
-  virtual Status OptimizeOriginalGraphJudgeInsert(ComputeGraph &graph) {
-    return SUCCESS;
-  }
+  virtual Status OptimizeOriginalGraphJudgeInsert(ComputeGraph &graph) { return SUCCESS; }
 
   // optimize fused graph
   virtual Status OptimizeFusedGraph(ComputeGraph &graph) = 0;

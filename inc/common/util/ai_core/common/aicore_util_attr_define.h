@@ -26,18 +26,16 @@ static const std::string FE_IMPLY_TYPE = "_fe_imply_type";
 
 static const std::string PARENT_OP_TYPE = "parentOpType";
 
-static const std::string ATTR_NAME_TASK_L2_FUSION_INFO_EXTEND_PTR =
-    "task_l2_fusion_info_extend_content";
+static const std::string ATTR_NAME_TASK_L2_FUSION_INFO_EXTEND_PTR = "task_l2_fusion_info_extend_content";
 
 static const std::string ATTR_DATA_DUMP_REF = "_datadump_ref";
 
-static const std::string ATTR_NAME_L2_FUSION_EXTEND_PTR =
-    "l2_fusion_extend_content";
+static const std::string ATTR_NAME_L2_FUSION_EXTEND_PTR = "l2_fusion_extend_content";
 
 static const std::string L1_OPTIMIZED = "l1_optimized";
 
 static const std::string L2_OPTIMIZED = "l2_optimized";
 
 static const std::string OP_SLICE_INFO = "_op_slice_info";
-} // namespace fe
+}  // namespace fe
 #endif

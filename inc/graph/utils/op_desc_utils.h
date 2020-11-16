@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class OpDescUtils {
   static bool HasQuantizeFactorParams(const OpDesc& op_desc);
   static graphStatus GetQuantizeFactorParams(const OpDescPtr& op_desc, QuantizeFactorParams& quant);
   static graphStatus GetQuantizeFactorParams(const OpDesc& op_desc, QuantizeFactorParams& quant);
-  static graphStatus SetQuantizeFactorParams(const OpDescPtr &op_desc, const QuantizeFactorParams& quant);
+  static graphStatus SetQuantizeFactorParams(const OpDescPtr& op_desc, const QuantizeFactorParams& quant);
   static graphStatus SetQuantizeFactorParams(OpDesc& op_desc, const QuantizeFactorParams& quant);
 
   static vector<ge::NodePtr> GetConstInputNode(const ge::Node& node);
@@ -52,8 +52,8 @@ class OpDescUtils {
   static vector<GeTensorPtr> MutableWeights(const ge::Node& node);
   static vector<GeTensorPtr> MutableWeights(const ge::NodePtr node);
   static graphStatus SetWeights(ge::Node& node, const vector<ge::GeTensorPtr>& weights);
-  static graphStatus SetWeights(ge::NodePtr node, const vector<ge::GeTensorPtr> &weights);
-  static graphStatus SetWeights(ge::Node &node, const map<int, ge::GeTensorPtr> &weights_map);
+  static graphStatus SetWeights(ge::NodePtr node, const vector<ge::GeTensorPtr>& weights);
+  static graphStatus SetWeights(ge::Node& node, const map<int, ge::GeTensorPtr>& weights_map);
   static graphStatus ClearWeights(ge::NodePtr node);
 
   static bool ClearInputDesc(ge::OpDescPtr op_desc, uint32_t index);
@@ -82,8 +82,8 @@ class OpDescUtils {
 
   static OpDescPtr CreateConstOp(const GeTensorPtr& tensor_ptr);
 
-  static graphStatus SetSubgraphInstanceName(const std::string &subgraph_name,
-      const std::string &subgraph_instance_name, OpDescPtr &op_desc);
+  static graphStatus SetSubgraphInstanceName(const std::string& subgraph_name,
+                                             const std::string& subgraph_instance_name, OpDescPtr& op_desc);
 
  private:
   static GeTensorPtr MutableWeights(ge::OpDesc& op_desc);
@@ -95,10 +95,10 @@ class OpDescUtils {
 class OpDescBuilder {
  public:
   OpDescBuilder(std::string name, std::string type) : name_(std::move(name)), type_(std::move(type)) {}
-  OpDescBuilder(const OpDescBuilder &) = delete;
-  OpDescBuilder &operator=(const OpDescBuilder &) = delete;
-  OpDescBuilder(const OpDescBuilder &&) = delete;
-  OpDescBuilder &operator=(const OpDescBuilder &&) = delete;
+  OpDescBuilder(const OpDescBuilder&) = delete;
+  OpDescBuilder& operator=(const OpDescBuilder&) = delete;
+  OpDescBuilder(const OpDescBuilder&&) = delete;
+  OpDescBuilder& operator=(const OpDescBuilder&&) = delete;
   ~OpDescBuilder() = default;
 
   ///
@@ -106,7 +106,7 @@ class OpDescBuilder {
   /// @param [in] name
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddInput(const std::string &name);
+  OpDescBuilder& AddInput(const std::string& name);
 
   ///
   /// @brief Add input
@@ -114,7 +114,7 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddInput(const std::string &name, const GeTensorDesc &tensor);
+  OpDescBuilder& AddInput(const std::string& name, const GeTensorDesc& tensor);
 
   ///
   /// @brief Add dynamic input
@@ -122,7 +122,7 @@ class OpDescBuilder {
   /// @param [in] num
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicInput(const std::string &name, uint32_t num);
+  OpDescBuilder& AddDynamicInput(const std::string& name, uint32_t num);
 
   ///
   /// @brief Add dynamic input
@@ -131,14 +131,14 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicInput(const std::string &name, uint32_t num, const GeTensorDesc &tensor);
+  OpDescBuilder& AddDynamicInput(const std::string& name, uint32_t num, const GeTensorDesc& tensor);
 
   ///
   /// @brief Add output
   /// @param [in] name
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddOutput(const std::string &name);
+  OpDescBuilder& AddOutput(const std::string& name);
 
   ///
   /// @brief Add output
@@ -146,7 +146,7 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddOutput(const std::string &name, const GeTensorDesc &tensor);
+  OpDescBuilder& AddOutput(const std::string& name, const GeTensorDesc& tensor);
 
   ///
   /// @brief Add dynamic output
@@ -154,7 +154,7 @@ class OpDescBuilder {
   /// @param [in] num
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicOutput(const std::string &name, uint32_t num);
+  OpDescBuilder& AddDynamicOutput(const std::string& name, uint32_t num);
 
   ///
   /// @brief Add dynamic output
@@ -163,7 +163,7 @@ class OpDescBuilder {
   /// @param [in] tensor
   /// @return OpDescBuilder
   ///
-  OpDescBuilder& AddDynamicOutput(const std::string &name, uint32_t num, const GeTensorDesc &tensor);
+  OpDescBuilder& AddDynamicOutput(const std::string& name, uint32_t num, const GeTensorDesc& tensor);
 
   ///
   /// @brief Build op_desc

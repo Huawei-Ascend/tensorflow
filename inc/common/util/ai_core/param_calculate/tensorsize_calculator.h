@@ -36,11 +36,9 @@ class TensorSizeCalculator {
   static Status CalculateOpTensorSize(ge::OpDesc &opDesc);
 
  private:
-  static Status CalcInputOpTensorSize(ge::OpDesc &opDesc,
-                                      int32_t &outputRealCalcFlag);
+  static Status CalcInputOpTensorSize(ge::OpDesc &opDesc, int32_t &outputRealCalcFlag);
 
-  static Status CalcOutputOpTensorSize(ge::OpDesc &opDesc,
-                                       int32_t &outputRealCalcFlag);
+  static Status CalcOutputOpTensorSize(ge::OpDesc &opDesc, int32_t &outputRealCalcFlag);
 };
 }  // namespace fe
 

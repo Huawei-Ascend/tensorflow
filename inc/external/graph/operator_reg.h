@@ -65,7 +65,7 @@ class OpReg {
                                                                      \
    private:                                                          \
     void __##x() {                                                   \
-    OpReg()
+      OpReg()
 
 #define ATTR(x, Type, ...)                                                  \
   N();                                                                      \
@@ -194,124 +194,113 @@ class OpReg {
     Operator::OutputRegister(#x);                                                \
     (void)OpReg()
 
-#define DYNAMIC_INPUT(x, t)                                                                   \
-  N();                                                                                        \
-  __dy_input_##x();                                                                           \
-  }                                                                                           \
-                                                                                              \
- public:                                                                                      \
-  _THIS_TYPE &create_dynamic_input_##x(uint32_t num, bool isPushBack = true) {                \
-    Operator::DynamicInputRegister(#x, num, isPushBack);                                      \
-    return *this;                                                                             \
-  }                                                                                           \
-  _THIS_TYPE &create_dynamic_input_byindex_##x(uint32_t num, size_t index) {                  \
-    Operator::DynamicInputRegisterByIndex(#x, num, index);                                    \
-    return *this;                                                                             \
-  }                                                                                           \
-  TensorDesc get_dynamic_input_desc_##x(uint32_t index) const {                               \
-    return Operator::GetDynamicInputDesc(#x, index);                                          \
-  }                                                                                           \
-  graphStatus update_dynamic_input_desc_##x(uint32_t index, const TensorDesc &tensorDesc) {   \
-    return Operator::UpdateDynamicInputDesc(#x, index, tensorDesc);                           \
-  }                                                                                           \
-  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v) {                         \
-    Operator::SetInput(#x, dstIndex, v);                                                      \
-    return *this;                                                                             \
-  }                                                                                           \
-  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v, const string &srcName) {  \
-    Operator::SetInput(#x, dstIndex, v, srcName);                                             \
-    return *this;                                                                             \
-  }                                                                                           \
-                                                                                              \
- private:                                                                                     \
-  void __dy_input_##x() {                                                                     \
-  Operator::DynamicInputRegister(#x, 0, true);                                                \
-  (void)OpReg()
-
-#define DYNAMIC_OUTPUT(x, t)                                                                  \
-  N();                                                                                        \
-  __dy_output_##x();                                                                          \
-  }                                                                                           \
-                                                                                              \
- public:                                                                                      \
-  _THIS_TYPE &create_dynamic_output_##x(uint32_t num, bool isPushBack = true) {               \
-    Operator::DynamicOutputRegister(#x, num, isPushBack);                                     \
-    return *this;                                                                             \
-  }                                                                                           \
-  TensorDesc get_dynamic_output_desc_##x(uint32_t index) const {                              \
-    return Operator::GetDynamicOutputDesc(#x, index);                                         \
-  }                                                                                           \
-  graphStatus update_dynamic_output_desc_##x(uint32_t index, const TensorDesc &tensorDesc) {  \
-    return Operator::UpdateDynamicOutputDesc(#x, index, tensorDesc);                          \
-  }                                                                                           \
-                                                                                              \
- private:                                                                                     \
-  void __dy_output_##x() {                                                                    \
-  Operator::DynamicOutputRegister(#x, 0, true);                                               \
-  (void)OpReg()
-
-#define GRAPH(x)                                                                              \
-  N();                                                                                        \
-  __graph_##x();                                                                              \
-  }                                                                                           \
-                                                                                              \
- public:                                                                                      \
-  static const string name_graph_##x() { return #x; }                                         \
-  SubgraphBuilder get_subgraph_builder_##x() const {                                          \
-    return Operator::GetSubgraphBuilder(#x);                                                  \
-  }                                                                                           \
-  _THIS_TYPE &set_subgraph_builder_##x(const SubgraphBuilder &v) {                            \
-    Operator::SetSubgraphBuilder(#x, 0, v);                                                   \
-    return *this;                                                                             \
-  }                                                                                           \
-  Graph get_subgraph_##x() const {                                                            \
-    return Operator::GetSubgraph(#x);                                                         \
-  }                                                                                           \
-                                                                                              \
- private:                                                                                     \
-  void __graph_##x() {                                                                        \
-    Operator::SubgraphRegister(#x, false);                                                    \
-    Operator::SubgraphCountRegister(#x, 1);                                                   \
+#define DYNAMIC_INPUT(x, t)                                                                                        \
+  N();                                                                                                             \
+  __dy_input_##x();                                                                                                \
+  }                                                                                                                \
+                                                                                                                   \
+ public:                                                                                                           \
+  _THIS_TYPE &create_dynamic_input_##x(uint32_t num, bool isPushBack = true) {                                     \
+    Operator::DynamicInputRegister(#x, num, isPushBack);                                                           \
+    return *this;                                                                                                  \
+  }                                                                                                                \
+  _THIS_TYPE &create_dynamic_input_byindex_##x(uint32_t num, size_t index) {                                       \
+    Operator::DynamicInputRegisterByIndex(#x, num, index);                                                         \
+    return *this;                                                                                                  \
+  }                                                                                                                \
+  TensorDesc get_dynamic_input_desc_##x(uint32_t index) const { return Operator::GetDynamicInputDesc(#x, index); } \
+  graphStatus update_dynamic_input_desc_##x(uint32_t index, const TensorDesc &tensorDesc) {                        \
+    return Operator::UpdateDynamicInputDesc(#x, index, tensorDesc);                                                \
+  }                                                                                                                \
+  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v) {                                              \
+    Operator::SetInput(#x, dstIndex, v);                                                                           \
+    return *this;                                                                                                  \
+  }                                                                                                                \
+  _THIS_TYPE &set_dynamic_input_##x(uint32_t dstIndex, Operator &v, const string &srcName) {                       \
+    Operator::SetInput(#x, dstIndex, v, srcName);                                                                  \
+    return *this;                                                                                                  \
+  }                                                                                                                \
+                                                                                                                   \
+ private:                                                                                                          \
+  void __dy_input_##x() {                                                                                          \
+    Operator::DynamicInputRegister(#x, 0, true);                                                                   \
     (void)OpReg()
 
-#define DYNAMIC_GRAPH(x)                                                                      \
-  N();                                                                                        \
-  __graph_##x();                                                                              \
-  }                                                                                           \
-                                                                                              \
- public:                                                                                      \
-  static const string name_graph_##x() { return #x; }                                         \
-  _THIS_TYPE &create_dynamic_subgraph_##x(uint32_t num) {                                     \
-    Operator::SubgraphCountRegister(#x, num);                                                 \
-    return *this;                                                                             \
-  }                                                                                           \
-  SubgraphBuilder get_dynamic_subgraph_builder_##x(uint32_t index) const {                    \
-    return Operator::GetDynamicSubgraphBuilder(#x, index);                                    \
-  }                                                                                           \
-  Graph get_dynamic_subgraph_##x(uint32_t index) const {                                      \
-    return Operator::GetDynamicSubgraph(#x, index);                                           \
-  }                                                                                           \
-  _THIS_TYPE &set_dynamic_subgraph_builder_##x(uint32_t index,const SubgraphBuilder &v) {     \
-    Operator::SetSubgraphBuilder(#x, index, v);                                               \
-    return *this;                                                                             \
-  }                                                                                           \
-                                                                                              \
- private:                                                                                     \
-  void __graph_##x() {                                                                        \
-    Operator::SubgraphRegister(#x, true);                                                     \
+#define DYNAMIC_OUTPUT(x, t)                                                                                         \
+  N();                                                                                                               \
+  __dy_output_##x();                                                                                                 \
+  }                                                                                                                  \
+                                                                                                                     \
+ public:                                                                                                             \
+  _THIS_TYPE &create_dynamic_output_##x(uint32_t num, bool isPushBack = true) {                                      \
+    Operator::DynamicOutputRegister(#x, num, isPushBack);                                                            \
+    return *this;                                                                                                    \
+  }                                                                                                                  \
+  TensorDesc get_dynamic_output_desc_##x(uint32_t index) const { return Operator::GetDynamicOutputDesc(#x, index); } \
+  graphStatus update_dynamic_output_desc_##x(uint32_t index, const TensorDesc &tensorDesc) {                         \
+    return Operator::UpdateDynamicOutputDesc(#x, index, tensorDesc);                                                 \
+  }                                                                                                                  \
+                                                                                                                     \
+ private:                                                                                                            \
+  void __dy_output_##x() {                                                                                           \
+    Operator::DynamicOutputRegister(#x, 0, true);                                                                    \
     (void)OpReg()
 
+#define GRAPH(x)                                                                                \
+  N();                                                                                          \
+  __graph_##x();                                                                                \
+  }                                                                                             \
+                                                                                                \
+ public:                                                                                        \
+  static const string name_graph_##x() { return #x; }                                           \
+  SubgraphBuilder get_subgraph_builder_##x() const { return Operator::GetSubgraphBuilder(#x); } \
+  _THIS_TYPE &set_subgraph_builder_##x(const SubgraphBuilder &v) {                              \
+    Operator::SetSubgraphBuilder(#x, 0, v);                                                     \
+    return *this;                                                                               \
+  }                                                                                             \
+  Graph get_subgraph_##x() const { return Operator::GetSubgraph(#x); }                          \
+                                                                                                \
+ private:                                                                                       \
+  void __graph_##x() {                                                                          \
+    Operator::SubgraphRegister(#x, false);                                                      \
+    Operator::SubgraphCountRegister(#x, 1);                                                     \
+    (void)OpReg()
+
+#define DYNAMIC_GRAPH(x)                                                                                   \
+  N();                                                                                                     \
+  __graph_##x();                                                                                           \
+  }                                                                                                        \
+                                                                                                           \
+ public:                                                                                                   \
+  static const string name_graph_##x() { return #x; }                                                      \
+  _THIS_TYPE &create_dynamic_subgraph_##x(uint32_t num) {                                                  \
+    Operator::SubgraphCountRegister(#x, num);                                                              \
+    return *this;                                                                                          \
+  }                                                                                                        \
+  SubgraphBuilder get_dynamic_subgraph_builder_##x(uint32_t index) const {                                 \
+    return Operator::GetDynamicSubgraphBuilder(#x, index);                                                 \
+  }                                                                                                        \
+  Graph get_dynamic_subgraph_##x(uint32_t index) const { return Operator::GetDynamicSubgraph(#x, index); } \
+  _THIS_TYPE &set_dynamic_subgraph_builder_##x(uint32_t index, const SubgraphBuilder &v) {                 \
+    Operator::SetSubgraphBuilder(#x, index, v);                                                            \
+    return *this;                                                                                          \
+  }                                                                                                        \
+                                                                                                           \
+ private:                                                                                                  \
+  void __graph_##x() {                                                                                     \
+    Operator::SubgraphRegister(#x, true);                                                                  \
+    (void)OpReg()
 
 #define PASTE(g_register, y) g_register##y
-#define __OP_END_IMPL__(x, y)                                                                                      \
-  N();                                                                                                             \
-  }                                                                                                                \
-  static_assert(                                                                                                   \
-      std::is_same<x, _THIS_TYPE>::value,                                                                          \
-      "The class name entered into the OP_END_FACTORY_REG needs to be the same as the operator name you define."); \
-  }                                                                                                                \
-  ;                                                                                                                \
-  static const OperatorCreatorRegister PASTE(g_register, y)(#x, [](const std::string &name) { return x(name); });  \
+#define __OP_END_IMPL__(x, y)                                                                                     \
+  N();                                                                                                            \
+  }                                                                                                               \
+  static_assert(                                                                                                  \
+    std::is_same<x, _THIS_TYPE>::value,                                                                           \
+    "The class name entered into the OP_END_FACTORY_REG needs to be the same as the operator name you define.");  \
+  }                                                                                                               \
+  ;                                                                                                               \
+  static const OperatorCreatorRegister PASTE(g_register, y)(#x, [](const std::string &name) { return x(name); }); \
   }
 #define OP_END_FACTORY_REG(x) __OP_END_IMPL__(x, __COUNTER__)
 
@@ -359,7 +348,7 @@ class OpReg {
 // Common shape inferencer
 
 #define ELMTWISE_INFER_SHAPEANDTYPE(in_name, out_name)            \
-  [](Operator op)->graphStatus {                                  \
+  [](Operator op) -> graphStatus {                                \
     auto x_shape = op.GetInputDesc(in_name).GetShape().GetDims(); \
     auto x_type = op.GetInputDesc(in_name).GetDataType();         \
     TensorDesc op_output_desc = op.GetOutputDesc(out_name);       \
@@ -380,7 +369,8 @@ graphStatus BroadCastInfer(const function<vector<int64_t>()> &get_in1_shape,
                           [&](const vector<int64_t> &y_shape) {                             \
                             TensorDesc op_output_desc = op.GetOutputDesc(out_name);         \
                             op_output_desc.SetShape(ge::Shape(y_shape));                    \
-                            (void)op.UpdateOutputDesc(out_name, op_output_desc);});         \
+                            (void)op.UpdateOutputDesc(out_name, op_output_desc);            \
+                          });                                                               \
   }
 }  // namespace ge
 #endif  // INC_EXTERNAL_GRAPH_OPERATOR_REG_H_

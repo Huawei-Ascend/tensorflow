@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,10 +47,9 @@ namespace ge {
   inline void add_##name(type value) { name.push_back(value); }          \
   inline std::vector<type> *mutable_##name() { return &name; }
 
-#define DEF_TYPE_BYTES_DEC(name)                                                                                \
-  inline void clear_##name() { name.ClearBuffer(); }                                                            \
-  inline void set_##name(const void *value, size_t size) {                                                      \
-    name = Buffer::CopyFrom((const uint8_t *)(value), size); }                                        \
+#define DEF_TYPE_BYTES_DEC(name)                                                                                      \
+  inline void clear_##name() { name.ClearBuffer(); }                                                                  \
+  inline void set_##name(const void *value, size_t size) { name = Buffer::CopyFrom((const uint8_t *)(value), size); } \
   inline Buffer *mutable_##name() { return &name; }
 
 struct CompressInfo {
