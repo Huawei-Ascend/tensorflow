@@ -1,12 +1,17 @@
-/*
-
- * Copyright (c) Huawei Technologies Co., Ltd. 2019-2020. All rights reserved.
-
- * Description: platform info init
-
- * Author:
- * Create: 2020-03-22
-
+/**
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #ifndef PLATFORM_INFO_DEF_H
@@ -20,17 +25,10 @@ using std::map;
 using std::vector;
 using std::string;
 
-namespace fe
-{
-enum MemoryType {
-  DDR = 0,
-  HBM
-};
+namespace fe {
+enum MemoryType { DDR = 0, HBM };
 
-enum L2Type {
-  Cache = 0,
-  Buff
-};
+enum L2Type { Cache = 0, Buff };
 
 typedef struct tagStrInfo {
   string aicVersion;
@@ -120,8 +118,7 @@ typedef struct tagCPUCache {
   uint32_t TSCPUSyncBySW;
 } CPUCache;
 
-typedef struct tagPlatformInfo
-{
+typedef struct tagPlatformInfo {
   StrInfo strInfo;
   SoCInfo socInfo;
   AiCoreSpec aiCoreSpec;
@@ -133,8 +130,7 @@ typedef struct tagPlatformInfo
   map<string, vector<string>> vectorCoreIntrinsicDtypeMap;
 } PlatformInfo;
 
-typedef struct tagOptionalInfo
-{
+typedef struct tagOptionalInfo {
   string socVersion;
   string coreType;
   uint32_t aiCoreNum;
