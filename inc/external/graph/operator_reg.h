@@ -225,7 +225,6 @@ class OpReg {
                                                                                               \
  private:                                                                                     \
   void __dy_input_##x() {                                                                     \
-  Operator::DynamicInputRegister(#x, 0, true);                                                \
   (void)OpReg()
 
 #define DYNAMIC_OUTPUT(x, t)                                                                  \
@@ -247,7 +246,6 @@ class OpReg {
                                                                                               \
  private:                                                                                     \
   void __dy_output_##x() {                                                                    \
-  Operator::DynamicOutputRegister(#x, 0, true);                                               \
   (void)OpReg()
 
 #define GRAPH(x)                                                                              \
