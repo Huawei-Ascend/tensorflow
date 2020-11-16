@@ -59,9 +59,8 @@ class GeOp : public AsyncOpKernel {
   void GlobalFinalize();
 
   // Build GraphDef from FunctionDef.
-  void BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const FunctionLibraryDefinition &flib_def,
-                     const FunctionDef &func_def, const std::vector<Tensor> &input_vec, GraphDef &graph_def,
-                     bool &is_initialize);
+  Status BuildGraphDef(const FunctionLibraryDefinition &flib_def, const FunctionDef &func_def,
+                       const std::vector<Tensor> &input_vec, GraphDef &graph_def, bool &is_initialize);
 
   // prepare input tensor
   Status BuildInputTensorInfo(OpKernelContext *ctx, std::vector<ge::InputTensorInfo> &inputs);
@@ -95,7 +94,7 @@ class GeOp : public AsyncOpKernel {
 
   void BuildShapeNodeAndCacheArgNodes(Graph &graph);
 
-  void ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done);
+  Status ChangeInputsShapeDesc();
 
  private:
   static const std::string INPUT_DESC;

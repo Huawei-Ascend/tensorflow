@@ -182,6 +182,32 @@ inline Status CheckMstuneMode(const string &mstune_mode) {
   }
 }
 
+inline Status CheckInputShape(const string &input_shape) {
+  std::vector<std::string> inputs;
+  Split(input_shape, inputs, ";");
+  for (auto input : inputs) {
+    std::string input_tmp = input + ",";
+    std::regex pattern(R"(\w{1,}:((\d{1,}|-\d{1,}),)+)");
+    if (!regex_match(input_tmp, pattern)) {
+      return errors::InvalidArgument("input_shape string style is invalid");
+    }
+  }
+  return Status::OK();
+}
+
+inline Status CheckDynamicDims(const string &dynamic_dims) {
+  std::vector<std::string> inputs;
+  Split(dynamic_dims, inputs, ";");
+  for (auto input : inputs) {
+    std::string input_tmp = input + ",";
+    std::regex pattern(R"((\d{1,},)+)");
+    if (!regex_match(input_tmp, pattern)) {
+      return errors::InvalidArgument("dynamic_dims string style is invalid");
+    }
+  }
+  return Status::OK();
+}
+
 std::map<std::string, std::string> NpuAttrs::GetSessOptions(OpKernelConstruction *ctx) {
   std::map<std::string, std::string> sess_options;
   std::string variable_format_optimize = std::to_string(true);
@@ -881,7 +907,11 @@ Status NpuAttrs::SetNpuOptimizerAttr(const GraphOptimizationPassOptions &options
       if (params.count("input_shape") && params.count("dynamic_dims") &&
           params.count("dynamic_node_type")) {
         input_shape = params.at("input_shape").s();
+        Status s = CheckInputShape(input_shape);
+        if (!s.ok()) { LOG(FATAL) << s.error_message(); }
         dynamic_dims = params.at("dynamic_dims").s();
+        s = CheckDynamicDims(dynamic_dims);
+        if (!s.ok()) { LOG(FATAL) << s.error_message(); }
         dynamic_node_type = params.at("dynamic_node_type").i();
         if (dynamic_node_type < 0 || dynamic_node_type > 1) {
           LOG(FATAL) << "dynamic_node_type should be 0 or 1.";
