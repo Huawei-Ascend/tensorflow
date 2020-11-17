@@ -4,8 +4,8 @@ if (ENABLE_OPEN_SRC)
     project(TFAdapter)
 
     set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_C_FLAGS "-O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-O2 -DNDEBUG -Wno-deprecated-declarations -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -DNDEBUG -Wno-deprecated-declarations -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
     add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
     # build external prjects
     if(DEFINED ENV{D_PKG_SERVER})
@@ -19,7 +19,7 @@ if (ENABLE_OPEN_SRC)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/external)
     include_directories(${CMAKE_CURRENT_LIST_DIR}/inc/soft_dp)
-    
+
     if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/tools/COMPILE_FLAGS OR NOT EXISTS
             ${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS OR NOT EXISTS
             ${CMAKE_CURRENT_LIST_DIR}/tools/PYTHON_BIN_PATH OR NOT EXISTS
@@ -31,7 +31,7 @@ if (ENABLE_OPEN_SRC)
     file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/LINK_FLAGS" LINK_FLAGS)
     file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/PYTHON_BIN_PATH" PYTHON_BIN_PATH)
     file(STRINGS "${CMAKE_CURRENT_LIST_DIR}/tools/SWIG_BIN_PATH" SWIG_BIN_PATH)
-    
+
     file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/python DESTINATION ${CMAKE_BINARY_DIR}/dist)
     file(COPY ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/swig DESTINATION ${CMAKE_BINARY_DIR}/dist)
     execute_process(COMMAND ${SWIG_BIN_PATH} -python -c++ -threads ${CMAKE_BINARY_DIR}/dist/swig/ge_plugin.i)
@@ -69,7 +69,7 @@ else()
 
     execute_process(COMMAND ${HI_PYTHON} -c "import tensorflow as tf; print(tf.sysconfig.get_lib(),end='')"
                     OUTPUT_VARIABLE TF_INSTALL_LIB_PATH)
-    
+
     file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_LIST_DIR}/tf_adapter/*.cc)
     add_library(tf_adapter SHARED
         ${SOURCES}
@@ -100,6 +100,7 @@ else()
         -O2
         -DNDEBUG
         -ftrapv
+        -Wno-deprecated-declarations
     )
     target_compile_definitions(tf_adapter PUBLIC
         _FORTIFY_SOURCE=2

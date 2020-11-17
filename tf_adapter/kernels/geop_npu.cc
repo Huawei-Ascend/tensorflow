@@ -470,8 +470,7 @@ void GeOp::ComputeAsync(OpKernelContext *ctx, DoneCallback done) {
 
     // Build GraphDef from FunctionDef
     GraphDef ori_graph_def;
-    BuildGraphDef(ctx, done, *flib_def, *fdef, input_vec, ori_graph_def, is_initialized_graph_);
-    if (ctx->status() != Status::OK()) { return; }
+    OP_REQUIRES_OK_ASYNC(ctx, BuildGraphDef(*flib_def, *fdef, input_vec, ori_graph_def, is_initialized_graph_), done);
 
     /* if graph is init verify graph, return */
     if (this->is_initialized_graph_ == true) {
@@ -710,7 +709,7 @@ void GeOp::AddNodeAttrs(Node *node, bool &is_initialize) {
   }
   if (node->name() == "var_in_host") {
     is_host_graph_ = true;
-    LOG(INFO) << "[GeOp] variable subgraph is initialized in host.";
+    LOG(INFO) << "[GEOP] variable subgraph is initialized in host.";
   }
   if (node->name().find("_Allreduce") != string::npos) {
     is_train_graph_ = true;
@@ -725,12 +724,15 @@ void GeOp::AddNodeAttrs(Node *node, bool &is_initialize) {
 }
 
 // Build GraphDef from FunctionDef.
-void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const FunctionLibraryDefinition &flib_def,
-                         const FunctionDef &func_def, const std::vector<Tensor> &input_vec, GraphDef &graph_def,
-                         bool &is_initialize) {
+Status GeOp::BuildGraphDef(const FunctionLibraryDefinition &flib_def, const FunctionDef &func_def,
+                           const std::vector<Tensor> &input_vec, GraphDef &graph_def, bool &is_initialize) {
   // get infershape
   Graph graph(OpRegistry::Global());
-  OP_REQUIRES_OK_ASYNC(ctx, InferShapeUtil::InferShape(input_vec, &flib_def, &func_def, &graph), done);
+  Status ret = InferShapeUtil::InferShape(input_vec, &flib_def, &func_def, &graph);
+  if (!ret.ok()) {
+    LOG(ERROR) << "[GEOP] InferShape failed, " << ret.error_message();
+    return ret;
+  }
 
   bool is_set_dynamic_config = !sess_options_["ge.inputShape"].empty() && !sess_options_["ge.dynamicDims"].empty() &&
                                !sess_options_["ge.dynamicNodeType"].empty();
@@ -740,7 +742,12 @@ void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const Function
   for (Node *node : graph.nodes()) {
     AddNodeAttrs(node, is_initialize);
     // Add Input&Output Desc into NodeDef
-    OP_REQUIRES_OK_ASYNC(ctx, this->GenerateDesc(node), done);
+    ret = this->GenerateDesc(node);
+    if (!ret.ok()) {
+      LOG(ERROR) << "[GEOP] node: " << node->name() << " GenerateDesc failed, "
+                 << ret.error_message();
+      return ret;
+    }
     if (is_tuning) {
       // output handle
       NodeDef &node_def = const_cast<NodeDef &>(node->def());
@@ -763,8 +770,15 @@ void GeOp::BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const Function
     }
   }
   // set input_shape to dynamic nodes shape desc
-  if (is_set_dynamic_config) { ChangeInputsShapeDesc(ctx, done); }
+  if (is_set_dynamic_config) {
+    ret = ChangeInputsShapeDesc();
+    if (!ret.ok()) {
+      LOG(ERROR) << "[GEOP] ChangeInputsShapeDesc failed, " << ret.error_message();
+      return ret;
+    }
+  }
   graph.ToGraphDef(&graph_def);
+  return Status::OK();
 }
 
 void GeOp::BuildShapeNodeAndCacheArgNodes(Graph &graph) {
@@ -805,13 +819,16 @@ void GeOp::BuildShapeNodeAndCacheArgNodes(Graph &graph) {
   std::sort(dynamic_shape_nodes_.begin(), dynamic_shape_nodes_.end(), CmpVecValue);
 }
 
-void GeOp::ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done) {
+Status GeOp::ChangeInputsShapeDesc() {
   std::vector<std::string> result;
   std::string input_shapes = sess_options_["ge.inputShape"];
   Split(input_shapes, result, ";"); //e.g. result:["data:2,3", "data1:3,4"]
 
   if (dynamic_shape_nodes_.size() == 1 && dynamic_shape_nodes_[0]->type_string() == "IteratorGetNext") {
     LOG(INFO) << "[GEOP] change " << dynamic_shape_nodes_[0]->name() << " shape desc.";
+    if (dynamic_shape_nodes_[0]->num_outputs() != result.size()) {
+      return errors::InvalidArgument("input_shape is not match inputs num in graph");
+    }
     NodeDef &node_def = const_cast<NodeDef &>(dynamic_shape_nodes_[0]->def());
     AttrValue &output_tensor_descs = (*node_def.mutable_attr())[OUTPUT_DESC];
     for (size_t i = 0; i < dynamic_shape_nodes_[0]->num_outputs(); ++i) {
@@ -821,8 +838,9 @@ void GeOp::ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done) {
     }
   } else {
     if (!dynamic_shape_nodes_.empty()) {
-      OP_REQUIRES_ASYNC(ctx, dynamic_shape_nodes_.size() == result.size(),
-                        errors::Internal("input_shape is not match inputs num in graph"), done);
+      if (dynamic_shape_nodes_.size() != result.size()) {
+        return errors::InvalidArgument("input_shape is not match inputs num in graph");
+      }
     }
     for (size_t i = 0; i < dynamic_shape_nodes_.size(); ++i) {
       LOG(INFO) << "[GEOP] change " << dynamic_shape_nodes_[i]->name() << " shape desc.";
@@ -834,6 +852,7 @@ void GeOp::ChangeInputsShapeDesc(OpKernelContext *ctx, DoneCallback done) {
     }
   }
   LOG(INFO) << "[GEOP] change input shapes desc success.";
+  return Status::OK();
 }
 
 void GeOp::SetShapesToOutputDesc(const std::vector<std::string> &input_shapes,
