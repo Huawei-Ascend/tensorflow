@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,8 +91,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeTensorDesc : public AttrH
   // set shape with -2, it stand for unknown shape
   void SetUnknownDimNumShape();
   // for unknown shape
-  graphStatus SetShapeRange(const std::vector<std::pair<int64_t,int64_t>> &range);
-  graphStatus GetShapeRange(std::vector<std::pair<int64_t,int64_t>> &range) const;
+  graphStatus SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range);
+  graphStatus GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
 
   GeShape GetOriginShape() const;
   void SetOriginShape(const GeShape &originShape);

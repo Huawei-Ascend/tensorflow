@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.14)
 project(TFAdapter)
 
     set(CMAKE_CXX_STANDARD 11)
-    set(CMAKE_C_FLAGS "-O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
-    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "-O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "-std=c++11 -O2 -DNDEBUG -Wall -fPIC -fstack-protector-all -Wl,-z,relro,-z,now,-z,noexecstack -pipe ${CMAKE_CXX_FLAGS}")
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
     # build external prjects
     if(DEFINED ENV{D_PKG_SERVER})
         set(TF_PKG_SERVER $ENV{D_PKG_SERVER})
@@ -43,7 +44,7 @@ endforeach (COMPILE_FLAG)
 
 target_link_libraries(_tf_adapter PUBLIC "dl")
 foreach (LINK_FLAG ${LINK_FLAGS})
-    target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}")
+    target_link_libraries(_tf_adapter PUBLIC "${LINK_FLAG}" -Wl,--no-as-needed)
 endforeach (LINK_FLAG)
 
 set_target_properties(_tf_adapter PROPERTIES PREFIX "")

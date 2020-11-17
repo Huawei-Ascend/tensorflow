@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <mutex>
 
 namespace ge {
 class OpsProtoManager {
@@ -30,14 +31,15 @@ class OpsProtoManager {
   static OpsProtoManager *Instance();
 
   bool Initialize(const std::map<std::string, std::string> &options);
-
   void Finalize();
 
+ private:
   void LoadOpsProtoPluginSo(std::string &path);
 
- private:
   std::string pluginPath_;
   std::vector<void *> handles_;
+  bool is_init_ = false;
+  std::mutex mutex_;
 };
 }  // namespace ge
 

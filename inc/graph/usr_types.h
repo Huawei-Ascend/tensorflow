@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -131,4 +131,3 @@ struct UsrQuantizeFactorParams {
 }  // namespace ge
 
 #endif  // INC_GRAPH_USR_TYPES_H_
-
