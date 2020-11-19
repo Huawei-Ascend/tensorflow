@@ -137,7 +137,8 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
 
   // dynamic input config
   LOG(INFO) << "[GEOP] input_shape :" << sess_options["ge.inputShape"]
-            << ", dynamic_dims :" << sess_options["ge.dynamicDims"];
+            << ", dynamic_dims :" << sess_options["ge.dynamicDims"]
+            << ", dynamic_node_type :" << sess_options["ge.dynamicNodeType"];
 
   LOG(INFO) << "[GEOP] buffer_optimize :" << sess_options["ge.bufferOptimize"];
 

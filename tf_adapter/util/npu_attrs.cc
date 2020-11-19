@@ -185,6 +185,9 @@ inline Status CheckMstuneMode(const string &mstune_mode) {
 inline Status CheckInputShape(const string &input_shape) {
   std::vector<std::string> inputs;
   Split(input_shape, inputs, ";");
+  if (inputs.empty()) {
+    return errors::InvalidArgument("input_shape is empty.");
+  }
   for (auto input : inputs) {
     std::string input_tmp = input + ",";
     std::regex pattern(R"(\w{1,}:((\d{1,}|-\d{1,}),)+)");
@@ -198,6 +201,9 @@ inline Status CheckInputShape(const string &input_shape) {
 inline Status CheckDynamicDims(const string &dynamic_dims) {
   std::vector<std::string> inputs;
   Split(dynamic_dims, inputs, ";");
+  if (inputs.empty()) {
+    return errors::InvalidArgument("dynamic_dims is empty.");
+  }
   for (auto input : inputs) {
     std::string input_tmp = input + ",";
     std::regex pattern(R"((\d{1,},)+)");
