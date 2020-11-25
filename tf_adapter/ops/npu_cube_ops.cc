@@ -103,16 +103,6 @@ Status Conv2dInferShape(shape_inference::InferenceContext *c) {
         "Offsets batch size (", offsets_n,
         ") should be equal to x (", x_n, ")");
   }
-  if (offsets_h != x_h) {
-    return errors::InvalidArgument(
-        "Offsets height (", offsets_h,
-        ") should be equal to x (", x_h, ")");
-  }
-  if (offsets_w != x_w) {
-    return errors::InvalidArgument(
-        "Offsets width (", offsets_w,
-        ") should be equal to x (", x_w, ")");
-  }
   int32 groups;
   TF_RETURN_IF_ERROR(c->GetAttr("groups", &groups));
   if (groups < 1) {
@@ -216,6 +206,16 @@ Status Conv2dInferShape(shape_inference::InferenceContext *c) {
   }
   int64 out_h = (pad_image_h - dil_filter_h) / str_h + 1;
   int64 out_w = (pad_image_w - dil_filter_w) / str_w + 1;
+  if (offsets_h != out_h) {
+    return errors::InvalidArgument(
+        "Offsets height (", offsets_h,
+        ") should be equal to output (", out_h, ")");
+  }
+  if (offsets_w != out_w) {
+    return errors::InvalidArgument(
+        "Offsets width (", offsets_w,
+        ") should be equal to output (", out_w, ")");
+  }
   std::vector<DimensionHandle> out_dims(rank);
   out_dims[pos_n] = x_n_dim;
   out_dims[pos_c] = filter_n_dim;
