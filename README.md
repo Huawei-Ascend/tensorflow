@@ -35,7 +35,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-脚本执行成功后，会在output目录生成tfadapter.tar压缩文件
+脚本执行成功后，会在output目录生成tfadapter.tar压缩文件。
 
 #### 安装插件包
 解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl,
