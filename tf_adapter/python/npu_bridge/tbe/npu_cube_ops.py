@@ -56,7 +56,7 @@ def deformable_conv2d(  # pylint: disable=redefined-builtin
         in_channels / groups, out_channels]`.
       offsets: A 4D `Tensor` of x y coordinates offset and mask. With the
         `data_format` `NHWC`, the data is stored in the order of: `[batch,
-        in_height, in_width, deformable_groups * filter_height * filter_width
+        out_height, out_width, deformable_groups * filter_height * filter_width
         * 3]`. Must be one of the following types: `float16`, `float32`.
       bias: A optional 1D `Tensor` of additive biased to the filter outputs.
         The data is stored in the order of: `[out_channels]`. Must be one of
