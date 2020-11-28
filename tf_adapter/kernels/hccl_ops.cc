@@ -55,6 +55,15 @@ class HcomBroadcastOpKernel : public OpKernel {
 
 REGISTER_KERNEL_BUILDER(Name("HcomBroadcast").Device(DEVICE_CPU), HcomBroadcastOpKernel);
 
+class HcomReduceOpKernel : public OpKernel {
+ public:
+  explicit HcomReduceOpKernel(OpKernelConstruction *context) : OpKernel(context) {}
+  ~HcomReduceOpKernel() {}
+  void Compute(OpKernelContext *context) override { LOG(INFO) << "HcomReduceOp Compute."; }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomReduce").Device(DEVICE_CPU), HcomReduceOpKernel);
+
 class HcomReduceScatterOpKernel : public OpKernel {
  public:
   explicit HcomReduceScatterOpKernel(OpKernelConstruction *context) : OpKernel(context) {}

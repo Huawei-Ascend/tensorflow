@@ -115,6 +115,33 @@ input: The input to the broadcast.
 output: The same as input.
 )doc");
 
+REGISTER_OP("HcomReduce")
+    .Input("input: T")
+    .Output("output: T")
+    .Attr("T: {int8, int16, int32, float16, float32}")
+    .Attr("reduction: {'min', 'max', 'prod', 'sum'}")
+    .Attr("group: string")
+    .Attr("root_rank: int")    
+    .Attr("fusion: int")
+    .Attr("fusion_id: int")
+    .SetIsStateful()
+    .SetShapeFn([](shape_inference::InferenceContext *c) {
+      c->set_output(0, c->input(0));
+      return Status::OK();
+    })
+    .Doc(R"doc(
+Outputs a tensor containing the reduction across all input tensors passed to ops.
+
+The graph should be constructed so if one op runs with shared_name value `c`,
+then `num_devices` ops will run with shared_name value `c`.  Failure to do so
+will cause the graph execution to fail to complete.
+
+input: the input to the reduction
+output: the value of the reduction across all `num_devices` devices.
+reduction: the reduction operation to perform.
+group: all devices of the group participating in this reduction.
+)doc");
+
 REGISTER_OP("HcomReduceScatter")
     .Input("input: T")
     .Output("output: T")
