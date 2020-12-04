@@ -91,11 +91,8 @@ def ast_call(node):
     return node
 
 def insert_npu_import(r_node):
-    npu_alias = ast.alias(name='npu_ops', asname=None)
-    npu_import = ast.ImportFrom(module='npu_bridge.estimator', names=[npu_alias], level=0)
-    r_node.body.insert(0, npu_import)
-    npu_alias = ast.alias(name='npu_unary_ops', asname=None)
-    npu_import = ast.ImportFrom(module='npu_bridge.estimator.npu_unary_ops', names=[npu_alias], level=0)
+    npu_alias = ast.alias(name='*', asname=None)
+    npu_import = ast.ImportFrom(module='npu_bridge.npu_init', names=[npu_alias], level=0)
     r_node.body.insert(0, npu_import)
 
 # Format printing for locate
