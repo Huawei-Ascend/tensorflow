@@ -8,43 +8,13 @@ Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器
 ![tfadapter](https://images.gitee.com/uploads/images/2020/1027/094640_8f305b88_8175427.jpeg "framework.jpg")
 
 您可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
-## 安装
-### 从源码安装
 
-您可以从源代码构建 TF_Adapter 软件包并将其安装在昇腾AI处理器环境上。
-> TF_Adapter 插件与 Tensorflow 有严格的匹配关系，从源码构建前，您需要确保已经正确安装了 [Tensorflow v1.15.0
->版本](https://www.tensorflow.org/install/pip) 。
-
-
-tfadapter也支持由源码编译，进行源码编译前，首先确保你有昇腾910 AI处理器的环境，同时系统满足以下要求：
-- Linux OS
-- GCC >= 7.3.0
-- CMake >= 3.14.0
-- [SWIG](http://www.swig.org/download.html) 
-  
-#### 下载源码
-
-```
-git clone https://gitee.com/ascend/tensorflow.git
-cd tensorflow
-```
-
-#### 执行脚本生成安装包
-```
-chmod +x build.sh
-./build.sh
-```
-
-脚本执行成功后，会在output目录生成tfadapter.tar压缩文件
-
-#### 安装插件包
-解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl,
-然后使用 pip 安装 TF_Adapter 插件。
-```
-pip install npu_bridge-1.15.0-py3-none-any.whl
-```
-需要注意的是， 您应当保证安装路径与您编译时指定的 python
- 解释器搜索路径是一致的。
+## 使用指导
+1、迁移脚本主要是将原生的tensorflow脚本自动迁移成NPU支持的脚本。
+2、执行方式请直接下载脚本后执行，执行以下命令获取脚本的帮忙：
+   python3 main.py -h
+  迁移完成后，会在您配置的目录生成迁移后的脚本和迁移报告
+3、目前支持的功能列表，请参考资料文档
 
 ## 贡献
 
