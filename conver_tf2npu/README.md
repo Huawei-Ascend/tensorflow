@@ -2,23 +2,74 @@
 
 [View English](README.en.md)
 
-Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器卓越的运算能力，便捷地提供给使用Tensorflow框架的开发者。
-开发者只需安装TF_Adapter插件，并在现有Tensorflow脚本中添加少量配置，即可实现在昇腾AI处理器上加速自己的训练任务。
-
-![tfadapter](https://images.gitee.com/uploads/images/2020/1027/094640_8f305b88_8175427.jpeg "framework.jpg")
-
-您可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
 
 ## 使用指导
 1、迁移脚本主要是将原生的tensorflow脚本自动迁移成NPU支持的脚本。
 
-2、执行方式请直接下载脚本后执行，执行以下命令获取脚本的帮忙：
+2、执行方式请直接下载脚本后执行，执行以下命令获取脚本的使用帮助：
 
    python3 main.py -h
 
-  迁移完成后，会在您配置的目录生成迁移后的脚本和迁移报告
+   举例说明：
+
+   python3 main.py -i /home/BERT -o /home/out -r /home/report
+
+   其中：
+
+    main.py  --这个是主函数
+
+    /home/BERT --这个是被迁移的脚本路径
+
+    /home/out  --这个是迁移后的脚本路径
+
+    /home/report --这个是迁移过程的迁移报告
+
+           迁移报告分三种：
+
+               1、success_report.txt  --这个是迁移成功的结果
+
+                   例如：下面的报告的内容表示把run_ner.py的第522行的hvd.ran迁移为NPU的get_ran_id
+
+                   /home/BERT/run_ner.py:522 "change hvd.rank to get_rank_id"
+                   
+               2、failed_report.txt   --这个是迁移失败的结果
+
+               3、need_migration_doc.txt   --这个是需要参考迁移指导进行手动迁移的
+
   
-3、目前支持的功能列表，请参考资料文档
+3、目前支持自动迁移的功能列表
+
+    Tensorflow函数 --> 迁移后的NPU函数
+
+    "tf.gelu" --> "npu_unary_ops.gelu"
+
+    "tf.nn.dropout" --> "npu_ops.dropout"
+
+    "hvd.init" --> "None"
+
+    "hvd.DistributedOptimizer" --> "NPUDistributedOptimizer"
+
+    "hvd.rank" --> "get_rank_id"
+
+    "hvd.local_rank" --> "get_local_rank_id"
+
+    "hvd.size" --> "get_rank_size"
+
+    "BroadcastGlobalVariablesHook" --> "None"
+
+    "dataset.shard(xxx, xxx)" --> "dataset.shard(get_rank_size(), get_rank_id())"
+
+    "tf.estimator.EstimatorSpec" --> "NPUEstimatorSpec"
+
+    "tf.estimator.RunConfig" --> "NPURunConfig"
+
+    "tf.estimator.Estimator" --> "NPUEstimator"
+
+    "batch(xxx)" --> "batch(xxx, drop_remainder=True)"
+
+    "map_and_batch(xxx)" --> "map_and_batch(xxx, drop_remainder=True)"
+
+    "tf.device(xxx)" --> "tf.device(/cpu:0)"
 
 ## 贡献
 
