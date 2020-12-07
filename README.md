@@ -25,7 +25,7 @@ tfadapter也支持由源码编译，进行源码编译前，首先确保你有�
 #### 下载源码
 
 ```
-git clone https://gitee.com/ascend/tensorflow.git
+git clone https://github.com/Huawei-Ascend/tensorflow.git
 cd tensorflow
 ```
 

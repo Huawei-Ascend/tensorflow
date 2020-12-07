@@ -23,7 +23,7 @@ You may also build GraphEngine from source. To build GraphEngine, please make su
 
 #### Download
 ```
-git clone https://gitee.com/ascend/tensorflow.git
+git clone https://github.com/Huawei-Ascend/tensorflow.git
 cd tensorflow
 ```
 

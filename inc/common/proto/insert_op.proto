@@ -38,28 +38,28 @@ message AippOpParams {
 		dynamic = 2;
 	}
 
-	// AIPPÄ£Ê½£¬Çø·Ö¾²Ì¬AIPPºÍ¶¯Ì¬AIPP
+	// AIPPÄ£Ê½Ö¾Ì¬AIPPÍ¶Ì¬AIPP
 	AippMode aipp_mode = 1;
 
-	// related_input_rank²ÎÊıÎª±ØÌî£¬ÀàĞÍÎªÕûĞÍ£¬ÅäÖÃ·¶Î§>=0, <=ÊäÈëDataËã×ÓµÄ¸öÊı£¬Ä¬ÈÏÖµÎª0¡£
-	// ±êÊ¶¶ÔÄ£ĞÍµÄµÚ¼¸¸öÊäÈë×öAIPP´¦Àí£¬ÀıÈçÄ£ĞÍÓĞÁ½¸öÊäÈë£¬ĞèÒª¶ÔµÚ2¸öÊäÈë×öAIPP£¬ÔòÅäÖÃrelated_input_rankÎª1¡£
+	// related_input_rankÎªî£¬ÎªÍ£Ã·Î§>=0, <=DataÓµÄ¸Ä¬ÖµÎª0
+	// Ê¶Ä£ÍµÄµÚ¼AIPPÄ£ë£¬ÒªÔµ2AIPPrelated_input_rankÎª1
 	uint32 related_input_rank = 2;
 
-	// input_edge_idx²ÎÊıÎª¿ÉÑ¡£¬ÀàĞÍÎªÕûĞÍ£¬ÅäÖÃ·¶Î§Îª>=0¡£
-	// ÅäÖÃ¸Ã²ÎÊıµÄ×÷ÓÃ£¬ÔÚÓÚ¶ÔDataËã×Ó²»Í¬µÄÊä³ö×ö²»Í¬µÄAIPP´¦Àí£¬Èç¹û¸Ã²ÎÊıÃ»ÓĞÅäÖÃ£¬Ä¬ÈÏ¶Ôrelated_input_rankÖ¸¶¨µÄÄ£ĞÍÊäÈëµÄËùÓĞÊä³ö±ß×öAIPP¡£
-	// ÅäÖÃÖµ <= DataËã×ÓÊä³ö±ßµÄ¸öÊı¡£
+	// input_edge_idxÎªÑ¡ÎªÍ£Ã·Î§Îª>=0
+	// Ã¸Ã²Ã£Ú¶DataÓ²Í¬Í¬AIPPÃ²Ã»Ã£Ä¬Ï¶related_input_rankÖ¸Ä£AIPP
+	// Öµ <= DataßµÄ¸
 	repeated uint32 input_edge_idx = 3;
 
-	// [Begin] ¶¯Ì¬AIPP²ÎÊı£¬ÅäÖÃ¾²Ì¬AIPPÊ±ÎŞĞ§
+	// [Begin] Ì¬AIPPÃ¾Ì¬AIPPÊ±Ğ§
 	uint32 max_src_image_size = 4;
 
-	// ÊÇ·ñÖ§³ÖĞı×ª¡£Ä¬ÈÏ²»Ö§³Ö£¬¿ªÆôÖ§³ÖĞı×ªÊ±£¬»áÓĞ¶îÍâµÄ¿Õ¼äºÍĞÔÄÜËğÊ§
+	// Ç·Ö§×ªÄ¬Ï²Ö§Ö£Ö§×ªÊ±Ğ¶Ä¿Õ¼Ê§
 	bool support_rotation = 5;
 
-	// [End] ¶¯Ì¬AIPP²ÎÊı
+	// [End] Ì¬AIPP
 
 
-	// [Begin] ¾²Ì¬AIPP²ÎÊı£¬ÅäÖÃ¶¯Ì¬AIPPÊ±ÎŞĞ§
+	// [Begin] Ì¬AIPPÃ¶Ì¬AIPPÊ±Ğ§
 	InputFormat input_format = 51;
 	bool csc_switch = 52;
 	float cpadding_value = 53;
@@ -115,7 +115,7 @@ message AippOpParams {
 	repeated int32 input_bias_1 = 43;
 	repeated int32 input_bias_2 = 44;
 
-	// [End] ¾²Ì¬AIPP²ÎÊı
+	// [End] Ì¬AIPP
 
        // The n number that is used for raw/rgbir data into f16 transformation.
        // The transformation equation is x/(2^n). If set to 0, no transform is performed.
@@ -124,13 +124,13 @@ message AippOpParams {
 
 message MultiShapeOpParams {
 	enum MultiShapeMode {
-		batch      = 0;             //¶¯Ì¬batch
-		resolution = 1;             //¶¯Ì¬·Ö±æÂÊ£¬À©Õ¹ÓÃ
+		batch      = 0;             //Ì¬batch
+		resolution = 1;             //Ì¬Ö±Ê£Õ¹
 	}
 
-	MultiShapeMode    mode                      = 1;        //Ëã×ÓÄ£Ê½
-	uint32            related_input_rank        = 2;        //ĞÂÔöËã×Ó²åÈëµ½ÄÄ¸öÊäÈë
+	MultiShapeMode    mode                      = 1;        //Ä£Ê½
+	uint32            related_input_rank        = 2;        //Ó²ëµ½Ä¸
 
 
-	repeated uint32 batch_list   = 11; //batch_listÖµ£¬batch_listµÄ¸öÊıÊÇ2µ½8Ö®¼ä
+	repeated uint32 batch_list   = 11; //batch_listÖµbatch_listÄ¸28Ö®
 }
