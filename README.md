@@ -25,7 +25,7 @@ tfadapter也支持由源码编译，进行源码编译前，首先确保你有�
 #### 下载源码
 
 ```
-git clone https://gitee.com/ascend/tensorflow.git
+git clone https://github.com/Huawei-Ascend/tensorflow.git
 cd tensorflow
 ```
 
@@ -51,7 +51,7 @@ pip install npu_bridge-1.15.0-py3-none-any.whl
 欢迎参与贡献。
 
 ## 社区版本规划
-https://gitee.com/ascend/tensorflow/wikis/Home?sort_id=3076366
+https://github.com/Huawei-Ascend/tensorflow/wikis/Home?sort_id=3076366
 
 ## Release Notes
 
