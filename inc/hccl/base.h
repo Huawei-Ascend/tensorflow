@@ -49,7 +49,7 @@ typedef enum {
     HOROVOD_REDUCE_RESERVED     /**< reserved */
 } HorovodReduceOp;
 
-const u32 HCCL_MAX_SEGMENT_NUM = 8;   // The max number of gradient segments.
+const u32 HCCL_MAX_SEGMENT_NUM = 32;   // The max number of gradient segments.
 
 /**
  * @brief the feature of the model
@@ -60,6 +60,16 @@ struct model_feature {
     float *gradient_size;    /**< The size of each gradient */
     float *gradient_time;    /**< The BP compution time of each gradient */
 };
+
+/**
+ * @brief Memory Register Address Struct for Remote Access
+ */
+struct MemRegisterAddr {
+    u64 addr;
+    u64 length;
+};
+
+const u32 HCCL_MAX_MEM_REGISTER_NUM = 8;   // The max number of memory register address.
 
 enum GradSplitForceMode {
     FORCE_NONE,     /**< no force */

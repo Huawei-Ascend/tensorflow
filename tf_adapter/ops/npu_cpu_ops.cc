@@ -35,18 +35,19 @@ using shape_inference::InferenceContext;
 using shape_inference::ShapeHandle;
 
 REGISTER_OP("EmbeddingRankId")
-    .Input("addr_table: uint64")
-    .Input("index: uint32")
-    .Output("rank_id: uint64")
-    .Attr("row_memory: int = 320")
-    .Attr("mode: string = 'mod' ")
-    .SetAllowsUninitializedInput()
-    .SetShapeFn([](shape_inference::InferenceContext *c) {
-      auto out_shape = c->MakeShape({c->Dim(c->input(1), 0), c->Dim(c->input(0), 1)});
-      c->set_output(0, out_shape);
-      return Status::OK();
-    })
-    .Doc(R"doc(
+  .Input("addr_table: uint64")
+  .Input("index: T")
+  .Output("rank_id: uint64")
+  .Attr("T: {int64,int32,uint64}")
+  .Attr("row_memory: int = 320")
+  .Attr("mode: string = 'mod' ")
+  .SetAllowsUninitializedInput()
+  .SetShapeFn([](shape_inference::InferenceContext *c) {
+    auto out_shape = c->MakeShape({c->Dim(c->input(1), 0), c->Dim(c->input(0), 1)});
+    c->set_output(0, out_shape);
+    return Status::OK();
+  })
+  .Doc(R"doc(
     Traverse the index calculation server and its position in the server.
     Arguments
         addr_table:    Tensors of addr_table.
@@ -54,4 +55,39 @@ REGISTER_OP("EmbeddingRankId")
     Output
         rank_id:    Tensors with the same shape as index.dim(0)*3.
     )doc");
+//regist lru cahe op
+REGISTER_OP("LruCache")
+  .Output("cache: resource")
+  .Attr("cache_size: int")
+  .Attr("load_factor: float = 1.0")
+  .Attr("container: string = ''")
+  .Attr("shared_name: string = 'LruCache'")
+  .SetIsStateful()
+  .SetShapeFn(shape_inference::ScalarShape);
+//regist cache add op
+REGISTER_OP("CacheAdd")
+  .Input("cache: resource")
+  .Input("ids: T")
+  .Output("swap_in_id: T")
+  .Output("swap_in_idx: int64")
+  .Output("swap_out_id: T")
+  .Output("swap_out_idx: int64")
+  .Attr("T: {int64, int32, uint64, uint32}")
+  .SetShapeFn([](shape_inference::InferenceContext *c) {
+    c->set_output(0, c->Vector(c->UnknownDim()));
+    c->set_output(1, c->Vector(c->UnknownDim()));
+    c->set_output(2, c->Vector(c->UnknownDim()));
+    c->set_output(3, c->Vector(c->UnknownDim()));
+    return Status::OK();
+  });
+//regist cache remote index to local op
+REGISTER_OP("CacheRemoteIndexToLocal")
+  .Input("cache: resource")
+  .Input("ids: T")
+  .Output("local_idx: int64")
+  .Attr("T: {int64, int32, uint32, uint64}")
+  .SetShapeFn([](shape_inference::InferenceContext *c) {
+    c->set_output(0, c->Vector(c->Rank(c->input(1))));
+    return Status::OK();
+  });
 }  // namespace tensorflow

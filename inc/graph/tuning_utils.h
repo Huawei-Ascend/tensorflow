@@ -1,19 +1,3 @@
-/**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 #ifndef MAIN_TUNING_UTILS_H
 #define MAIN_TUNING_UTILS_H
 
@@ -51,13 +35,21 @@ const char *const BUILD_STEP = "ge.buildStep";
 // Configure tuning path
 const char *const TUNING_PATH = "ge.tuningPath";
 // for interface: aclgrphBuildModel
-const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {BUILD_MODE, BUILD_STEP, TUNING_PATH};
+const std::set<std::string> ir_builder_supported_options_for_lx_fusion = {
+  BUILD_MODE,
+  BUILD_STEP,
+  TUNING_PATH
+};
 
 // Build model
 const char *const BUILD_MODE_NORMAL = "normal";
 const char *const BUILD_MODE_TUNING = "tuning";
 const char *const BUILD_MODE_BASELINE = "baseline";
-const std::set<std::string> build_mode_options = {BUILD_MODE_NORMAL, BUILD_MODE_TUNING, BUILD_MODE_BASELINE};
+const std::set<std::string> build_mode_options = {
+    BUILD_MODE_NORMAL,
+    BUILD_MODE_TUNING,
+    BUILD_MODE_BASELINE
+};
 
 // Build step
 const char *const BUILD_STEP_BEFORE_UB_MATCH = "before_ub_match";
@@ -65,9 +57,13 @@ const char *const BUILD_STEP_AFTER_UB_MATCH = "after_ub_match";
 const char *const BUILD_STEP_AFTER_BUILDER = "after_builder";
 const char *const BUILD_STEP_AFTER_BUILDER_SUB = "after_builder_sub";
 const char *const BUILD_STEP_AFTER_MERGE = "after_merge";
-const std::set<std::string> build_step_options = {BUILD_STEP_BEFORE_UB_MATCH, BUILD_STEP_AFTER_UB_MATCH,
-                                                  BUILD_STEP_AFTER_BUILDER, BUILD_STEP_AFTER_BUILDER_SUB,
-                                                  BUILD_STEP_AFTER_MERGE};
+const std::set<std::string> build_step_options = {
+    BUILD_STEP_BEFORE_UB_MATCH,
+    BUILD_STEP_AFTER_UB_MATCH,
+    BUILD_STEP_AFTER_BUILDER,
+    BUILD_STEP_AFTER_BUILDER_SUB,
+    BUILD_STEP_AFTER_MERGE
+};
 
 using SubgraphCreateOutNode = std::unordered_map<ComputeGraphPtr, NodePtr>;
 using NodetoNodeMap = std::unordered_map<NodePtr, NodePtr>;
@@ -82,8 +78,10 @@ class TuningUtils {
   // the subgraphs in them to be executable subgraphs if exe_flag is true
   // `tuning_path` means path to save the graphs
   static graphStatus ConvertGraphToFile(std::vector<ComputeGraphPtr> tuning_subgraphs,
-                                        std::vector<ComputeGraphPtr> non_tuning_subgraphs = {}, bool exe_flag = false,
-                                        const std::string &path = "", const std::string &user_path = "");
+                                        std::vector<ComputeGraphPtr> non_tuning_subgraphs = {},
+                                        bool exe_flag = false,
+                                        const std::string &path = "",
+                                        const std::string &user_path = "");
   // Recovery `graph` from graph dump files configured in options
   static graphStatus ConvertFileToGraph(const map<int64_t, string> &options, ge::Graph &graph);
 
@@ -96,7 +94,8 @@ class TuningUtils {
     const std::string &path;
     const std::string &user_path;
   };
-  static graphStatus MakeExeGraph(ComputeGraphPtr &exe_graph, const HelpInfo &help_info);
+  static graphStatus MakeExeGraph(ComputeGraphPtr &exe_graph,
+                                  const HelpInfo& help_info);
   static graphStatus HandlePld(NodePtr &node);
   static graphStatus HandleEnd(NodePtr &node);
   static graphStatus ChangePld2Data(NodePtr &node, NodePtr &data_node);
@@ -106,15 +105,19 @@ class TuningUtils {
   static graphStatus CreateNetOutput(NodePtr &node, NodePtr &out_node);
   static graphStatus AddAttrToDataNodeForMergeGraph(const NodePtr &pld, NodePtr &data_node);
   static graphStatus AddAttrToNetOutputForMergeGraph(const NodePtr &end, NodePtr &out_node);
-  static void DumpGraphToPath(ComputeGraphPtr &exe_graph, int64_t index, bool is_tuning_graph, std::string path);
+  static void DumpGraphToPath(ComputeGraphPtr &exe_graph, int64_t index,
+                              bool is_tuning_graph, std::string path);
 
   static SubgraphCreateOutNode create_output_;
   // part 2
-  static graphStatus MergeAllSubGraph(std::vector<ComputeGraphPtr> &graphs, ComputeGraphPtr &graph);
+  static graphStatus MergeAllSubGraph(std::vector<ComputeGraphPtr> &graphs,
+                                      ComputeGraphPtr &graph);
   static graphStatus MergeSubGraph(ComputeGraphPtr &graph);
   // Deletes new data and output nodes added by call `MakeExeGraph()` func in part 1
   static graphStatus RemoveDataNetoutputEdge(ComputeGraphPtr &graph);
-  static graphStatus GetInAndOutAnchorPair(NodePtr &data_node, NodePtr &out_node, AnchorPtr &dest_in_anchor,
+  static graphStatus GetInAndOutAnchorPair(NodePtr &data_node,
+                                           NodePtr &out_node,
+                                           AnchorPtr &dest_in_anchor,
                                            AnchorPtr &src_out_anchor);
   static NodeNametoNodeNameMap data_2_netoutput_;
   static NodetoNodeNameMap data_node_2_netoutput_;
@@ -126,5 +129,5 @@ class TuningUtils {
   static std::string PrintCheckLog();
   static std::string GetNodeNameByAnchor(const Anchor *anchor);
 };
-}  // namespace ge
-#endif  // MAIN_TUNING_UTILS_H
+}
+#endif //MAIN_TUNING_UTILS_H

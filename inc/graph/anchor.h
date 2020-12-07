@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,7 +80,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Anchor : public std::enable
   template <class T>
   using Vistor = RangeVistor<T, std::shared_ptr<ConstAnchor>>;
 
-  Anchor(const NodePtr &ownerNode, int idx);
+  Anchor(const NodePtr& ownerNode, int idx);
 
   virtual ~Anchor() = default;
 

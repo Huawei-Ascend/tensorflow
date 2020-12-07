@@ -38,28 +38,31 @@ message AippOpParams {
 		dynamic = 2;
 	}
 
-	// AIPPģʽ־̬AIPPͶ̬AIPP
+	// AIPP模式，区分静态AIPP和动态AIPP
 	AippMode aipp_mode = 1;
 
-	// related_input_rankΪΪͣ÷Χ>=0, <=DataӵĸĬֵΪ0
-	// ʶģ͵ĵڼAIPPģ룬ҪԵ2AIPPrelated_input_rankΪ1
+	// related_input_rank参数为必填，类型为整型，配置范围>=0, <=输入Data算子的个数，默认值为0。
+	// 标识对模型的第几个输入做AIPP处理，例如模型有两个输入，需要对第2个输入做AIPP，则配置related_input_rank为1。
 	uint32 related_input_rank = 2;
 
-	// input_edge_idxΪѡΪͣ÷ΧΪ>=0
-	// øòãڶDataӲͬͬAIPPòûãĬ϶related_input_rankָģAIPP
-	// ֵ <= Dataߵĸ
+    // related_input_name is optional and the top name of data node which inserts aipp
+    string related_input_name = 6;
+
+	// input_edge_idx参数为可选，类型为整型，配置范围为>=0。
+	// 配置该参数的作用，在于对Data算子不同的输出做不同的AIPP处理，如果该参数没有配置，默认对related_input_rank指定的模型输入的所有输出边做AIPP。
+	// 配置值 <= Data算子输出边的个数。
 	repeated uint32 input_edge_idx = 3;
 
-	// [Begin] ̬AIPPþ̬AIPPʱЧ
+	// [Begin] 动态AIPP参数，配置静态AIPP时无效
 	uint32 max_src_image_size = 4;
 
-	// Ƿ֧תĬϲ֧֣֧תʱжĿռʧ
+	// 是否支持旋转。默认不支持，开启支持旋转时，会有额外的空间和性能损失
 	bool support_rotation = 5;
 
-	// [End] ̬AIPP
+	// [End] 动态AIPP参数
 
 
-	// [Begin] ̬AIPPö̬AIPPʱЧ
+	// [Begin] 静态AIPP参数，配置动态AIPP时无效
 	InputFormat input_format = 51;
 	bool csc_switch = 52;
 	float cpadding_value = 53;
@@ -115,7 +118,7 @@ message AippOpParams {
 	repeated int32 input_bias_1 = 43;
 	repeated int32 input_bias_2 = 44;
 
-	// [End] ̬AIPP
+	// [End] 静态AIPP参数
 
        // The n number that is used for raw/rgbir data into f16 transformation.
        // The transformation equation is x/(2^n). If set to 0, no transform is performed.
@@ -124,13 +127,13 @@ message AippOpParams {
 
 message MultiShapeOpParams {
 	enum MultiShapeMode {
-		batch      = 0;             //̬batch
-		resolution = 1;             //ֱ̬ʣչ
+		batch      = 0;             //动态batch
+		resolution = 1;             //动态分辨率，扩展用
 	}
 
-	MultiShapeMode    mode                      = 1;        //ģʽ
-	uint32            related_input_rank        = 2;        //Ӳ뵽ĸ
+	MultiShapeMode    mode                      = 1;        //算子模式
+	uint32            related_input_rank        = 2;        //新增算子插入到哪个输入
 
 
-	repeated uint32 batch_list   = 11; //batch_listֵbatch_listĸ28֮
+	repeated uint32 batch_list   = 11; //batch_list值，batch_list的个数是2到8之间
 }

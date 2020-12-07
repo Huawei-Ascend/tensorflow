@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,6 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY RuntimeInferenceContext {
   static std::map<std::string, std::unique_ptr<RuntimeInferenceContext>> contexts_;
   static std::mutex ctx_mu_;
 };
-}  // namespace ge
+} // namespace ge
 
-#endif  // INC_GRAPH_RUNTIME_INFERENCE_CONTEXT_H_
+#endif // INC_GRAPH_RUNTIME_INFERENCE_CONTEXT_H_

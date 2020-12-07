@@ -35,15 +35,11 @@ class FastGeluOp : public tensorflow::OpKernel {
     // Grab the input tensor
     CHECK_NOT_NULL(context);
     const Tensor &input_tensor = context->input(0);
-    auto input = input_tensor.flat<T>();
 
     // Create an output tensor
     Tensor *output_tensor = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, input_tensor.shape(),
                                                      &output_tensor));
-    // handle any data type for input and output
-    auto output_flat = output_tensor->flat<T>();
-
   }
 };
 
@@ -92,9 +88,6 @@ class FastGeluGradOp : public tensorflow::OpKernel {
     Tensor *grad_output_tensor = nullptr;
     OP_REQUIRES_OK(context, context->allocate_output(0, grad_input_tensor.shape(),
                                                      &grad_output_tensor));
-    // handle any data type for input and output
-    auto grad_output_flat = grad_output_tensor->flat<T>();
-
   }
 };
 

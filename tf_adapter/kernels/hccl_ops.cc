@@ -55,6 +55,15 @@ class HcomBroadcastOpKernel : public OpKernel {
 
 REGISTER_KERNEL_BUILDER(Name("HcomBroadcast").Device(DEVICE_CPU), HcomBroadcastOpKernel);
 
+class HcomReduceOpKernel : public OpKernel {
+ public:
+  explicit HcomReduceOpKernel(OpKernelConstruction *context) : OpKernel(context) {}
+  ~HcomReduceOpKernel() {}
+  void Compute(OpKernelContext *context) override { LOG(INFO) << "HcomReduceOp Compute."; }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomReduce").Device(DEVICE_CPU), HcomReduceOpKernel);
+
 class HcomReduceScatterOpKernel : public OpKernel {
  public:
   explicit HcomReduceScatterOpKernel(OpKernelConstruction *context) : OpKernel(context) {}
@@ -81,4 +90,53 @@ class HcomReceiveOpKernel : public OpKernel {
 };
 
 REGISTER_KERNEL_BUILDER(Name("HcomReceive").Device(DEVICE_CPU), HcomReceiveOpKernel);
-}  // namespace tensorflow
+
+class HcomRemoteReadOpKernel : public OpKernel {
+public:
+    explicit HcomRemoteReadOpKernel(OpKernelConstruction* context) : OpKernel(context) {}
+    ~HcomRemoteReadOpKernel() {}
+    void Compute(OpKernelContext* context) override
+    {
+        LOG(INFO) << "HcomRemoteReadOpKernel Compute.";
+    }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomRemoteRead").Device(DEVICE_CPU), HcomRemoteReadOpKernel);
+
+class HcomRemoteRefReadOpKernel : public OpKernel {
+public:
+    explicit HcomRemoteRefReadOpKernel(OpKernelConstruction* context) : OpKernel(context) {}
+    ~HcomRemoteRefReadOpKernel() {}
+    void Compute(OpKernelContext* context) override
+    {
+        LOG(INFO) << "HcomRemoteRefRead Compute.";
+    }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomRemoteRefRead").Device(DEVICE_CPU), HcomRemoteRefReadOpKernel);
+
+class HcomRemoteWriteKernel : public OpKernel {
+public:
+    explicit HcomRemoteWriteKernel(OpKernelConstruction* context) : OpKernel(context) {}
+    ~HcomRemoteWriteKernel() {}
+    void Compute(OpKernelContext* context) override
+    {
+        LOG(INFO) << "HcomRemoteWriteKernel Compute.";
+    }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomRemoteWrite").Device(DEVICE_CPU), HcomRemoteWriteKernel);
+
+class HcomRemoteScatterWriteOpKernel : public OpKernel {
+public:
+    explicit HcomRemoteScatterWriteOpKernel(OpKernelConstruction* context) : OpKernel(context) {}
+    ~HcomRemoteScatterWriteOpKernel() {}
+    void Compute(OpKernelContext* context) override
+    {
+        LOG(INFO) << "HcomRemoteScatterWrite Compute.";
+    }
+};
+
+REGISTER_KERNEL_BUILDER(Name("HcomRemoteScatterWrite").Device(DEVICE_CPU), HcomRemoteScatterWriteOpKernel);
+
+} // namespace tensorflow

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -107,7 +107,7 @@ class GeIrProtoHelper {
   ProtoMsgOwner protoOwner_ = nullptr;
   ProtoType *protoMsg_ = nullptr;
   friend class GeIrProtoHelper<typename std::conditional<
-    std::is_const<ProtoType>::value, typename std::remove_const<ProtoType>::type, const ProtoType>::type>;
+      std::is_const<ProtoType>::value, typename std::remove_const<ProtoType>::type, const ProtoType>::type>;
 };
 
 using ProtoAttrMapHelper = GeIrProtoHelper<ProtoAttrMap>;

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 #ifndef INC_GRAPH_GE_LOCAL_CONTEXT_H_
 #define INC_GRAPH_GE_LOCAL_CONTEXT_H_
 
@@ -22,8 +21,8 @@
 #include <vector>
 #include "graph/ge_error_codes.h"
 
-using std::map;
 using std::string;
+using std::map;
 
 namespace ge {
 class GEThreadLocalContext {
@@ -32,6 +31,12 @@ class GEThreadLocalContext {
   void SetGraphOption(map<std::string, string> options_map);
   void SetSessionOption(map<std::string, string> options_map);
   void SetGlobalOption(map<std::string, string> options_map);
+
+  map<string, string> GetAllGraphOptions() const;
+  map<string, string> GetAllSessionOptions() const;
+  map<string, string> GetAllGlobalOptions() const;
+  map<string, string> GetAllOptions() const;
+
 
  private:
   map<string, string> graph_options_;

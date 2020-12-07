@@ -1,18 +1,18 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
- *
+ * Copyright 2020 Huawei Technologies Co., Ltd
+
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
+
  * http://www.apache.org/licenses/LICENSE-2.0
- *
+
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- */
+*/
 
 #ifndef INC_COMMON_DYNAMIC_AIPP_H_
 #define INC_COMMON_DYNAMIC_AIPP_H_
@@ -20,9 +20,9 @@
 #include <stdint.h>
 
 /**
- * @ingroup dnn
- * @brief struct define of dynamic aipp batch parameter.
- */
+* @ingroup dnn
+* @brief struct define of dynamic aipp batch parameter.
+*/
 typedef struct tagAippDynamicBatchPara {
   int8_t cropSwitch;     // crop switch
   int8_t scfSwitch;      // resize switch
@@ -67,9 +67,9 @@ typedef struct tagAippDynamicBatchPara {
 } kAippDynamicBatchPara;
 
 /**
- * @ingroup dnn
- * @brief struct define of dynamic aipp parameter. lite:64+96*batchNum byte ; tiny:64+64*batchNum byte
- */
+* @ingroup dnn
+* @brief struct define of dynamic aipp parameter. lite:64+96*batchNum byte ; tiny:64+64*batchNum byte
+*/
 typedef struct tagAippDynamicPara {
   uint8_t inputFormat;    // input format：YUV420SP_U8/XRGB8888_U8/RGB888_U8
   int8_t cscSwitch;       // csc switch

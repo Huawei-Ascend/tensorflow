@@ -28,6 +28,7 @@ limitations under the License.
 #include "framework/common/ge_inner_error_codes.h"
 #include "framework/common/types.h"
 #include "framework/omg/parser/parser_api.h"
+#include "framework/omg/omg_inner_types.h"
 #include "ge/ge_api.h"
 #include "ge/ge_api_types.h"
 #include "tdt/tdt_host_interface.h"
@@ -69,7 +70,7 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
     LOG(INFO) << "[GePlugin] Ge has already initialized";
     return;
   }
-
+  init_options_ = init_options;
   const char *tf_config = std::getenv("TF_CONFIG");
   int exec_hccl_flag = 1;
   if (tf_config != nullptr) {
@@ -138,9 +139,6 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   init_options[ge::OPTION_EXEC_IS_USEHCOM] = std::to_string(is_use_hcom);
   init_options[ge::OPTION_EXEC_DEPLOY_MODE] = std::to_string(deploy_mode);
 
-  // tailing optimization
-  LOG(INFO) << "[GePlugin] is_tailing_optimization : " << init_options["ge.exec.isTailingOptimization"];
-
   // profiling configuration
   LOG(INFO) << "[GePlugin] profiling_mode : " << init_options[ge::OPTION_EXEC_PROFILING_MODE]
             << ", profiling_options:" << init_options[ge::OPTION_EXEC_PROFILING_OPTIONS]
@@ -151,6 +149,9 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] precision_mode : " << init_options[ge::PRECISION_MODE];
 
   // auto tune configuration
+  if (!init_options["ge.buildMode"].empty() && !init_options["ge.tuningPath"].empty()) {
+    init_options[ge::AUTO_TUNE_MODE] = "";
+  }
   LOG(INFO) << "[GePlugin] auto_tune_mode : " << init_options[ge::AUTO_TUNE_MODE];
 
   // debug configuration
@@ -160,22 +161,38 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] enable_scope_fusion_passes : " << init_options[ge::OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES];
 
   // exception dump configuration
-   LOG(INFO) << "[GePlugin] enable_exception_dump : " << init_options["ge.exec.enable_exception_dump"];
+  LOG(INFO) << "[GePlugin] enable_exception_dump : " << init_options["ge.exec.enable_exception_dump"];
+
+  LOG(INFO) << "[GePlugin] job_id : " << init_options[ge::OPTION_EXEC_JOB_ID];
+
+  LOG(INFO) << "[GePlugin] op_compiler_cache_mode : " << init_options["ge.op_compiler_cache_mode"];
+
+  LOG(INFO) << "[GePlugin] op_compiler_cache_dir : " << init_options["ge.op_compiler_cache_dir"];
+
+  LOG(INFO) << "[GePlugin] debugDir : " << init_options["ge.debugDir"];
+
+  // mstune mode and work path
+  if (!init_options["ge.buildMode"].empty()) {
+    init_options["ge.buildMode"] = "tuning";
+  }
+  LOG(INFO) << "[GePlugin] mstune mode : " << init_options["ge.buildMode"]
+            << ", work path : " << init_options["ge.tuningPath"];
 
   // Open TsdClient first, then call GEInitialize
-  LOG(INFO) << "[GePlugin] Start Init tdt host.";
+  LOG(INFO) << "[GePlugin] Open TsdClient and Init tdt host.";
   int32_t ret = tdt::TdtHostInit(static_cast<uint32_t>(device_id_));
   if (ret != 0) {
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GePlugin] Tdt host init failed, tdt error code : " << ret;
   }
-  LOG(INFO) << "[GePlugin] Tdt host init succeed.";
+
   // ge Initialize
   ge::Status status = ge::GEInitialize(init_options);
   if (status != ge::SUCCESS) {
     std::this_thread::sleep_for(std::chrono::milliseconds(kFatalSleepTime));
     LOG(FATAL) << "[GePlugin] Initialize ge failed, ret : " << ToString(status);
   }
+  domi::GetContext().train_flag = true;
   LOG(INFO) << "[GePlugin] Initialize ge success.";
 
   // parser Initialize
@@ -187,6 +204,10 @@ void GePlugin::Init(std::map<std::string, std::string> &init_options, bool is_gl
   LOG(INFO) << "[GePlugin] Initialize parser success.";
   isInit_ = true;
   isGlobal_ = is_global;
+}
+
+std::map<std::string, std::string> GePlugin::GetInitOptions() {
+  return init_options_;
 }
 
 void GePlugin::Finalize() {
@@ -204,14 +225,8 @@ void GePlugin::Finalize() {
   ge::Status status_parser = ge::ParserFinalize();
   if (status_parser != ge::SUCCESS) { LOG(ERROR) << "[GePlugin] Parser finalize failed, ret : " << ToString(status); }
 
-  LOG(INFO) << "[GePlugin] Start destroy tdt host.";
+  LOG(INFO) << "[GePlugin] Close TsdClient and destroy tdt.";
   int32_t ret = tdt::TdtHostDestroy();
-  if (ret != 0) {
-    LOG(ERROR) << "[GePlugin] Tdt host destroy failed, ret : " << ret;
-  } else {
-    LOG(INFO) << "[GePlugin] Tdt host destroy succeed.";
-  }
-
   isInit_ = false;
 }
 
@@ -222,10 +237,46 @@ bool GePlugin::IsGlobal() {
 
 void PluginInit(std::map<std::string, std::string> &init_options) {
   GePlugin::GetInstance()->Init(init_options, true);
-  LOG(INFO) << "npu plugin init success";
+  LOG(INFO) << "[GePlugin] npu plugin init success";
 }
 
 void PluginFinalize() {
   GePlugin::GetInstance()->Finalize();
-  LOG(INFO) << "npu plugin finalize success";
+  LOG(INFO) << "[GePlugin] npu plugin finalize success";
+}
+
+int32_t RdmaInitAndRegister(const std::vector<ge::HostVarInfo> &var_info, size_t size) {
+  ge::Status ret = ge::InitRdmaPool(size);
+  if (ret != ge::SUCCESS) {
+    LOG(ERROR) << "[GePlugin] init rdma pool failed, ret : " << ToString(ret);
+    return -1;
+  }
+  LOG(INFO) << "[GePlugin] init rdma pool success.";
+  ret = ge::RdmaRemoteRegister(var_info);
+  if (ret != ge::SUCCESS) {
+    LOG(ERROR) << "[GePlugin] rdma remote register failed, ret : " << ToString(ret);
+    return -1;
+  }
+  LOG(INFO) << "[GePlugin] rdma remote register success.";
+  return 0;
+}
+
+int32_t GetVarAddrAndSize(const string &var_name, uint64_t &base_addr, uint64_t &var_size) {
+  ge::Status ret = ge::GetVarBaseAddrAndSize(var_name, base_addr, var_size);
+  if (ret != ge::SUCCESS) {
+    LOG(ERROR) << "[GePlugin] get " << var_name << " base addr and size failed, ret : " << ToString(ret);
+    return -1;
+  }
+  LOG(INFO) << "[GePlugin] get " << var_name << " base addr and size success.";
+  return 0;
+}
+
+int32_t MallocSharedMem(const ge::TensorInfo &tensor_info, uint64_t &dev_addr, uint64_t &memory_size) {
+  ge::Status ret = ge::MallocSharedMemory(tensor_info, dev_addr, memory_size);
+  if (ret != ge::SUCCESS) {
+    LOG(ERROR) << "[GePlugin] malloc shared memory failed, ret : " << ToString(ret);
+    return -1;
+  }
+  LOG(INFO) << "[GePlugin] malloc shared memory success.";
+  return 0;
 }

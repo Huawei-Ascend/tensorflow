@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,17 +31,17 @@ namespace ge {
 using ComputeGraphPtr = std::shared_ptr<ComputeGraph>;
 
 struct NodeNameGraphReq {
-  string node_name;
-  int32_t index;
-  ComputeGraphPtr graph;
+    string node_name;
+    int32_t index;
+    ComputeGraphPtr graph;
 };
 
 struct NodeNameNodeReq {
-  string src_node_name;
-  int32_t src_out_index;
-  NodePtr dst_node;
-  int32_t dst_in_index;
-  string dst_node_name;
+    string src_node_name;
+    int32_t src_out_index;
+    NodePtr dst_node;
+    int32_t dst_in_index;
+    string dst_node_name;
 };
 
 class ModelSerializeImp {

@@ -1,0 +1,11 @@
+# source file:python/npu_bridge/estimator/npu/npu_estimator.py
+
+class NPUEstimator(estimator_lib.Estimator):
+    def __init__(self, model_fn=None, model_dir=None, config=None,
+    params=None, job_start_file='', warm_start_from=None):
+
+class NPUEstimatorSpec(model_fn_lib.EstimatorSpec):
+    def __new__(cls, mode, predictions=None, loss=None, train_op=None,
+                eval_metric_ops=None, export_outputs=None, training_chief_hooks=None,
+                training_hooks=None, scaffold=None, evaluation_hooks=None, prediction_hooks=None, host_call=None):
+

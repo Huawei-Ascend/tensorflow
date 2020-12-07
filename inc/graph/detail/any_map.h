@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,9 @@ class AnyMap {
 
   bool Has(const string &name) const { return anyValues_.find(name) != anyValues_.end(); }
 
-  void Swap(AnyMap &other) { anyValues_.swap(other.anyValues_); }
+  void Swap(AnyMap &other) {
+    anyValues_.swap(other.anyValues_);
+  }
 
  private:
   class Placeholder {

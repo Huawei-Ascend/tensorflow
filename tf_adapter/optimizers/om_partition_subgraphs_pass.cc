@@ -1302,6 +1302,7 @@ Status OMSplitter::Subgraph::BuildFunctionDef(const string &name, FunctionLibrar
         LOG(INFO) << func;
         FunctionDef *fdef = func_def_lib->add_function();
         REQUIRES_NOT_NULL(fdef);
+        REQUIRES_NOT_NULL(library->Find(func));
         *fdef = *(library->Find(func));
       }
       string funcdefStr;
@@ -1763,6 +1764,13 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
   LOG(INFO) << "OMPartition subgraph_" << std::to_string(graph_num) << " begin.";
   LOG(INFO) << "mix_compile_mode is " << (mix_compile_mode ? "True" : "False");
   LOG(INFO) << "iterations_per_loop is " << iterations_per_loop;
+  LOG(INFO) << "input_shape: " << all_options["input_shape"]
+            << "dynamic_dims: " << all_options["dynamic_dims"];
+  bool is_set_dynamic_config = !all_options["input_shape"].empty() &&
+                               !all_options["dynamic_dims"].empty();
+  if (is_set_dynamic_config && mix_compile_mode) {
+    LOG(FATAL) << "dynamic config can not use with mix compile.";
+  }
 
   char *need_print = getenv("PRINT_MODEL");
 
@@ -1776,6 +1784,7 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
 
   string graph_format_value;
   Graph *graphIn = graph->get();
+  int getnext_node_count = 0;
   for (Node *node : graphIn->op_nodes()) {
     if (node->type_string() == "NPUInit") {
       std::string attr_name;
@@ -1815,6 +1824,13 @@ Status OMPartitionSubgraphsPass::ProcessGraph(std::unique_ptr<Graph> *graph, Fun
       }
       graphIn->RemoveNode(node);
     }
+    if (is_set_dynamic_config && node->type_string() == "IteratorGetNext") {
+      getnext_node_count++;
+    }
+  }
+  if (getnext_node_count > 1) {
+    LOG(FATAL) << "dynamic dims func can not support graph with "
+               << getnext_node_count << " IteratorGetNext node.";
   }
 
   for (Node *node : graphIn->op_nodes()) {

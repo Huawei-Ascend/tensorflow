@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,7 +91,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeAttrValue {
   using LIST_LIST_INT = vector<vector<int64_t>>;
   using LIST_DATA_TYPE = vector<ge::DataType>;
 
-  using NamedAttrs = ge::NamedAttrs;  // for cce use (ge::GeAttrValue::NamedAttrs).
+  using NamedAttrs = ge::NamedAttrs;    // for cce use (ge::GeAttrValue::NamedAttrs).
 
   enum ValueType {
     VT_NONE = 0,
@@ -141,14 +141,15 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeAttrValue {
 
   template <typename vector_type>
   // To cols
-  using enable_if_vector_type_valid_t = typename std::enable_if<IsAttrTypeEnable<vector_type>::LIST_VALUE, int>::type;
+  using enable_if_vector_type_valid_t = typename std::enable_if<IsAttrTypeEnable<vector_type>::LIST_VALUE,
+                                                                int>::type;
 
   template <typename one_type>
   using enable_if_one_type_valid_t = typename std::enable_if<IsAttrTypeEnable<one_type>::VALUE, int>::type;
 
   template <typename val_type>
   using enable_if_type_valid_t =
-    typename std::enable_if<IsAttrTypeEnable<val_type>::VALUE || IsAttrTypeEnable<val_type>::LIST_VALUE, int>::type;
+      typename std::enable_if<IsAttrTypeEnable<val_type>::VALUE || IsAttrTypeEnable<val_type>::LIST_VALUE, int>::type;
 
   template <typename seriliable_type>
   using enable_if_seriliable_type_valid_t = typename seriliable_type::__ge_serializable;
@@ -320,8 +321,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY GeAttrValue {
   VALUE_SET_GET_DEC(vector<GeAttrValue::GRAPH>)
   VALUE_SET_GET_DEC(vector<GeAttrValue::BYTES>)
   VALUE_SET_GET_DEC(vector<NamedAttrs>)
-  VALUE_SET_GET_DEC(vector<vector<int64_t>>)  // lint !e665
-  VALUE_SET_GET_DEC(vector<ge::DataType>)     // lint !e665
+  VALUE_SET_GET_DEC(vector<vector<int64_t>>)  //lint !e665
+  VALUE_SET_GET_DEC(vector<ge::DataType>)     //lint !e665
 #undef VALUE_SET_GET_DEC
 
   GeIrProtoHelper<proto::AttrDef> value_;

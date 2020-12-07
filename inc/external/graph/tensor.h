@@ -66,8 +66,8 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY TensorDesc {
   // set shape with -2, it stand for unknown shape
   graphStatus SetUnknownDimNumShape();
   // for unknown shape
-  graphStatus SetShapeRange(const std::vector<std::pair<int64_t, int64_t>> &range);
-  graphStatus GetShapeRange(std::vector<std::pair<int64_t, int64_t>> &range) const;
+  graphStatus SetShapeRange(const std::vector<std::pair<int64_t,int64_t>> &range);
+  graphStatus GetShapeRange(std::vector<std::pair<int64_t,int64_t>> &range) const;
 
   Format GetFormat() const;
   void SetFormat(Format format);

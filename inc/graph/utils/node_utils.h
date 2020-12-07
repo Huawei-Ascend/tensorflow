@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright 2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,7 @@ class NodeUtils {
   static std::string GetNodeType(const Node &node);
   static std::string GetNodeType(const NodePtr &node);
 
+  static std::vector<ComputeGraphPtr> GetAllSubgraphs(const Node &node);
   static ComputeGraphPtr GetSubgraph(const Node &node, uint32_t index);
   static graphStatus SetSubgraph(Node &node, uint32_t index, const ComputeGraphPtr &subgraph);
 
@@ -158,9 +159,16 @@ class NodeUtils {
 
   static ge::ConstNodePtr GetNodeFromOperator(const Operator &oprt);
 
-  static graphStatus GetInputConstData(const ConstNodePtr &node_ptr, const string &dst_name, GeTensorPtr &ge_tensor);
+  static graphStatus GetInputConstData(const ConstNodePtr& node_ptr, const string &dst_name, GeTensorPtr &ge_tensor);
 
   static graphStatus GetInputConstData(const Node &node, const string &dst_name, GeTensorPtr &ge_tensor);
+
+  ///
+  /// @brief Get node type in cross subgragh.
+  /// @param [in] node
+  /// @return type
+  ///
+  static std::string GetInConstNodeTypeCrossSubgraph(const ge::NodePtr &node);
 
  private:
   static std::map<NodePtr, std::vector<uint32_t>> map_send_info_;

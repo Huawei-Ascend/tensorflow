@@ -38,9 +38,12 @@ limitations under the License.
 #include "ge/ge_api_types.h"
 #include "graph/tensor.h"
 #include "graph/utils/graph_utils.h"
+#include "toolchain/tuning_tool/tune_api.h"
 #include <unordered_map>
 
 namespace tensorflow {
+using MsTuningFunc = MsTuneStatus (*)(ge::Graph &, std::vector<ge::Graph> &, ge::Session *,
+                      const std::map<std::string, std::map<std::string, std::string>> &);
 class GeOp : public AsyncOpKernel {
  public:
   explicit GeOp(OpKernelConstruction *ctx);
@@ -56,12 +59,14 @@ class GeOp : public AsyncOpKernel {
   void GlobalFinalize();
 
   // Build GraphDef from FunctionDef.
-  void BuildGraphDef(OpKernelContext *ctx, DoneCallback done, const FunctionLibraryDefinition &flib_def,
-                     const FunctionDef &func_def, const std::vector<Tensor> &input_vec, GraphDef &graph_def,
-                     bool &is_initialize);
+  Status BuildGraphDef(const FunctionLibraryDefinition &flib_def, const FunctionDef &func_def,
+                       const std::vector<Tensor> &input_vec, GraphDef &graph_def, bool &is_initialize);
 
   // prepare input tensor
   Status BuildInputTensorInfo(OpKernelContext *ctx, std::vector<ge::InputTensorInfo> &inputs);
+
+  // prepare output tensor
+  Status BuildOutTensorInfo(OpKernelContext *ctx);
 
   // create input and output desc for NodeDef
   Status GenerateDesc(Node *&node);
@@ -81,6 +86,15 @@ class GeOp : public AsyncOpKernel {
 
   void GetExecGraphId(OpKernelContext *ctx, uint32_t &cache_graph_id,
                       std::vector<std::string> input_shapes);
+
+  void GetMsTuneConfig(std::map<std::string, std::string> init_options);
+
+  void SetShapesToOutputDesc(const std::vector<std::string> &input_shapes,
+                             const int &index, AttrValue &attr_shape_value);
+
+  void BuildShapeNodeAndCacheArgNodes(Graph &graph);
+
+  Status ChangeInputsShapeDesc();
 
  private:
   static const std::string INPUT_DESC;
@@ -109,8 +123,19 @@ class GeOp : public AsyncOpKernel {
   std::map<std::vector<std::string>, uint32_t> cache_graphs_;
   std::vector<std::pair<std::vector<std::string>, uint32_t>> graph_counts_;
   std::map<std::string, std::string> sess_options_;
+  std::map<std::string, std::string> init_options_;
   static std::unordered_map<std::string, uint32_t> session_and_graph_id_map_;
   uint32_t iteration_per_loop_;
+  bool is_host_graph_;
+  std::map<std::string, std::string> graph_options_;
+  string work_path_;
+  string mstune_mode_;
+  std::map<int, TensorShape> outputs_shape_;
+  bool is_train_graph_;
+  void *handle_;
+  MsTuningFunc tuning_api_;
+  string auto_tune_mode_;
+  std::vector<Node*> dynamic_shape_nodes_;
 };
 }  // namespace tensorflow
 #endif  // TENSORFLOW_KERNELS_GEOP_NPU_H_
