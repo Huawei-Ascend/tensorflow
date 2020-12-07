@@ -3,7 +3,6 @@ from __future__ import division
 from __future__ import print_function
 
 import six
-import os
 import tensorflow as tf
 from tensorflow.python.framework import ops
 from tensorflow.python.training import training_util
@@ -95,39 +94,6 @@ def check_profiling_options(profiling_options=[]):
 
   result = ":".join(profiling_options)
   return result
-
-def check_path(path):
-  """Check path.
-  Args:
-      path: path.
-  Return:
-      real path
-  Raise:
-      if path is valid or not read and write permissions.
-  """
-  if os.path.exists(path):
-    real_path = os.path.realpath(path)
-    if not os.path.isdir(real_path):
-      raise ValueError("path:%s is not directory." %(path))
-    if not os.access(real_path, os.R_OK | os.W_OK):
-      raise ValueError("path:%s is not read and write permissions." %(path))
-  else:
-    raise ValueError("path:%s is not exists." %(path))
-  return real_path
-
-def check_mstune_mode(mstune_mode):
-  """Check mstune mode .
-  Args:
-      mstune_mode: mstune_mode: Optimization Task Type."1": model tune; "2": optune;
-                                "3": model tune & optune; "4": gradient split tune.
-  Return:
-      mstune_mode
-  Raise:
-      If mstune_mode is null or not in ['1', '2', '3', '4'].
-  """
-  mstune_modes = ['1', '2', '3', '4']
-  if mstune_mode not in mstune_modes:
-    raise ValueError("mstune_mode is valid, should be in ['1', '2', '3', '4']")
 
 def register_func(var_name):
   ops.register_proto_function(
@@ -238,15 +204,3 @@ class IterationPerLoop():
     self._loop_cond_var.load(0, session=sess)
     self._const_zero.load(0, session=sess)
     self._const_one.load(1, session=sess)
-
-def variable_initializer_in_host(var_list):
-  """Returns an Op that initializes a list of variables.
-  If `var_list` is empty, however, the function still returns an Op that can
-  be run. That Op just has no effect.
-  Args:
-    var_list: List of `Variable` objects to initialize.
-    name: Optional name for the returned operation.
-  Returns:
-    An Op that run the initializers of all the specified variables.
-  """
-  return tf.initializers.variables(var_list, name='var_in_host')

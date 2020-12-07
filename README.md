@@ -7,7 +7,7 @@ Tensorflow Adapter For Ascend（简称TF_Adapter）致力于将昇腾AI处理器
 
 ![tfadapter](https://images.gitee.com/uploads/images/2020/1027/094640_8f305b88_8175427.jpeg "framework.jpg")
 
-您可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0048.html) 获取更多使用细节。
+您可以通过阅读 [TF_Adapter接口文档](https://support.huaweicloud.com/mprtg-A800_9000_9010/atlasprtg_13_0013.html) 获取更多使用细节。
 ## 安装
 ### 从源码安装
 
@@ -35,7 +35,7 @@ chmod +x build.sh
 ./build.sh
 ```
 
-脚本执行成功后，会在output目录生成tfadapter.tar压缩文件。
+脚本执行成功后，会在output目录生成tfadapter.tar压缩文件
 
 #### 安装插件包
 解压tfadapter.tar文件，生成npu_bridge-1.15.0-py3-none-any.whl,
@@ -49,9 +49,6 @@ pip install npu_bridge-1.15.0-py3-none-any.whl
 ## 贡献
 
 欢迎参与贡献。
-
-## 社区版本规划
-https://github.com/Huawei-Ascend/tensorflow/wikis/Home?sort_id=3076366
 
 ## Release Notes
 

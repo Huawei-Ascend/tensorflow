@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -95,7 +95,7 @@ class Node : public std::enable_shared_from_this<Node> {
 
   ComputeGraphPtr GetOwnerComputeGraph() const;
   graphStatus SetOwnerComputeGraph(const ComputeGraphPtr &graph);
-  graphStatus SetAnyOwnerComputeGraph(const ComputeGraphPtr &graph);
+
   Vistor<InDataAnchorPtr> GetAllInDataAnchors() const;
   Vistor<OutDataAnchorPtr> GetAllOutDataAnchors() const;
   uint32_t GetAllInDataAnchorsSize() const;

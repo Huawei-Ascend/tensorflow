@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -206,8 +206,7 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeOpTypeFeature : ScopeBa
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeAttrFeature : ScopeBaseFeature {
  public:
-  NodeAttrFeature(std::string nodeType, std::string attr_name,
-                  ge::DataType datatype, ScopeAttrValue &attr_value);
+  NodeAttrFeature(std::string nodeType, std::string attr_name, ge::DataType datatype, ScopeAttrValue &attr_value);
   NodeAttrFeature(NodeAttrFeature const &feature);
   NodeAttrFeature &operator=(NodeAttrFeature const &feature);
   ~NodeAttrFeature();
@@ -220,8 +219,8 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY NodeAttrFeature : ScopeBase
 
 class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFeature : ScopeBaseFeature {
  public:
-  ScopeFeature(std::string sub_type, int32_t num, std::string suffix = "",
-               std::string sub_scope_mask = "", int step = 0);
+  ScopeFeature(std::string sub_type, int32_t num, std::string suffix = "", std::string sub_scope_mask = "",
+               int step = 0);
   ScopeFeature(ScopeFeature const &feature);
   ScopeFeature &operator=(ScopeFeature const &feature);
   ~ScopeFeature();
@@ -326,11 +325,10 @@ class GE_FUNC_HOST_VISIBILITY GE_FUNC_DEV_VISIBILITY ScopeFusionPassRegistrar {
 #define REGISTER_SCOPE_FUSION_PASS_UNIQ_HELPER(ctr, pass_name, scope_pass, is_general) \
   REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)
 
-#define REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)                                 \
+#define REGISTER_SCOPE_FUSION_PASS_UNIQ(ctr, pass_name, scope_pass, is_general)                   \
   static ::ge::ScopeFusionPassRegistrar register_scope_fusion_pass##ctr __attribute__((unused)) = \
-      ::ge::ScopeFusionPassRegistrar(pass_name,                                                   \
-                                     []() -> ::ge::ScopeBasePass * { return new (std::nothrow) scope_pass(); }, \
-                                     is_general)
+    ::ge::ScopeFusionPassRegistrar(                                                               \
+      pass_name, []() -> ::ge::ScopeBasePass * { return new (std::nothrow) scope_pass(); }, is_general)
 }  // namespace ge
 
 #endif  // EXTERNAL_REGISTER_SCOPE_SCOPE_FUSION_PASS_REGISTER_H_

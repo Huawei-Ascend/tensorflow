@@ -67,7 +67,6 @@ void SessionManager::DestroyGeSession(const std::string &tf_session) {
   if (it != ge_sessions_.end()) {
     if (it->second != nullptr) {
       LOG(INFO) << "find ge session connect with tf session " << tf_session;
-      ge_graphs_.erase(it->second);
       delete it->second;
       it->second = nullptr;
     }
@@ -119,12 +118,17 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
     sess_options.erase(ge::VARIABLE_MEMORY_MAX_SIZE);
   }
 
-  // tailing optimization
-  LOG(INFO) << "[GEOP] is_tailing_optimization : " << sess_options["ge.exec.isTailingOptimization"];
-
   LOG(INFO) << "[GEOP] op_select_implmode : " << sess_options[ge::OP_SELECT_IMPL_MODE];
 
   LOG(INFO) << "[GEOP] optypelist_for_implmode : " << sess_options[ge::OPTYPELIST_FOR_IMPLMODE];
+
+  // reuse memory env
+  const char *disable_reuse_memory = std::getenv("DISABLE_REUSE_MEMORY");
+  if (disable_reuse_memory == nullptr) {
+    disable_reuse_memory = "0";
+    LOG(WARNING) << "[GEOP] can not get DISABLE_REUSE_MEMORY in env, set to default 0";
+  }
+  sess_options["ge.exec.disableReuseMemory"] = disable_reuse_memory;
 
   // dump configuration
   string dump_step = sess_options[ge::OPTION_EXEC_DUMP_STEP];
@@ -134,43 +138,4 @@ void SessionManager::PrintGeSessionOptions(std::map<std::string, std::string> &s
             << ", dump_mode :" << sess_options[ge::OPTION_EXEC_DUMP_MODE]
             << ", enable_dump_debug :" << sess_options[ge::OPTION_EXEC_ENABLE_DUMP_DEBUG]
             << ", dump_debug_mode :" << sess_options[ge::OPTION_EXEC_DUMP_DEBUG_MODE];
-
-  // dynamic input config
-  LOG(INFO) << "[GEOP] input_shape :" << sess_options["ge.inputShape"]
-            << ", dynamic_dims :" << sess_options["ge.dynamicDims"]
-            << ", dynamic_node_type :" << sess_options["ge.dynamicNodeType"];
-
-  LOG(INFO) << "[GEOP] buffer_optimize :" << sess_options["ge.bufferOptimize"];
-
-  LOG(INFO) << "[GEOP] enable_small_channel :" << sess_options["ge.enableSmallChannel"];
-
-  LOG(INFO) << "[GEOP] fusion_switch_file :" << sess_options["ge.fusionSwitchFile"];
-
-  LOG(INFO) << "[GEOP] enable_compress_weight :" << sess_options["ge.enableCompressWeight"];
-
-  LOG(INFO) << "[GEOP] compress_weight_conf :" << sess_options["compress_weight_conf"];
-}
-
-bool SessionManager::CacheGeGraphs(ge::Session *ge_session, ge::Graph &ge_graph) {
-  if (ge_session == nullptr) {
-    LOG(ERROR) << "ge session is null ptr.";
-    return false;
-  }
-  ge_graphs_[ge_session].push_back(ge_graph);
-  return true;
-}
-
-bool SessionManager::GetGeGraphs(ge::Session *ge_session, std::vector<ge::Graph> &ge_graphs) {
-  if (ge_session == nullptr) {
-    LOG(ERROR) << "ge session is null ptr.";
-    return false;
-  }
-  auto it = ge_graphs_.find(ge_session);
-  if (it != ge_graphs_.end()) {
-    ge_graphs = it->second;
-    LOG(INFO) << " get ge session nontraining graphs success.";
-    return true;
-  }
-  LOG(ERROR) << "ge session get nontraining graphs failed.";
-  return false;
 }

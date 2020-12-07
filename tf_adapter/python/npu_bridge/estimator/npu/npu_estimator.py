@@ -665,33 +665,6 @@ class NPUEstimator(estimator_lib.Estimator):
         if config._optypelist_for_implmode is not None:
             custom_op.parameter_map["optypelist_for_implmode"].s = tf.compat.as_bytes(config._optypelist_for_implmode)
 
-    def __load_dynamic_input_config(self, config, custom_op):
-        """Load dynamic input config,and add to custom_optimizers
-        Args:
-            config: NPURunConfig.
-            custom_op: Customer optimizers.
-        """
-
-        if (config._dynamic_input_config is not None and
-            config._dynamic_input_config._input_shape is not None and
-            config._dynamic_input_config._dynamic_dims is not None and
-            config._dynamic_input_config._dynamic_node_type is not None):
-            custom_op.parameter_map["input_shape"].s = tf.compat.as_bytes(config._dynamic_input_config._input_shape)
-            custom_op.parameter_map["dynamic_dims"].s = tf.compat.as_bytes(config._dynamic_input_config._dynamic_dims)
-            custom_op.parameter_map["dynamic_node_type"].i = config._dynamic_input_config._dynamic_node_type
-
-    def __load_mstune_config(self, config, custom_op):
-        """Load mstune config ,and add to custom_optimizers
-        Args:
-            config: NPURunConfig.
-            custom_op: Customer optimizers.
-        """
-        if config._mstune_mode is not None:
-            custom_op.parameter_map["mstune_mode"].s = tf.compat.as_bytes(config._mstune_mode)
-            if config._work_path is not None:
-                custom_op.parameter_map["work_path"].s = tf.compat.as_bytes(config._work_path)
-            else:
-                raise ValueError('work_path must be set when use mstune_mode')
 
     def __load_graph_optimizers(self, config):
         """Change the session config and load the graph optimizers:
@@ -729,20 +702,6 @@ class NPUEstimator(estimator_lib.Estimator):
         if config.enable_scope_fusion_passes is not None:
             custom_op.parameter_map["enable_scope_fusion_passes"].s = tf.compat.as_bytes(config.enable_scope_fusion_passes)
         custom_op.parameter_map["enable_exception_dump"].i = config.enable_exception_dump
-        if config._buffer_optimize is not None:
-            custom_op.parameter_map["buffer_optimize"].s = tf.compat.as_bytes(config._buffer_optimize)
-        custom_op.parameter_map["enable_small_channel"].i = config._enable_small_channel
-        if config._fusion_switch_file is not None:
-            custom_op.parameter_map["fusion_switch_file"].s = tf.compat.as_bytes(config._fusion_switch_file)
-        custom_op.parameter_map["enable_compress_weight"].b = config._enable_compress_weight
-        if config._compress_weight_conf is not None:
-            custom_op.parameter_map["compress_weight_conf"].s = tf.compat.as_bytes(config._compress_weight_conf)
-        if config._op_compiler_cache_mode is not None:
-            custom_op.parameter_map["op_compiler_cache_mode"].s = tf.compat.as_bytes(config._op_compiler_cache_mode)
-        if config._op_compiler_cache_dir is not None:
-            custom_op.parameter_map["op_compiler_cache_dir"].s = tf.compat.as_bytes(config._op_compiler_cache_dir)
-        if config._debug_dir is not None:
-            custom_op.parameter_map["debug_dir"].s = tf.compat.as_bytes(config._debug_dir)
 
         # add profiling options to custom_op
         self.__load_profiling_options(config, custom_op)
@@ -765,11 +724,6 @@ class NPUEstimator(estimator_lib.Estimator):
         self.__load_ps_mode_config(config, custom_op)
 
         self._load_op_performance_config(config, custom_op)
-
-        # add dynamic_input_config to custom_op
-        self.__load_dynamic_input_config(config, custom_op)
-
-        self.__load_mstune_config(config, custom_op)
 
         return config
 

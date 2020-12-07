@@ -185,7 +185,7 @@ class HostQueueDatasetOp : public DatasetOpKernel {
             mutex_lock lck(mu_);
             for (auto &tensor : args) {
               if (tensor.TotalBytes() > UINT64_MAX - total_bytes_) {
-                LOG(ERROR) << "The size of tensor is too big";
+                LOG(ERROR) << "the size of tensor is too big";
                 buffer_element.host_thread_finished = true;
                 buffer_.push_back(std::move(buffer_element));
                 cond_var_.notify_all();
@@ -276,7 +276,7 @@ class HostQueueDatasetOp : public DatasetOpKernel {
           // call tdt interface
           int32_t tdt_status = TdtHostPushData(dataset()->channel_name_, items);
           if (tdt_status != 0) {
-            LOG(INFO) << "End training as tdt host push data finished: " << tdt_status;
+            LOG(INFO) << "End training as tdt host push data failed " << tdt_status;
             mutex_lock lck(mu_);
             cancelled_ = true;
             cond_var_.notify_all();

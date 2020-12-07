@@ -41,8 +41,6 @@ const string SHAPE_ATTR = "shape";
 const string GROUP_ATTR = "group";
 const string ROOT_RANK_ATTR = "root_rank";
 const string REDUCE_TYPE_ATTR = "reduction";
-const string FUSION_ATTR = "fusion";
-const string FUSION_ID_ATTR = "fusion_id";
 
 Status SizeofDataType(DataType dType, size_t &size) {
   static const std::map<DataType, int> dataTypeSizeMap = {
@@ -137,8 +135,6 @@ Status GradFusionOptimizer::SetHcomBroadcastAttr(NodeDef *fusionNode, NodeDef &o
     (*fusionNode->mutable_attr())[ROOT_RANK_ATTR].set_i(rootRank);
     string group = (*originNode.mutable_attr())[GROUP_ATTR].s();
     (*fusionNode->mutable_attr())[GROUP_ATTR].set_s(group);
-    (*fusionNode->mutable_attr())[FUSION_ATTR].set_i(0);
-    (*fusionNode->mutable_attr())[FUSION_ID_ATTR].set_i(-1);
     fusionBroadcastName.insert(fusionNode->name());
   }
   // All input data types are the same.

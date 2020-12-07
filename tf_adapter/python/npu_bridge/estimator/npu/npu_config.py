@@ -50,18 +50,7 @@ class NPURunConfig(run_config_lib.RunConfig):
                  enable_scope_fusion_passes=None,
                  enable_exception_dump=0,
                  op_select_implmode=None,
-                 optypelist_for_implmode=None,
-                 dynamic_input_config=None,
-                 mstune_mode=None,
-                 work_path=None,
-                 buffer_optimize="l2_optimize",
-                 enable_small_channel=0,
-                 fusion_switch_file=None,
-                 enable_compress_weight=False,
-                 compress_weight_conf=None,
-                 op_compiler_cache_mode=None,
-                 op_compiler_cache_dir=None,
-                 debug_dir=None
+                 optypelist_for_implmode=None
                  ):
         """
         Constructs a NPUConfig.
@@ -113,15 +102,6 @@ class NPURunConfig(run_config_lib.RunConfig):
         op_select_implmode: Selecting whether the operator is implemented with high precision
                             or high performance.
         optypelist_for_implmode: Operator list.
-        dynamic_input_config:Dynamic dims configuration
-        mstune_mode: Optimization Task Type."1": model tune; "2": optune;
-                     "3": model tune & optune; "4": gradient split tune.
-        work_path: Stores temporary files generated during optimization.
-        buffer_optimize: Whether to enable buffer optimization.
-        enable_small_channel: Whether to enable small channel optimization.
-        fusion_switch_file: Fusion switch configuration file path.
-        enable_compress_weight: Whether to enable global weight compression.
-        compress_weight_conf:Path and file name of the node list configuration file to be compressed.
         """
 
         # Check iterations_per_loop.
@@ -181,19 +161,6 @@ class NPURunConfig(run_config_lib.RunConfig):
         self.enable_exception_dump = enable_exception_dump
         self._op_select_implmode = op_select_implmode
         self._optypelist_for_implmode = optypelist_for_implmode
-        if dynamic_input_config is not None and  not isinstance(dynamic_input_config, DynamicInputConfig):
-            raise ValueError('dynamic_input_config must be provided with type DynamicInputConfig')
-        self._dynamic_input_config = dynamic_input_config
-        self._mstune_mode = mstune_mode
-        self._work_path = work_path
-        self._buffer_optimize = buffer_optimize
-        self._enable_small_channel = enable_small_channel
-        self._fusion_switch_file = fusion_switch_file
-        self._enable_compress_weight = enable_compress_weight
-        self._compress_weight_conf = compress_weight_conf
-        self._op_compiler_cache_mode=op_compiler_cache_mode
-        self._op_compiler_cache_dir=op_compiler_cache_dir
-        self._debug_dir=debug_dir
 
         super(NPURunConfig, self).__init__(
             model_dir=model_dir,
@@ -265,19 +232,3 @@ class NpuExecutePlacement(Enum):
     TAISHAN = "taishan"
     DVPP = "dvpp"
     HOST = "host"
-
-class DynamicInputConfig():
-    """dynamic dims and input shape config with npu support"""
-    def __init__(self, input_shape, dynamic_dims, dynamic_node_type):
-        """
-        Constructs a DynamicInputConfig.
-
-        Args:
-            input_shape: the network's inputs shapes.
-            dynamic_dims: This parameter corresponds to input_shape.
-                          The dim value in dims corresponds to the parameter "-1" in input_shape.
-            dynamic_node_type: Dataset or placeholder is dynamic input. type: 0 or 1.
-        """
-        self._input_shape = input_shape
-        self._dynamic_dims = dynamic_dims
-        self._dynamic_node_type = dynamic_node_type

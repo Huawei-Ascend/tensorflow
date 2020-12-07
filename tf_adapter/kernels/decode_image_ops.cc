@@ -57,7 +57,7 @@ class DecodeImageOp : public OpKernel {
   }
   ~DecodeImageOp() override {
     if (handle_ != nullptr) {
-      (void)dlclose(handle_);
+      dlclose(handle_);
       LOG(INFO) << "dlclose handle finish.";
     } else {
       LOG(INFO) << "handle is null.";

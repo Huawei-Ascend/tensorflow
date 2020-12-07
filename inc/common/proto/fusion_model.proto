@@ -11,8 +11,7 @@
  */
 syntax = "proto3";
 
-import "om.proto";
-
+import "vendor/hisi/npu/cce/graph_old/proto/om.proto";
 package domi;
 
 message FusionModelDef {

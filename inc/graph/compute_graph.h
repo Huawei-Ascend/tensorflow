@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,7 +88,7 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
   // AddNode with NodePtr
   NodePtr AddNode(NodePtr node);
   NodePtr AddNode(OpDescPtr op);
-  NodePtr AddNode(OpDescPtr op, int64_t id);    // for unserialize
+  NodePtr AddNode(OpDescPtr op, int64_t id);  // for unserialize
   NodePtr AddNodeFront(NodePtr node);
   NodePtr AddNodeFront(const OpDescPtr &op);
   NodePtr AddInputNode(NodePtr node);
@@ -249,16 +249,11 @@ class ComputeGraph : public std::enable_shared_from_this<ComputeGraph>, public A
 
  private:
   graphStatus DFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,
-                                    std::vector<NodePtr> &stack, bool reverse);
+                                    std::vector<NodePtr> &stack);
   graphStatus BFSTopologicalSorting(std::vector<NodePtr> &node_vec, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::deque<NodePtr> &stack);
   graphStatus CollectBreadthOutNode(const NodePtr &node, std::map<NodePtr, uint32_t> &map_in_edge_num,
                                     std::map<string, NodePtr> &breadth_node_map);
-  /// nodes like : (a) <--- (c) ---> (b)
-  /// node a and b have only one parent node c, and a is connected to c firstly
-  /// topo order of DFS is `c, b, a` with `dfs_reverse=false` as default
-  /// in same case, user could get `c, a, b` with `dfs_reverse=true`
-  graphStatus TopologicalSortingGraph(bool dfs_reverse = false);
   graphStatus TopologicalSortingGraph();
   graphStatus SortNodes(std::vector<NodePtr> &stack, std::map<NodePtr, uint32_t> &mapInEdgeNum);
   Vistor<NodePtr> AllGraphNodes(std::vector<std::shared_ptr<ComputeGraph>> &subgraphs) const;

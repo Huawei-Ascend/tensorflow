@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef INC_GRAPH_GE_CONTEXT_H_
 #define INC_GRAPH_GE_CONTEXT_H_
 
@@ -30,8 +31,9 @@ class GEContext {
   void Init();
   void SetSessionId(uint64_t session_id);
   void SetCtxDeviceId(uint32_t device_id);
+
  private:
-  thread_local static uint64_t session_id_;
+  uint64_t session_id_ = 0;
   uint32_t device_id_ = 0;
   uint64_t trace_id_ = 0;
 };  // class GEContext

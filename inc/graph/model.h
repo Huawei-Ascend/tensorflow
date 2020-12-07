@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,11 +63,11 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY Model : public AttrHolder {
 
   graphStatus Save(Buffer &buffer, bool is_dump = false) const;
 
-  graphStatus SaveToFile(const string& file_name) const;
+  graphStatus SaveToFile(const string &file_name) const;
   // Model will be rewrite
   static graphStatus Load(const uint8_t *data, size_t len, Model &model);
   graphStatus Load(ge::proto::ModelDef &model_def);
-  graphStatus LoadFromFile(const string& file_name);
+  graphStatus LoadFromFile(const string &file_name);
 
   bool IsValid() const;
 

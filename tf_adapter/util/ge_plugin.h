@@ -46,8 +46,6 @@ class GePlugin {
 
   bool IsGlobal();
 
-  std::map<std::string, std::string> GetInitOptions();
-
  private:
   GePlugin();
 

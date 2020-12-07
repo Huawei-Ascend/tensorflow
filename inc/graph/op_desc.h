@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,11 +51,7 @@ class GeAttrValue;
 
 using ConstOpDesc = const OpDesc;
 
-enum SubgraphType {
-  kStatic,
-  kDynamic,
-  kSubgraphTypeEnd
-};
+enum SubgraphType { kStatic, kDynamic, kSubgraphTypeEnd };
 
 class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
  public:
@@ -282,8 +278,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
 
   graphStatus GetSubgraphNameByInstanceName(const std::string &instance_name, std::string &subgraph_name) const;
 
-  graphStatus InferDataSlice();
-
  protected:
   ProtoAttrMapHelper MutableAttrMap() override;
   ConstProtoAttrMapHelper GetAttrMap() const override;
@@ -323,7 +317,6 @@ class OpDesc : public std::enable_shared_from_this<OpDesc>, public AttrHolder {
   std::function<graphStatus(Operator &)> infer_func_ = nullptr;
   std::function<graphStatus(Operator &)> infer_format_func_ = nullptr;
   std::function<graphStatus(Operator &)> verifier_func_ = nullptr;
-  std::function<graphStatus(Operator &)> infer_data_slice_func_ = nullptr;
   string op_kernel_lib_name_;
   string engine_name_;
   friend class OpDescUtils;

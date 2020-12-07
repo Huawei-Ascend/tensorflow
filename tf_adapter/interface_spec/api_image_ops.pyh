@@ -1,5 +1,0 @@
-# source file:python/npu_bridge/image/image_ops.py
-
-def decode_and_resize_jpeg(image, size):
-
-def decode_and_crop_and_resize_jpeg(image, crop_size, size):
